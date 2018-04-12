@@ -1,11 +1,11 @@
 #include "stdafx.h"
-#include "TTetrimino.h"
+#include "OTetrimino.h"
 
 
 OTetrimino::OTetrimino(int** matrix)
-	: Tetrimino(matrix, "", "")
+	: Tetrimino(matrix, "    лллл    ", "    лллл    ")
 {
-	vector<Vector2i> north = vector<Vector2i>(4);
+	vector<Vector2i> north = vector<Vector2i>();
 	north.push_back(Vector2i());
 	north.push_back(Vector2i(-1, 0));
 	north.push_back(Vector2i(-1, 1));

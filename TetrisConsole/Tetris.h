@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "TTetrimino.h"
+#include "Tetrimino.h"
 #include "Vector2i.h"
 
 using namespace std;

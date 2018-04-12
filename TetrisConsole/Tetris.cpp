@@ -5,25 +5,16 @@
 #include <stdlib.h>
 
 #include "Tetris.h"
+#include "OTetrimino.h"
+#include "ITetrimino.h"
+#include "TTetrimino.h"
+#include "LTetrimino.h"
+#include "JTetrimino.h"
+#include "STetrimino.h"
+#include "ZTetrimino.h"
 
 Tetris::Tetris()
 {
-	/*int OTetrimino[2][4] = { { 0, 1, 1, 0 }, { 0, 1, 1, 0 } };
-	int ITetrimino[2][4] = { { 0, 0, 0, 0 }, { 1, 1, 1, 1 } };
-	int TTetrimino[2][4] = { { 0, 1, 0, 0 }, { 1, 1, 1, 0 } };
-	int LTetrimino[2][4] = { { 0, 0, 1, 0 }, { 1, 1, 1, 0 } };
-	int JTetrimino[2][4] = { { 1, 0, 0, 0 }, { 1, 1, 1, 0 } };
-	int STetrimino[2][4] = { { 0, 1, 1, 0 }, { 1, 1, 0, 0 } };
-	int ZTetrimino[2][4] = { { 1, 1, 0, 0 }, { 0, 1, 1, 0 } };*/
-
-	//_allPieces[0] = new Tetrimino(OTetrimino, "    ÛÛÛÛ    ", "    ÛÛÛÛ    ");
-	//_allPieces[1] = new Tetrimino(ITetrimino, "  ÜÜÜÜÜÜÜÜ  ", "  ßßßßßßßß  ");
-	//_allPieces[2] = new Tetrimino(TTetrimino, "     ÛÛ     ", "   ÛÛÛÛÛÛ   ");
-	//_allPieces[3] = new Tetrimino(LTetrimino, "       ÛÛ   ", "   ÛÛÛÛÛÛ   ");
-	//_allPieces[4] = new Tetrimino(JTetrimino, "   ÛÛ       ", "   ÛÛÛÛÛÛ   ");
-	//_allPieces[5] = new Tetrimino(STetrimino, "     ÛÛÛÛ   ", "   ÛÛÛÛ     ");
-	//_allPieces[6] = new Tetrimino(ZTetrimino, "   ÛÛÛÛ     ", "     ÛÛÛÛ   ");
-
 	_level = 1;
 
 	_matrix = new int*[TETRIS_HEIGHT];
@@ -31,10 +22,15 @@ Tetris::Tetris()
 	{
 		_matrix[i] = new int[TETRIS_WIDTH];
 		for (int j = 0; j < TETRIS_WIDTH; j++)
-			_matrix[i][j] = 0;
+		{
+			if (i > 35 && j > 1 && j < TETRIS_WIDTH - 2)
+				_matrix[i][j] = rlutil::GREY;
+			else
+				_matrix[i][j] = 0;
+		}
 	}
 
-	_currentTetrimino = new TTetrimino(_matrix);
+	_currentTetrimino = new ZTetrimino(_matrix);
 	_currentTetrimino->setPosition(Vector2i(30, 5));
 }
 
@@ -103,9 +99,13 @@ void Tetris::printLine(int line)
 	{
 		rlutil::locate(x, y);
 		x += 2;
-		if (_matrix[line][i] > 0 || _currentTetrimino->isMino(line, i))
+		bool currentTetriminoHere = _currentTetrimino->isMino(line, i);
+		if (_matrix[line][i] > 0 || currentTetriminoHere)
 		{
-			rlutil::setColor(_currentTetrimino->getColor());
+			if (currentTetriminoHere)
+				rlutil::setColor(_currentTetrimino->getColor());
+			else
+				rlutil::setColor(_matrix[line][i]);
 			cout << "ÛÛ";
 			rlutil::setColor(rlutil::WHITE);
 		}

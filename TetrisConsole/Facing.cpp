@@ -37,8 +37,8 @@ Vector2i Facing::getMino(int mino) const
 
 RotationPoint const & Facing::getRotationPoint(int point) const
 {
-	if (point < 1 || point > 5)
-		point = 1;
+	if (point < 0 || point > 4)
+		point = 0;
 	
-	return _rotationPoints[point - 1];
+	return _rotationPoints[point];
 }

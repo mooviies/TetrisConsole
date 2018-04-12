@@ -11,6 +11,6 @@ class OTetrimino : public Tetrimino
 public:
 	OTetrimino(int** matrix);
 	virtual ~OTetrimino();
-	virtual int getColor() const { return rlutil::WHITE; }
+	virtual int getColor() const { return rlutil::YELLOW; }
 };
 
