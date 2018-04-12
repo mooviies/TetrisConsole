@@ -147,17 +147,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="Facing.cpp" />
+    <ClCompile Include="Grid.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Tetrimino.cpp" />
+    <ClCompile Include="Tetris.cpp" />
     <ClCompile Include="TetrisConsole.cpp" />
+    <ClCompile Include="TTetrimino.cpp" />
+    <ClCompile Include="Vector2i.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Facing.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="rlutil.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tetrimino.h" />
+    <ClInclude Include="Tetris.h" />
+    <ClInclude Include="TTetrimino.h" />
+    <ClInclude Include="Vector2i.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
