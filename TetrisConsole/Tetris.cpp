@@ -30,18 +30,13 @@ Tetris::Tetris()
 {
 	_exit = false;
 	_level = 1;
+	_lines = 0;
+	_goal = 0;
+	_score = 0;
 
-	_matrix = new int*[TETRIS_HEIGHT];
 	for (int i = 0; i < TETRIS_HEIGHT; i++)
 	{
-		_matrix[i] = new int[TETRIS_WIDTH];
-		for (int j = 0; j < TETRIS_WIDTH; j++)
-		{
-			/*if (i > 35 && j > 1 && j < TETRIS_WIDTH - 2)
-				_matrix[i][j] = rlutil::GREY;
-			else*/
-				_matrix[i][j] = 0;
-		}
+		_matrix.push_back(vector<int>(TETRIS_WIDTH));
 	}
 
 	double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
@@ -74,11 +69,6 @@ Tetris::Tetris()
 
 Tetris::~Tetris()
 {
-	for (int i = 0; i < TETRIS_HEIGHT; i++)
-	{
-		delete[] _matrix[i];
-	}
-	delete[] _matrix;
 	delete[] _speedNormal;
 	delete[] _speedFast;
 }
@@ -183,6 +173,11 @@ void Tetris::stepIdle()
 
 	checkAutorepeat(Input::left(), AUTOREPEAT_LEFT, &Tetris::moveLeft, &Tetris::stepMoveLeft);
 	checkAutorepeat(Input::right(), AUTOREPEAT_RIGHT, &Tetris::moveRight, &Tetris::stepMoveRight);
+
+	if (Input::hardDrop())
+	{
+		_stepState = &Tetris::stepHardDrop;
+	}
 }
 
 void Tetris::stepMoveLeft()
@@ -221,7 +216,9 @@ void Tetris::stepMoveRight()
 
 void Tetris::stepHardDrop()
 {
-
+	while (moveDown());
+	lock();
+	_stepState = &Tetris::stepIdle;
 }
 
 void Tetris::moveLeft()
@@ -357,11 +354,60 @@ string Tetris::valueToString(int value, int length)
 
 void Tetris::lock()
 {
+	moveDown();
 	_currentTetrimino->lock();
 	_nbMoveAfterLockDown = 0;
 	_lowestLine = 0;
 	_timer.stopTimer(LOCK_DOWN);
 	_currentTetrimino = NULL;
+
+	int nbLine = 0;
+	for (int i = MATRIX_END; i >= MATRIX_START; i--)
+	{
+		bool fullLine = true;
+		for (int j = 0; j < TETRIS_WIDTH; j++)
+		{
+			if (_matrix[i][j] == 0)
+			{
+				fullLine = false;
+				break;
+			}
+		}
+
+		if (fullLine)
+		{
+			nbLine++;
+			_matrix.erase(_matrix.begin() + i);
+		}
+	}
+
+	for(int i = 0; i < nbLine; i++)
+		_matrix.insert(_matrix.begin(), vector<int>());
+
+	_lines += nbLine;
+	_goal += nbLine;
+
+	switch (nbLine)
+	{
+	case 1:
+		_score += 100 * _level;
+		break;
+	case 2:
+		_score += 300 * _level;
+		break;
+	case 3:
+		_score += 500 * _level;
+		break;
+	case 4:
+		_score += 800 * _level;
+		break;
+	}
+
+	if (_goal >= 10/*_level * 5*/)
+	{
+		_level++;
+		_goal = 0;
+	}
 }
 
 void Tetris::shuffle()

@@ -2,7 +2,7 @@
 #include "ZTetrimino.h"
 
 
-ZTetrimino::ZTetrimino(int** matrix)
+ZTetrimino::ZTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "   лллл     ", "     лллл   ")
 {
 	vector<Vector2i> north = vector<Vector2i>();

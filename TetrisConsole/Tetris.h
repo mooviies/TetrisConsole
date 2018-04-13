@@ -48,11 +48,12 @@ protected:
 	void checkAutorepeat(bool input, string timer, void(Tetris::*move)(), void(Tetris::*state)());
 
 private:
-	int** _matrix;
+	vector<vector<int>> _matrix;
 	Timer& _timer;
 
 	int _level;
 	int _lines;
+	int _goal;
 	int _score;
 	int _nbMoveAfterLockDown;
 	int _lowestLine;

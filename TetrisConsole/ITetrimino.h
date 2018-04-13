@@ -9,7 +9,7 @@ using namespace std;
 class ITetrimino : public Tetrimino
 {
 public:
-	ITetrimino(int** matrix);
+	ITetrimino(vector<vector<int>>& matrix);
 	virtual ~ITetrimino();
 	virtual int getColor() const { return rlutil::LIGHTBLUE; }
 	virtual Vector2i getStartingPosition() const { return Vector2i(19, 4); }

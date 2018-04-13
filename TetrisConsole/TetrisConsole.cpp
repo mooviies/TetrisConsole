@@ -9,18 +9,18 @@
 #include <windows.h>
 #include <conio.h>
 #include <queue>
-#include <mutex>
 
 #include "Tetris.h"
 #include "Random.h"
 #include "Input.h"
+#include "fmod\fmod.hpp"
+#include "fmod\fmod_errors.h"
 
 using namespace std;
 
-mutex readInputMutex;
-
 void initConsole(int width, int height);
 void afficherTitre(string sousTitre);
+void checkFMODError(FMOD_RESULT result);
 
 int main()
 {
@@ -32,12 +32,48 @@ int main()
 	afficherTitre("Un classic en console!");
 	tetris.display();
 
+	//// FMOD
+	FMOD_RESULT result;
+	FMOD::System *system = NULL;
+
+	result = FMOD::System_Create(&system);      // Create the main system object.
+	checkFMODError(result);
+
+	result = system->init(512, FMOD_INIT_NORMAL, 0);    // Initialize FMOD.
+	checkFMODError(result);
+
+	FMOD::Sound *sound, *sound_to_play;
+	result = system->createStream("../media/tetris.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &sound);
+	checkFMODError(result);
+
+	int numsubsounds;
+	result = sound->getNumSubSounds(&numsubsounds);
+	checkFMODError(result);
+
+	if (numsubsounds)
+	{
+		sound->getSubSound(0, &sound_to_play);
+		checkFMODError(result);
+	}
+	else
+	{
+		sound_to_play = sound;
+	}
+
+	FMOD::Channel *channel = 0;
+	result = system->playSound(sound_to_play, 0, false, &channel);
+	checkFMODError(result);
+
+	////
 	
 	bool quit = false;
 	while (!tetris.doExit())
 	{
 		tetris.step();
+		system->update();
 	}
+
+	system->release();
 
     return 0;
 }
@@ -111,4 +147,14 @@ void afficherTitre(string sousTitre)
 	}
 	// Puis on affiche la fermeture du cadre
 	cout << "ºÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl;
+}
+
+void checkFMODError(FMOD_RESULT result)
+{
+	if (result != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+		system("pause");
+		exit(-1);
+	}
 }

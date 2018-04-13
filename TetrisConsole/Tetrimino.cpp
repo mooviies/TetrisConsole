@@ -2,9 +2,9 @@
 #include "Tetrimino.h"
 
 
-Tetrimino::Tetrimino(int** matrix, string previewLine1, string previewLine2)
+Tetrimino::Tetrimino(vector<vector<int>>& matrix, string previewLine1, string previewLine2)
+	: _matrix(matrix)
 {
-	_matrix = matrix;
 	_currentRotation = NORTH;
 	_previewLine1 = previewLine1;
 	_previewLine2 = previewLine2;

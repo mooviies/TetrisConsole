@@ -2,7 +2,7 @@
 #include "ITetrimino.h"
 
 
-ITetrimino::ITetrimino(int** matrix)
+ITetrimino::ITetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "  ‹‹‹‹‹‹‹‹  ", "  ﬂﬂﬂﬂﬂﬂﬂﬂ  ")
 {
 	vector<Vector2i> north = vector<Vector2i>();

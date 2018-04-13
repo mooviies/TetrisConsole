@@ -27,7 +27,7 @@ public:
 	virtual Vector2i getStartingPosition() const { return Vector2i(19, 4); }
 
 protected:
-	Tetrimino(int** matrix, string previewLine1, string previewLine2);
+	Tetrimino(vector<vector<int>>& matrix, string previewLine1, string previewLine2);
 
 	void setFacing(ROTATION direction, Facing facing);
 
@@ -36,7 +36,7 @@ protected:
 	bool checkPositionValidity(Vector2i position, ROTATION rotation);
 
 private:
-	int** _matrix;
+	vector<vector<int>>& _matrix;
 
 	Facing _facings[4];
 	RotationPoint _rotationPoints[5];
