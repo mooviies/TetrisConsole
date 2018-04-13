@@ -7,13 +7,13 @@
 #include <ctime>
 #include <limits>
 #include <windows.h>
-#include <strsafe.h>
-#include <tchar.h>
 #include <conio.h>
 #include <queue>
 #include <mutex>
 
 #include "Tetris.h"
+#include "Random.h"
+#include "Input.h"
 
 using namespace std;
 
@@ -21,101 +21,22 @@ mutex readInputMutex;
 
 void initConsole(int width, int height);
 void afficherTitre(string sousTitre);
-DWORD WINAPI readInput(LPVOID lpParam);
 
 int main()
 {
 	initConsole(660, 510);
 	
-	queue<int> inputBuffer;
-	// Initialisation du générateur de hasard
-	srand(time(NULL));
+	Random::init();
 
 	Tetris tetris = Tetris();
 	afficherTitre("Un classic en console!");
 	tetris.display();
 
-	DWORD inputThreadId;
-	HANDLE inputThread = CreateThread(
-		NULL,                   // default security attributes
-		0,                      // use default stack size  
-		readInput,       // thread function name
-		&inputBuffer,          // argument to thread function 
-		0,                      // use default creation flags 
-		&inputThreadId);   // returns the thread identifier 
-
 	
 	bool quit = false;
-	while (!quit)
+	while (!tetris.doExit())
 	{
-		int k = 0;
-		if (readInputMutex.try_lock())
-		{
-			if (!inputBuffer.empty())
-			{
-				k = inputBuffer.front();
-				inputBuffer.pop();
-			}
-			readInputMutex.unlock();
-		}
-		switch (k)
-		{
-		case 72:
-		case 'X':
-		case 'x':
-		case '1':
-		case '5':
-		case '9':
-			//cout << "ROTATE CLOCKWISE" << endl;
-			tetris.rotateClockwise();
-			tetris.refresh();
-			break;
-		case 'Z':
-		case 'z':
-		case '3':
-		case '7':
-			//cout << "ROTATE COUNTERCLOCKWISE" << endl;
-			tetris.rotateCounterClockwise();
-			tetris.refresh();
-			break;
-		case 75:
-		case '4':
-			//cout << "MOVE LEFT" << endl;
-			tetris.moveLeft();
-			tetris.refresh();
-			break;
-		case 77:
-		case '6':
-			//cout << "MOVE RIGHT" << endl;
-			tetris.moveRight();
-			tetris.refresh();
-			break;
-		case 80:
-		case '2':
-			//cout << "SOFT DROP" << endl;
-			tetris.moveDown();
-			tetris.refresh();
-			break;
-		case ' ':
-		case '8':
-			//cout << "HARD DROP" << endl;
-			tetris.moveUp();
-			tetris.refresh();
-			break;
-		case 'C':
-		case 'c':
-		case '0':
-			//cout << "HOLD" << endl;
-			break;
-		case 27:
-		case 59:
-			//cout << "PAUSE" << endl;
-			break;
-		case 'Q':
-		case 'q':
-			quit = true;
-			break;
-		}
+		tetris.step();
 	}
 
     return 0;
@@ -153,22 +74,6 @@ void initConsole(int width, int height)
 	DWORD prev_mode;
 	GetConsoleMode(input, &prev_mode);
 	SetConsoleMode(input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
-}
-
-DWORD WINAPI readInput(LPVOID lpParam)
-{
-	queue<int>* inputBuffer = (queue<int>*)lpParam;
-	
-	TCHAR k;
-	while (true)
-	{
-		k = _getch();
-		readInputMutex.lock();
-		inputBuffer->push(k);
-		readInputMutex.unlock();
-	}
-
-	return 0;
 }
 
 void afficherTitre(string sousTitre)

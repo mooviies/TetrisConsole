@@ -25,11 +25,22 @@ void Tetrimino::setPosition(Vector2i position)
 		_currentPosition = position;
 }
 
-void Tetrimino::move(Vector2i distance)
+bool Tetrimino::move(Vector2i distance)
 {
 	Vector2i newPosition = _currentPosition + distance;
 	if (checkPositionValidity(newPosition, _currentRotation))
+	{
 		_currentPosition = newPosition;
+		return true;
+	}
+	
+	return false;
+}
+
+bool Tetrimino::simulateMove(Vector2i distance)
+{
+	Vector2i newPosition = _currentPosition + distance;
+	return checkPositionValidity(newPosition, _currentRotation);
 }
 
 void Tetrimino::rotate(DIRECTION direction)
@@ -64,6 +75,20 @@ void Tetrimino::rotate(DIRECTION direction)
 			break;
 		}
 	}
+}
+
+void Tetrimino::lock()
+{
+	Facing& facing = _facings[_currentRotation];
+	int minoCount = facing.getMinoCount();
+
+	for (int i = 0; i < minoCount; i++)
+	{
+		Vector2i minoPos = _currentPosition + facing.getMino(i);
+		_matrix[minoPos.row][minoPos.column] = getColor();
+	}
+
+	_currentRotation = NORTH;
 }
 
 bool Tetrimino::isMino(int row, int column) const

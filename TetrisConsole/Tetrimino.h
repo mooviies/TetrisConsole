@@ -15,10 +15,16 @@ public:
 
 	void printPreview(int line);
 	void setPosition(Vector2i position);
-	void move(Vector2i distance);
+	bool move(Vector2i distance);
+	bool simulateMove(Vector2i distance);
 	void rotate(DIRECTION direction);
+	void lock();
+
 	bool isMino(int row, int column) const;
+	Vector2i const & getPosition() const { return _currentPosition; }
+
 	virtual int getColor() const = 0;
+	virtual Vector2i getStartingPosition() const { return Vector2i(19, 4); }
 
 protected:
 	Tetrimino(int** matrix, string previewLine1, string previewLine2);
