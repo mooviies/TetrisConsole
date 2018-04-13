@@ -117,13 +117,13 @@ void Tetris::refresh()
 
 void Tetris::step()
 {
+	(*this.*_stepState)();
+
 	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
 	{
 		_stepState = &Tetris::stepPause;
 		_timer.resetTimer(PAUSE);
 	}
-
-	(*this.*_stepState)();
 
 	if (!_didRotate)
 	{
@@ -295,6 +295,7 @@ void Tetris::stepGameOver()
 		rlutil::locate(29, 18);
 		cout << "º                      º";
 
+		SoundEngine::stopMusic();
 		if (_score > _highscore)
 		{
 			rlutil::locate(29, 19);
@@ -304,10 +305,10 @@ void Tetris::stepGameOver()
 			rlutil::locate(29, 21);
 			cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
 
+			_highscore = _score;
 			ofstream highscoreFile(SCORE_FILE);
 			highscoreFile << _highscore;
 			highscoreFile.close();
-			_highscore = _score;
 		}
 		else
 		{
@@ -575,7 +576,7 @@ void Tetris::reset()
 
 	_timer.startTimer(PAUSE);
 
-	SoundEngine::playMusic("A");
+ 	SoundEngine::playMusic("A");
 }
 
 void Tetris::lock()
@@ -607,7 +608,7 @@ void Tetris::lock()
 	_timer.stopTimer(LOCK_DOWN);
           	_currentTetrimino = NULL;
 
-	int nbLine = 0;
+	int linesCleared = 0;
 	for (int i = MATRIX_END; i >= MATRIX_START; i--)
 	{
 		bool fullLine = true;
@@ -622,53 +623,69 @@ void Tetris::lock()
 
 		if (fullLine)
 		{
-			nbLine++;
+			linesCleared++;
 			_matrix.erase(_matrix.begin() + i);
 		}
 	}
 
-	for(int i = 0; i < nbLine; i++)
+	for(int i = 0; i < linesCleared; i++)
 		_matrix.insert(_matrix.begin(), vector<int>(TETRIS_WIDTH));
 
-	_lines += nbLine;
-	_goal += nbLine;
+	int awardedLines = linesCleared;
 
 	if (_lastMoveIsTSpin)
 	{
-		int value = 0;
-		switch (nbLine)
+		if (linesCleared >= 1)
 		{
-		case 1:
-			value = 400;
-			break;
-		case 2:
-			value = 800;
-			break;
-		case 3:
-			value = 1200;
-			break;
-		}
+			int value = 0;
+			switch (linesCleared)
+			{
+			case 1:
+				value = 400;
+				awardedLines = 8;
+				break;
+			case 2:
+				value = 800;
+				awardedLines = 12;
+				break;
+			case 3:
+				value = 1200;
+				awardedLines = 16;
+				break;
+			}
 
-		if (_backToBackBonus)
-			value += value / 2;
-
-		_score += value * _level;
-	}
-	else if (_lastMoveIsMiniTSpin)
-	{
-		if (nbLine == 1)
-		{
-			int value = 100;
 			if (_backToBackBonus)
+			{
 				value += value / 2;
+				awardedLines += 0.5 * linesCleared;
+			}
 
 			_score += value * _level;
 		}
+		else
+			awardedLines = 4;
+	}
+	else if (_lastMoveIsMiniTSpin)
+	{
+		if (linesCleared == 1)
+		{
+			int value = 100;
+			awardedLines = 2;
+			if (_backToBackBonus)
+			{
+				value += value / 2;
+				awardedLines += 0.5 * linesCleared;
+			}
+
+			_score += value * _level;
+		}
+		else
+			awardedLines = 1;
 	}
 	else
 	{
 		int value = 0;
-		switch (nbLine)
+		switch (linesCleared)
 		{
 		case 1:
 			value = 100;
@@ -676,16 +693,22 @@ void Tetris::lock()
 			break;
 		case 2:
 			value = 300;
+			awardedLines = 3;
 			_backToBackBonus = false;
 			break;
 		case 3:
 			value = 500;
+			awardedLines = 5;
 			_backToBackBonus = false;
 			break;
 		case 4:
 			value = 800;
+			awardedLines = 8;
 			if (_backToBackBonus)
+			{
 				value += value / 2;
+				awardedLines += 0.5 * linesCleared;
+			}
 
 			_backToBackBonus = true;
 			break;
@@ -696,6 +719,9 @@ void Tetris::lock()
 
 	_lastMoveIsTSpin = false;
 	_lastMoveIsMiniTSpin = false;
+
+	_lines += awardedLines;
+	_goal += awardedLines;
 
 	if (_goal >= _level * 5)
 	{
@@ -724,8 +750,6 @@ void Tetris::shuffle()
 
 void Tetris::popTetrimino()
 {
-	_currentTetrimino = _tspinTest; //TODO REMOVE
-	return; //TODO REMOVE
 	_currentTetrimino = _bag[_bagIndex++];
 	if (_bagIndex >= _bag.size())
 	{

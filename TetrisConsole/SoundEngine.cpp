@@ -82,6 +82,16 @@ void SoundEngine::playSound(string name)
 	checkFMODError(result);
 }
 
+void SoundEngine::stopMusic()
+{
+	if (_channelPlaying != NULL)
+	{
+		_channelPlaying->setPaused(true);
+		_channelPlaying = NULL;
+		_channels[_musicPlaying] = NULL;
+	}
+}
+
 void SoundEngine::pauseMusic()
 {
 	if (_channelPlaying != NULL)
