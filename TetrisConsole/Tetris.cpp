@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 
 #include "Tetris.h"
 #include "OTetrimino.h"
@@ -14,31 +15,25 @@
 #include "ZTetrimino.h"
 #include "Random.h"
 #include "Input.h"
+#include "Utility.h"
 
 #define FALL "fall"
 #define AUTOREPEAT_LEFT "autorepeatleft"
 #define AUTOREPEAT_RIGHT "autorepeatright"
 #define LOCK_DOWN "lockdown"
+#define PAUSE "pause"
+
+#define SCORE_FILE "score.bin"
 
 #define AUTOREPEAT_DELAY 0.3
 #define AUTOREPEAT_SPEED 0.05
 #define LOCK_DOWN_DELAY 0.5
 #define LOCK_DOWN_MOVE 15
+#define PAUSE_DELAY 0.3
 
 Tetris::Tetris()
 	: _timer(Timer::instance())
 {
-	_exit = false;
-	_level = 1;
-	_lines = 0;
-	_goal = 0;
-	_score = 0;
-
-	for (int i = 0; i < TETRIS_HEIGHT; i++)
-	{
-		_matrix.push_back(vector<int>(TETRIS_WIDTH));
-	}
-
 	double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
 	double speedFast[] = { 0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014, 0.0009, 0.00055, 0.00035 };
 	_speedNormal = new double[16];
@@ -58,13 +53,28 @@ Tetris::Tetris()
 	_bag.push_back(new STetrimino(_matrix));
 	_bag.push_back(new ZTetrimino(_matrix));
 
-	_currentTetrimino = NULL;
-	_bagIndex = 0;
-	shuffle();
-	_stepState = &Tetris::stepIdle;
-	_didRotate = false;
-	_nbMoveAfterLockDown = 0;
-	_lowestLine = 0;
+	for (int i = 0; i < TETRIS_HEIGHT; i++)
+	{
+		_matrix.push_back(vector<int>(TETRIS_WIDTH));
+	}
+
+	ifstream highscoreFile(SCORE_FILE);
+
+	if (highscoreFile.is_open())
+	{
+		highscoreFile >> _highscore;
+		highscoreFile.close();
+	}
+	else
+	{
+		ofstream highscoreFile(SCORE_FILE);
+		_highscore = 0;
+		highscoreFile << _highscore;
+		highscoreFile.close();
+	}
+
+	Utility::afficherTitre("A classic in console!");
+	reset();
 }
 
 Tetris::~Tetris()
@@ -75,7 +85,8 @@ Tetris::~Tetris()
 
 void Tetris::display()
 {
-	rlutil::locate(0, 0);
+	rlutil::locate(1, 6);
+	
 	cout << "    ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»       ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»       ÉÍÍÍÍÍÍÍÍÍÍÍÍ»" << endl;
 	cout << "    º     Score      º       º                    º       º    Next    º" << endl;
 	cout << "    ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹       º                    º       ÌÍÍÍÍÍÍÍÍÍÍÍÍ¹" << endl;
@@ -84,13 +95,13 @@ void Tetris::display()
 	cout << "    º Level º   01   º       º                    º       º            º" << endl;
 	cout << "    ÌÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍ¹       º                    º       º            º" << endl;
 	cout << "    º Lines º 000001 º       º                    º       ÈÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl;
-	cout << "    ÈÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍ¼       º                    º"					   << endl;
+	cout << "    ÈÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍ¼       º                    º                     " << endl;
 
 	for (int i = 28; i <= MATRIX_END; i++)
 	{
-		cout << "                             º                    º" << endl;
+		cout << "                             º                    º                     " << endl;
 	}
-	cout << "                             ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl << endl;
+	cout << "                             ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼                     " << endl << endl;
 }
 
 void Tetris::refresh()
@@ -102,8 +113,11 @@ void Tetris::refresh()
 
 void Tetris::step()
 {
-	if (Input::pause())
-		_exit = true;
+	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
+	{
+		_stepState = &Tetris::stepPause;
+		_pause = true;
+	}
 
 	(*this.*_stepState)();
 
@@ -123,6 +137,9 @@ void Tetris::step()
 
 void Tetris::fall()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	int speedIndex = _level;
 	if (speedIndex > 15)
 		speedIndex = 15;
@@ -164,9 +181,15 @@ void Tetris::stepIdle()
 {
 	if (_currentTetrimino == NULL)
 	{
-		popTetrimino();
-		_currentTetrimino->setPosition(_currentTetrimino->getStartingPosition());
+       		popTetrimino();
+		if (!_currentTetrimino->setPosition(_currentTetrimino->getStartingPosition()))
+		{
+			_stepState = &Tetris::stepGameOver;
+			_gameOver = true;
+			return;
+		}
 		_timer.startTimer(FALL);
+		refresh();
 	}
 	
 	fall();
@@ -182,6 +205,12 @@ void Tetris::stepIdle()
 
 void Tetris::stepMoveLeft()
 {
+	if (_currentTetrimino == NULL)
+	{
+		_stepState = &Tetris::stepIdle;
+		return;
+	}
+
 	fall();
 
 	if (!Input::left())
@@ -199,6 +228,12 @@ void Tetris::stepMoveLeft()
 
 void Tetris::stepMoveRight()
 {
+	if (_currentTetrimino == NULL)
+	{
+		_stepState = &Tetris::stepIdle;
+		return;
+	}
+
 	fall();
 
 	if (!Input::right())
@@ -216,25 +251,114 @@ void Tetris::stepMoveRight()
 
 void Tetris::stepHardDrop()
 {
+	if (_currentTetrimino == NULL)
+	{
+		_stepState = &Tetris::stepIdle;
+		return;
+	}
+
 	while (moveDown());
 	lock();
-	_stepState = &Tetris::stepIdle;
+}
+
+void Tetris::stepGameOver()
+{
+	if (_gameOver)
+	{
+		rlutil::setColor(rlutil::WHITE);
+		rlutil::locate(29, 15);
+		cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
+		rlutil::locate(29, 16);
+		cout << "º                      º";
+		rlutil::locate(29, 17);
+		cout << "º      GAME  OVER      º";
+		rlutil::locate(29, 18);
+		cout << "º                      º";
+
+		if (_score > _highscore)
+		{
+			rlutil::locate(29, 19);
+			cout << "º    New High Score!   º";
+			rlutil::locate(29, 20);
+			cout << "º                      º";
+			rlutil::locate(29, 21);
+			cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+
+			ofstream highscoreFile(SCORE_FILE);
+			highscoreFile << _highscore;
+			highscoreFile.close();
+			_highscore = _score;
+		}
+		else
+		{
+			rlutil::locate(29, 19);
+			cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+		}
+
+		_gameOver = false;
+	}
+	
+	if (Input::select())
+	{
+		reset();
+		return;
+	}
+
+	if (Input::pause())
+		_exit = true;
+}
+
+void Tetris::stepPause()
+{
+	if (_pause)
+	{
+		rlutil::setColor(rlutil::WHITE);
+		rlutil::locate(29, 15);
+		cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
+		rlutil::locate(29, 16);
+		cout << "º                      º";
+		rlutil::locate(29, 17);
+		cout << "º         PAUSE        º";
+		rlutil::locate(29, 18);
+		cout << "º                      º";
+		rlutil::locate(29, 19);
+		cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+		_pause = false;
+		_timer.resetTimer(PAUSE);
+	}
+	
+	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
+	{
+		display();
+		refresh();
+		_stepState = &Tetris::stepIdle;
+		_timer.resetTimer(PAUSE);
+	}
 }
 
 void Tetris::moveLeft()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	_currentTetrimino->move(Vector2i(0, -1));
 	refresh();
 }
 
 void Tetris::moveRight()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	_currentTetrimino->move(Vector2i(0, 1));
 	refresh();
 }
 
 bool Tetris::moveDown()
 {
+	if (_currentTetrimino == NULL)
+		return false;
+
 	bool result = _currentTetrimino->move(Vector2i(1, 0));
 	refresh();
 	return result;
@@ -242,6 +366,9 @@ bool Tetris::moveDown()
 
 void Tetris::rotateClockwise()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	_currentTetrimino->rotate(RIGHT);
 	_didRotate = true;
 	refresh();
@@ -249,6 +376,9 @@ void Tetris::rotateClockwise()
 
 void Tetris::rotateCounterClockwise()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	_currentTetrimino->rotate(LEFT);
 	_didRotate = true;
 	refresh();
@@ -352,14 +482,60 @@ string Tetris::valueToString(int value, int length)
 	return result;
 }
 
+void Tetris::reset()
+{
+	_level = 1;
+	_lines = 0;
+	_goal = 0;
+	_score = 0;
+	_pause = false;
+	_gameOver = false;
+
+	for (int i = 0; i < TETRIS_HEIGHT; i++)
+	{
+		for (int j = 0; j < TETRIS_WIDTH; j++)
+		{
+			_matrix[i][j] = 0;
+		}
+	}
+
+	_currentTetrimino = NULL;
+	_bagIndex = 0;
+	shuffle();
+
+	_stepState = &Tetris::stepIdle;
+	_didRotate = false;
+	_nbMoveAfterLockDown = 0;
+	_lowestLine = 0;
+
+	_timer.stopTimer(LOCK_DOWN);
+	_timer.stopTimer(FALL);
+	_timer.stopTimer(AUTOREPEAT_LEFT);
+	_timer.stopTimer(AUTOREPEAT_RIGHT);
+
+	display();
+	refresh();
+
+	_timer.startTimer(PAUSE);
+}
+
 void Tetris::lock()
 {
+	if (_currentTetrimino == NULL)
+		return;
+
 	moveDown();
-	_currentTetrimino->lock();
+	if (!_currentTetrimino->lock())
+	{
+ 		_stepState = &Tetris::stepGameOver;
+		_gameOver = true;
+		return;
+	}
+	
 	_nbMoveAfterLockDown = 0;
 	_lowestLine = 0;
 	_timer.stopTimer(LOCK_DOWN);
-	_currentTetrimino = NULL;
+          	_currentTetrimino = NULL;
 
 	int nbLine = 0;
 	for (int i = MATRIX_END; i >= MATRIX_START; i--)
@@ -382,7 +558,7 @@ void Tetris::lock()
 	}
 
 	for(int i = 0; i < nbLine; i++)
-		_matrix.insert(_matrix.begin(), vector<int>());
+		_matrix.insert(_matrix.begin(), vector<int>(TETRIS_WIDTH));
 
 	_lines += nbLine;
 	_goal += nbLine;
@@ -408,6 +584,9 @@ void Tetris::lock()
 		_level++;
 		_goal = 0;
 	}
+
+	_stepState = &Tetris::stepIdle;
+	refresh();
 }
 
 void Tetris::shuffle()

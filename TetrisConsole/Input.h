@@ -11,6 +11,7 @@ public:
 	static bool rotateCounterClockwise();
 	static bool hold();
 	static bool pause();
+	static bool select();
 
 private:
 	Input();

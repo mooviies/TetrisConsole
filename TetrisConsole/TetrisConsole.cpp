@@ -19,7 +19,6 @@
 using namespace std;
 
 void initConsole(int width, int height);
-void afficherTitre(string sousTitre);
 void checkFMODError(FMOD_RESULT result);
 
 int main()
@@ -28,9 +27,7 @@ int main()
 	
 	Random::init();
 
-	Tetris tetris = Tetris();
-	afficherTitre("Un classic en console!");
-	tetris.display();
+	Tetris tetris;
 
 	//// FMOD
 	FMOD_RESULT result;
@@ -43,7 +40,7 @@ int main()
 	checkFMODError(result);
 
 	FMOD::Sound *sound, *sound_to_play;
-	result = system->createStream("../media/tetris.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &sound);
+	result = system->createStream("media/tetris.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &sound);
 	checkFMODError(result);
 
 	int numsubsounds;
@@ -62,6 +59,7 @@ int main()
 
 	FMOD::Channel *channel = 0;
 	result = system->playSound(sound_to_play, 0, false, &channel);
+	channel->setVolume(0.1);
 	checkFMODError(result);
 
 	////
@@ -110,43 +108,6 @@ void initConsole(int width, int height)
 	DWORD prev_mode;
 	GetConsoleMode(input, &prev_mode);
 	SetConsoleMode(input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
-}
-
-void afficherTitre(string sousTitre)
-{
-	// Initialisation d'une variable qui vaut la longueur du sous-titre
-	// Cette valeur est réutilisé plusieurs fois on évite donc de toujours
-	// repassé par la fonction length() qui est plus lente que la simple
-	// lecture d'un int
-	int longueur = sousTitre.length();
-
-	// Affichage du titre principale
-	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»º"
-		 << "                                Tetris Console"
-		 << "                                ºÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
-		 << "º";
-
-	// On affiche des espace avant le sous-titre et de façon à ce qu'il soit centré
-	for (int i = 0; i < 39 - (longueur / 2); i++)
-	{
-		cout << ' ';
-	}
-
-	// On affiche le sous-titre
-	cout << sousTitre;
-
-	// On vérifie si le nombre de lettre du sous-titre est pair ou impaire pour évité un bug d'affichage
-	// Car s'il est impair alors le nombre d'espace avant et après le sous-titre sera différent
-	if (longueur % 2 != 0)
-		longueur++;
-
-	// On affiche des espaces après le sous-titre
-	for (int i = 0; i < 39 - (longueur / 2); i++)
-	{
-		cout << ' ';
-	}
-	// Puis on affiche la fermeture du cadre
-	cout << "ºÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl;
 }
 
 void checkFMODError(FMOD_RESULT result)

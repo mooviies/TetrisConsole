@@ -14,11 +14,11 @@ public:
 	virtual ~Tetrimino();
 
 	void printPreview(int line);
-	void setPosition(Vector2i position);
+	bool setPosition(Vector2i position);
 	bool move(Vector2i distance);
 	bool simulateMove(Vector2i distance);
 	void rotate(DIRECTION direction);
-	void lock();
+	bool lock();
 
 	bool isMino(int row, int column) const;
 	Vector2i const & getPosition() const { return _currentPosition; }

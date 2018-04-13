@@ -28,6 +28,7 @@ protected:
 	void printPreview();
 	void printScore();
 
+	void reset();
 	void lock();
 	void shuffle();
 	void popTetrimino();
@@ -39,6 +40,8 @@ protected:
 	void stepMoveLeft();
 	void stepMoveRight();
 	void stepHardDrop();
+	void stepGameOver();
+	void stepPause();
 
 	void moveLeft();
 	void moveRight();
@@ -55,6 +58,7 @@ private:
 	int _lines;
 	int _goal;
 	int _score;
+	int _highscore;
 	int _nbMoveAfterLockDown;
 	int _lowestLine;
 
@@ -67,6 +71,8 @@ private:
 
 	bool _exit;
 	bool _didRotate;
+	bool _pause;
+	bool _gameOver;
 
 	void(Tetris::*_stepState)();
 };
