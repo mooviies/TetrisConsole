@@ -53,6 +53,7 @@ Tetris::Tetris()
 	_bag.push_back(new JTetrimino(_matrix));
 	_bag.push_back(new STetrimino(_matrix));
 	_bag.push_back(new ZTetrimino(_matrix));
+	_tspinTest = _bag[2];
 
 	for (int i = 0; i < TETRIS_HEIGHT; i++)
 	{
@@ -82,6 +83,8 @@ Tetris::~Tetris()
 {
 	delete[] _speedNormal;
 	delete[] _speedFast;
+	for (int i = 0; i < _bag.size(); i++)
+		delete _bag[i];
 }
 
 void Tetris::display()
@@ -360,8 +363,12 @@ void Tetris::moveLeft()
 	if (_currentTetrimino == NULL)
 		return;
 
-	_currentTetrimino->move(Vector2i(0, -1));
-	refresh();
+	if (_currentTetrimino->move(Vector2i(0, -1)))
+	{
+		_lastMoveIsTSpin = false;
+		_lastMoveIsMiniTSpin = false;
+		refresh();
+	}
 }
 
 void Tetris::moveRight()
@@ -369,8 +376,12 @@ void Tetris::moveRight()
 	if (_currentTetrimino == NULL)
 		return;
 
-	_currentTetrimino->move(Vector2i(0, 1));
-	refresh();
+	if (_currentTetrimino->move(Vector2i(0, 1)))
+	{
+		_lastMoveIsTSpin = false;
+		_lastMoveIsMiniTSpin = false;
+		refresh();
+	}
 }
 
 bool Tetris::moveDown()
@@ -378,29 +389,53 @@ bool Tetris::moveDown()
 	if (_currentTetrimino == NULL)
 		return false;
 
-	bool result = _currentTetrimino->move(Vector2i(1, 0));
-	refresh();
-	return result;
+	if (_currentTetrimino->move(Vector2i(1, 0)))
+	{
+		_lastMoveIsTSpin = false;
+		_lastMoveIsMiniTSpin = false;
+		refresh();
+		return true;
+	}
+
+	return false;
 }
 
 void Tetris::rotateClockwise()
 {
-	if (_currentTetrimino == NULL)
-		return;
-
-	_currentTetrimino->rotate(RIGHT);
-	_didRotate = true;
-	refresh();
+	rotate(RIGHT);
 }
 
 void Tetris::rotateCounterClockwise()
 {
+	rotate(LEFT);
+}
+
+void Tetris::rotate(DIRECTION direction)
+{
 	if (_currentTetrimino == NULL)
 		return;
 
-	_currentTetrimino->rotate(LEFT);
-	_didRotate = true;
-	refresh();
+	if (_currentTetrimino->rotate(direction))
+	{
+		_didRotate = true;
+		_lastMoveIsTSpin = false;
+		_lastMoveIsMiniTSpin = false;
+		refresh();
+
+		if (_currentTetrimino->canTSpin())
+		{
+			if (_currentTetrimino->checkTSpin())
+			{
+				_score += 400 * _level;
+				_lastMoveIsTSpin = true;
+			}
+			else if (_currentTetrimino->checkMiniTSpin())
+			{
+				_score += 100 * _level;
+				_lastMoveIsMiniTSpin = true;
+			}
+		}
+	}
 }
 
 void Tetris::checkAutorepeat(bool input, string timer, void(Tetris::*move)(), void(Tetris::*state)())
@@ -509,6 +544,9 @@ void Tetris::reset()
 	_score = 0;
 	_gameOver = false;
 	_ignoreHardDrop = false;
+	_lastMoveIsTSpin = false;
+	_lastMoveIsMiniTSpin = false;
+	_backToBackBonus = false;
 
 	for (int i = 0; i < TETRIS_HEIGHT; i++)
 	{
@@ -595,23 +633,71 @@ void Tetris::lock()
 	_lines += nbLine;
 	_goal += nbLine;
 
-	switch (nbLine)
+	if (_lastMoveIsTSpin)
 	{
-	case 1:
-		_score += 100 * _level;
-		break;
-	case 2:
-		_score += 300 * _level;
-		break;
-	case 3:
-		_score += 500 * _level;
-		break;
-	case 4:
-		_score += 800 * _level;
-		break;
+		int value = 0;
+		switch (nbLine)
+		{
+		case 1:
+			value = 400;
+			break;
+		case 2:
+			value = 800;
+			break;
+		case 3:
+			value = 1200;
+			break;
+		}
+
+		if (_backToBackBonus)
+			value += value / 2;
+
+		_score += value * _level;
+	}
+	else if (_lastMoveIsMiniTSpin)
+	{
+		if (nbLine == 1)
+		{
+			int value = 100;
+			if (_backToBackBonus)
+				value += value / 2;
+
+			_score += value * _level;
+		}
+	}
+	else
+	{
+		int value = 0;
+		switch (nbLine)
+		{
+		case 1:
+			value = 100;
+			_backToBackBonus = false;
+			break;
+		case 2:
+			value = 300;
+			_backToBackBonus = false;
+			break;
+		case 3:
+			value = 500;
+			_backToBackBonus = false;
+			break;
+		case 4:
+			value = 800;
+			if (_backToBackBonus)
+				value += value / 2;
+
+			_backToBackBonus = true;
+			break;
+		}
+
+		_score += value * _level;
 	}
 
-	if (_goal >= 10/*_level * 5*/)
+	_lastMoveIsTSpin = false;
+	_lastMoveIsMiniTSpin = false;
+
+	if (_goal >= _level * 5)
 	{
 		_level++;
 		_goal = 0;
@@ -638,6 +724,8 @@ void Tetris::shuffle()
 
 void Tetris::popTetrimino()
 {
+	_currentTetrimino = _tspinTest; //TODO REMOVE
+	return; //TODO REMOVE
 	_currentTetrimino = _bag[_bagIndex++];
 	if (_bagIndex >= _bag.size())
 	{

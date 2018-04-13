@@ -17,7 +17,7 @@ public:
 	bool setPosition(Vector2i position);
 	bool move(Vector2i distance);
 	bool simulateMove(Vector2i distance);
-	void rotate(DIRECTION direction);
+	bool rotate(DIRECTION direction);
 	bool lock();
 
 	bool isMino(int row, int column) const;
@@ -25,22 +25,28 @@ public:
 
 	virtual int getColor() const = 0;
 	virtual Vector2i getStartingPosition() const { return Vector2i(19, 4); }
-	virtual bool canTSpin() const { return false;  }
+	virtual bool canTSpin() const { return false; }
+	virtual bool checkTSpin() { return false;  }
+	virtual bool checkMiniTSpin() { return false; }
 
 protected:
 	Tetrimino(vector<vector<int>>& matrix, string previewLine1, string previewLine2);
 
+	virtual void onLock() {}
 	void setFacing(ROTATION direction, Facing facing);
 
 	int getMino(int row, int column) const;
 	int getMino(const Vector2i& position) const;
 	bool checkPositionValidity(Vector2i position, ROTATION rotation);
 
+	int getLastRotationPoint() const { return _lastRotationPoint; }
+	ROTATION getCurrentRotation() const { return _currentRotation; }
+
 private:
 	vector<vector<int>>& _matrix;
 
 	Facing _facings[4];
-	RotationPoint _rotationPoints[5];
+	int _lastRotationPoint;
 
 	string _previewLine1;
 	string _previewLine2;

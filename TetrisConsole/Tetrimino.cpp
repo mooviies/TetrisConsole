@@ -8,6 +8,7 @@ Tetrimino::Tetrimino(vector<vector<int>>& matrix, string previewLine1, string pr
 	_currentRotation = NORTH;
 	_previewLine1 = previewLine1;
 	_previewLine2 = previewLine2;
+	_lastRotationPoint = -1;
 }
 
 Tetrimino::~Tetrimino()
@@ -36,6 +37,7 @@ bool Tetrimino::move(Vector2i distance)
 	if (checkPositionValidity(newPosition, _currentRotation))
 	{
 		_currentPosition = newPosition;
+		_lastRotationPoint = -1;
 		return true;
 	}
 	
@@ -48,7 +50,7 @@ bool Tetrimino::simulateMove(Vector2i distance)
 	return checkPositionValidity(newPosition, _currentRotation);
 }
 
-void Tetrimino::rotate(DIRECTION direction)
+bool Tetrimino::rotate(DIRECTION direction)
 {
 	ROTATION newRotation = _currentRotation;
 	if (direction == LEFT)
@@ -77,9 +79,12 @@ void Tetrimino::rotate(DIRECTION direction)
 		{
 			_currentPosition = newPosition;
 			_currentRotation = newRotation;
-			break;
+			_lastRotationPoint = i + 1;
+			return true;
 		}
 	}
+
+	return false;
 }
 
 bool Tetrimino::lock()
@@ -97,6 +102,9 @@ bool Tetrimino::lock()
 	}
 
 	_currentRotation = NORTH;
+	_lastRotationPoint = -1;
+
+	onLock();
 	return !gameover;
 }
 

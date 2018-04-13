@@ -46,6 +46,7 @@ protected:
 	void moveLeft();
 	void moveRight();
 	bool moveDown();
+	void rotate(DIRECTION direction);
 	void rotateClockwise();
 	void rotateCounterClockwise();
 	void checkAutorepeat(bool input, string timer, void(Tetris::*move)(), void(Tetris::*state)());
@@ -73,7 +74,12 @@ private:
 	bool _didRotate;
 	bool _gameOver;
 	bool _ignoreHardDrop;
+	bool _lastMoveIsTSpin;
+	bool _lastMoveIsMiniTSpin;
+	bool _backToBackBonus;
 
 	void(Tetris::*_stepState)();
+
+	Tetrimino* _tspinTest;
 };
 
