@@ -31,7 +31,10 @@ void Timer::stopTimer(string id)
 double Timer::getSeconds(string id)
 {
 	if (_timers.count(id) > 0)
-		return (clock() - _timers[id]) / (double) CLOCKS_PER_SEC;
+	{
+		double elapsed = (double)(clock() - _timers[id]);
+		return elapsed / (double)CLOCKS_PER_SEC;
+	}
 
 	return 0;
 }

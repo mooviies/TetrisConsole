@@ -16,6 +16,7 @@
 #include "Random.h"
 #include "Input.h"
 #include "Utility.h"
+#include "SoundEngine.h"
 
 #define FALL "fall"
 #define AUTOREPEAT_LEFT "autorepeatleft"
@@ -25,8 +26,8 @@
 
 #define SCORE_FILE "score.bin"
 
-#define AUTOREPEAT_DELAY 0.3
-#define AUTOREPEAT_SPEED 0.05
+#define AUTOREPEAT_DELAY 0.25
+#define AUTOREPEAT_SPEED 0.01
 #define LOCK_DOWN_DELAY 0.5
 #define LOCK_DOWN_MOVE 15
 #define PAUSE_DELAY 0.3
@@ -116,7 +117,7 @@ void Tetris::step()
 	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
 	{
 		_stepState = &Tetris::stepPause;
-		_pause = true;
+		_timer.resetTimer(PAUSE);
 	}
 
 	(*this.*_stepState)();
@@ -145,20 +146,28 @@ void Tetris::fall()
 		speedIndex = 15;
 
 	double* speedArray = _speedNormal;
-	if (Input::softDrop())
+	bool isSoftDropping = false;
+	isSoftDropping = Input::softDrop();
+	if (isSoftDropping)
 		speedArray = _speedFast;
 
 	if (_timer.getSeconds(FALL) >= speedArray[speedIndex])
 	{
 		_timer.resetTimer(FALL);
-		if (moveDown() && _timer.exist(LOCK_DOWN))
+		if (moveDown())
 		{
-			int currentLine = _currentTetrimino->getPosition().column;
-			if (currentLine > _lowestLine)
+			if (isSoftDropping)
+				_score++;
+
+			if (_timer.exist(LOCK_DOWN))
 			{
-				_lowestLine = currentLine;
-				_nbMoveAfterLockDown = 0;
-				_timer.resetTimer(LOCK_DOWN);
+				int currentLine = _currentTetrimino->getPosition().column;
+				if (currentLine > _lowestLine)
+				{
+					_lowestLine = currentLine;
+					_nbMoveAfterLockDown = 0;
+					_timer.resetTimer(LOCK_DOWN);
+				}
 			}
 		}
 	}
@@ -175,6 +184,16 @@ void Tetris::fall()
 
 	if (_nbMoveAfterLockDown >= LOCK_DOWN_MOVE)
 		lock();
+
+	if (Input::hardDrop() && !_ignoreHardDrop)
+	{
+		_stepState = &Tetris::stepHardDrop;
+		_ignoreHardDrop = true;
+	}
+	else if (!Input::hardDrop() && _ignoreHardDrop)
+	{
+		_ignoreHardDrop = false;
+	}
 }
 
 void Tetris::stepIdle()
@@ -196,11 +215,6 @@ void Tetris::stepIdle()
 
 	checkAutorepeat(Input::left(), AUTOREPEAT_LEFT, &Tetris::moveLeft, &Tetris::stepMoveLeft);
 	checkAutorepeat(Input::right(), AUTOREPEAT_RIGHT, &Tetris::moveRight, &Tetris::stepMoveRight);
-
-	if (Input::hardDrop())
-	{
-		_stepState = &Tetris::stepHardDrop;
-	}
 }
 
 void Tetris::stepMoveLeft()
@@ -257,7 +271,10 @@ void Tetris::stepHardDrop()
 		return;
 	}
 
-	while (moveDown());
+	while(moveDown())
+	{
+		_score += 2;
+	}
 	lock();
 }
 
@@ -310,29 +327,31 @@ void Tetris::stepGameOver()
 
 void Tetris::stepPause()
 {
-	if (_pause)
-	{
-		rlutil::setColor(rlutil::WHITE);
-		rlutil::locate(29, 15);
-		cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
-		rlutil::locate(29, 16);
-		cout << "º                      º";
-		rlutil::locate(29, 17);
-		cout << "º         PAUSE        º";
-		rlutil::locate(29, 18);
-		cout << "º                      º";
-		rlutil::locate(29, 19);
-		cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
-		_pause = false;
-		_timer.resetTimer(PAUSE);
-	}
+	rlutil::setColor(rlutil::WHITE);
+	rlutil::locate(29, 15);
+	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
+	rlutil::locate(29, 16);
+	cout << "º                      º";
+	rlutil::locate(29, 17);
+	cout << "º         PAUSE        º";
+	rlutil::locate(29, 18);
+	cout << "º                      º";
+	rlutil::locate(29, 19);
+	cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+	SoundEngine::pauseMusic();
+
+	float t = _timer.getSeconds(PAUSE);
 	
-	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
+	if (_timer.getSeconds(PAUSE) >= PAUSE_DELAY)
 	{
-		display();
-		refresh();
-		_stepState = &Tetris::stepIdle;
-		_timer.resetTimer(PAUSE);
+		if (Input::pause())
+		{
+			display();
+			refresh();
+			_stepState = &Tetris::stepIdle;
+			_timer.resetTimer(PAUSE);
+			SoundEngine::unpauseMusic();
+		}
 	}
 }
 
@@ -488,8 +507,8 @@ void Tetris::reset()
 	_lines = 0;
 	_goal = 0;
 	_score = 0;
-	_pause = false;
 	_gameOver = false;
+	_ignoreHardDrop = false;
 
 	for (int i = 0; i < TETRIS_HEIGHT; i++)
 	{
@@ -517,6 +536,8 @@ void Tetris::reset()
 	refresh();
 
 	_timer.startTimer(PAUSE);
+
+	SoundEngine::playMusic("A");
 }
 
 void Tetris::lock()
@@ -524,13 +545,24 @@ void Tetris::lock()
 	if (_currentTetrimino == NULL)
 		return;
 
-	moveDown();
+	if (_currentTetrimino->simulateMove(Vector2i(1, 0)))
+	{
+		_timer.stopTimer(LOCK_DOWN);
+		_nbMoveAfterLockDown = 0;
+		int row = _currentTetrimino->getPosition().row;
+		if (row > _lowestLine)
+			_lowestLine = row;
+		return;
+	}
+
 	if (!_currentTetrimino->lock())
 	{
  		_stepState = &Tetris::stepGameOver;
 		_gameOver = true;
 		return;
 	}
+
+	SoundEngine::playSound("LOCK");
 	
 	_nbMoveAfterLockDown = 0;
 	_lowestLine = 0;

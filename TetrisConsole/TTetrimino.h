@@ -12,5 +12,6 @@ public:
 	TTetrimino(vector<vector<int>>& matrix);
 	virtual ~TTetrimino();
 	virtual int getColor() const { return rlutil::MAGENTA; }
+	virtual bool canTSpin() const { return true; }
 };
 

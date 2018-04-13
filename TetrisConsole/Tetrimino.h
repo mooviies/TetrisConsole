@@ -25,6 +25,7 @@ public:
 
 	virtual int getColor() const = 0;
 	virtual Vector2i getStartingPosition() const { return Vector2i(19, 4); }
+	virtual bool canTSpin() const { return false;  }
 
 protected:
 	Tetrimino(vector<vector<int>>& matrix, string previewLine1, string previewLine2);

@@ -71,8 +71,8 @@ private:
 
 	bool _exit;
 	bool _didRotate;
-	bool _pause;
 	bool _gameOver;
+	bool _ignoreHardDrop;
 
 	void(Tetris::*_stepState)();
 };
