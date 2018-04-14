@@ -154,7 +154,9 @@
     <ClCompile Include="ITetrimino.cpp" />
     <ClCompile Include="JTetrimino.cpp" />
     <ClCompile Include="LTetrimino.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="OTetrimino.cpp" />
+    <ClCompile Include="Overseer.cpp" />
     <ClCompile Include="Random.cpp" />
     <ClCompile Include="SoundEngine.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -180,7 +182,9 @@
     <ClInclude Include="ITetrimino.h" />
     <ClInclude Include="JTetrimino.h" />
     <ClInclude Include="LTetrimino.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="OTetrimino.h" />
+    <ClInclude Include="Overseer.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="rlutil.h" />
     <ClInclude Include="SoundEngine.h" />

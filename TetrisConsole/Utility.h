@@ -9,6 +9,7 @@ class Utility
 {
 public:
 	static void afficherTitre(string sousTitre);
+	static string valueToString(int value, int length);
 private:
 	Utility();
 	~Utility();

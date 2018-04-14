@@ -11,7 +11,6 @@ Utility::~Utility()
 {
 }
 
-
 void Utility::afficherTitre(string sousTitre)
 {
 	// Initialisation d'une variable qui vaut la longueur du sous-titre
@@ -47,4 +46,26 @@ void Utility::afficherTitre(string sousTitre)
 	}
 	// Puis on affiche la fermeture du cadre
 	cout << "บศออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผ" << endl;
+}
+
+string Utility::valueToString(int value, int length)
+{
+	string result;
+	int decimal = 1;
+	for (int i = 0; i < length; i++)
+	{
+		if (value < decimal)
+			result += "0";
+
+		decimal *= 10;
+	}
+
+	char buffer[10];
+	if (value > 0)
+	{
+		_itoa_s(value, buffer, 10, 10);
+		result += buffer;
+	}
+
+	return result;
 }

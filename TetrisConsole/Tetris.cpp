@@ -22,7 +22,6 @@
 #define AUTOREPEAT_LEFT "autorepeatleft"
 #define AUTOREPEAT_RIGHT "autorepeatright"
 #define LOCK_DOWN "lockdown"
-#define PAUSE "pause"
 
 #define SCORE_FILE "score.bin"
 
@@ -30,10 +29,9 @@
 #define AUTOREPEAT_SPEED 0.01
 #define LOCK_DOWN_DELAY 0.5
 #define LOCK_DOWN_MOVE 15
-#define PAUSE_DELAY 0.3
 
-Tetris::Tetris()
-	: _timer(Timer::instance())
+Tetris::Tetris(Menu& pauseMenu)
+	: _timer(Timer::instance()), _pauseMenu(pauseMenu)
 {
 	double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
 	double speedFast[] = { 0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014, 0.0009, 0.00055, 0.00035 };
@@ -75,7 +73,6 @@ Tetris::Tetris()
 		highscoreFile.close();
 	}
 
-	Utility::afficherTitre("A classic in console!");
 	reset();
 }
 
@@ -119,10 +116,13 @@ void Tetris::step()
 {
 	(*this.*_stepState)();
 
-	if (Input::pause() && (_timer.getSeconds(PAUSE) >= PAUSE_DELAY))
+	if (Input::pause())
 	{
-		_stepState = &Tetris::stepPause;
-		_timer.resetTimer(PAUSE);
+		SoundEngine::pauseMusic();
+		_pauseMenu.open();
+		display();
+		refresh();
+		SoundEngine::unpauseMusic();
 	}
 
 	if (!_didRotate)
@@ -329,36 +329,6 @@ void Tetris::stepGameOver()
 		_exit = true;
 }
 
-void Tetris::stepPause()
-{
-	rlutil::setColor(rlutil::WHITE);
-	rlutil::locate(29, 15);
-	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
-	rlutil::locate(29, 16);
-	cout << "º                      º";
-	rlutil::locate(29, 17);
-	cout << "º         PAUSE        º";
-	rlutil::locate(29, 18);
-	cout << "º                      º";
-	rlutil::locate(29, 19);
-	cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
-	SoundEngine::pauseMusic();
-
-	float t = _timer.getSeconds(PAUSE);
-	
-	if (_timer.getSeconds(PAUSE) >= PAUSE_DELAY)
-	{
-		if (Input::pause())
-		{
-			display();
-			refresh();
-			_stepState = &Tetris::stepIdle;
-			_timer.resetTimer(PAUSE);
-			SoundEngine::unpauseMusic();
-		}
-	}
-}
-
 void Tetris::moveLeft()
 {
 	if (_currentTetrimino == NULL)
@@ -482,11 +452,11 @@ void Tetris::printPreview()
 void Tetris::printScore()
 {
 	rlutil::locate(9, 9);
-	cout << valueToString(_score, 10);
+	cout << Utility::valueToString(_score, 10);
 	rlutil::locate(17, 11);
-	cout << valueToString(_level, 2);
+	cout << Utility::valueToString(_level, 2);
 	rlutil::locate(15, 13);
-	cout << valueToString(_lines, 6);
+	cout << Utility::valueToString(_lines, 6);
 }
 
 void Tetris::printLine(int line)
@@ -513,28 +483,6 @@ void Tetris::printLine(int line)
 		else
 			cout << "  ";
 	}
-}
-
-string Tetris::valueToString(int value, int length)
-{
-	string result;
-	int decimal = 1;
-	for (int i = 0; i < length; i++)
-	{
-		if (value < decimal)
-			result += "0";
-
-		decimal *= 10;
-	}
-
-	char buffer[10];
-	if (value > 0)
-	{
-		_itoa_s(value, buffer, 10, 10);
-		result += buffer;
-	}
-
-	return result;
 }
 
 void Tetris::reset()
@@ -573,8 +521,6 @@ void Tetris::reset()
 
 	display();
 	refresh();
-
-	_timer.startTimer(PAUSE);
 
  	SoundEngine::playMusic("A");
 }

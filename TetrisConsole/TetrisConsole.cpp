@@ -14,10 +14,17 @@
 #include "Random.h"
 #include "Input.h"
 #include "SoundEngine.h"
+#include "Utility.h"
+#include "Menu.h"
+#include "Overseer.h"
 
 using namespace std;
 
 void initConsole(int width, int height);
+void start();
+void quitGame();
+void incrementLevel();
+void decrementLevel();
 
 int main()
 {
@@ -26,9 +33,50 @@ int main()
 	Random::init();
 	SoundEngine::init();
 
-	Tetris tetris;
+	Utility::afficherTitre("A classic in console!");
+
+	vector<string> levels;
+	for (int i = 1; i <= 15; i++)
+		levels.push_back(Utility::valueToString(i, 2));
+
+	vector<string> modes;
+	modes.push_back("Extended");
+	modes.push_back("Infinite");
+	modes.push_back("Classic");
+
+	Menu main("Main Menu");
+	Menu options("Options");
+	Menu newGame("New Game");
+	Menu pause("Pause");
+	Menu help("Help");
+	Menu quit("Are you sure?");
+	Menu gameover("Game Over");
 	
-	bool quit = false;
+	main.addOption("New Game", &newGame);
+	main.addOption("Options", &options);
+	main.addOption("Help", &help);
+	main.addOption("Exit", &quit);
+
+	newGame.addOption("Start", &start);
+	newGame.addOptionWithValues("Level", levels);
+	newGame.addOptionWithValues("Mode", modes);
+
+	help.addOptionClose("Back");
+
+	pause.addOptionClose("Resume");
+	pause.addOption("Options", &options);
+	pause.addOption("Exit", &quit);
+
+	options.addOptionClose("Back");
+
+	quit.addOption("Yes", &quitGame);
+	quit.addOptionClose("No");
+
+	main.open();
+
+	Tetris tetris(pause);
+	Overseer::setTetris(&tetris);
+	
 	while (!tetris.doExit())
 	{
 		tetris.step();
@@ -56,7 +104,7 @@ void initConsole(int width, int height)
 	GetConsoleCursorInfo(out, &cursorInfo);
 	cursorInfo.bVisible = false;
 	SetConsoleCursorInfo(out, &cursorInfo);
-
+	
 	CONSOLE_SCREEN_BUFFER_INFO sbInfo;
 	COORD newSBSize;
 	GetConsoleScreenBufferInfo(out, &sbInfo);
@@ -70,4 +118,24 @@ void initConsole(int width, int height)
 	DWORD prev_mode;
 	GetConsoleMode(input, &prev_mode);
 	SetConsoleMode(input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
+}
+
+void start()
+{
+
+}
+
+void quitGame()
+{
+	exit(0);
+}
+
+void incrementLevel()
+{
+
+}
+
+void decrementLevel()
+{
+
 }

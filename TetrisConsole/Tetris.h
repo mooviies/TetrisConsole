@@ -6,13 +6,14 @@
 #include "Tetrimino.h"
 #include "Vector2i.h"
 #include "Timer.h"
+#include "Menu.h"
 
 using namespace std;
 
 class Tetris
 {
 public:
-	Tetris();
+	Tetris(Menu& pauseMenu);
 	~Tetris();
 
 	void display();
@@ -54,6 +55,7 @@ protected:
 private:
 	vector<vector<int>> _matrix;
 	Timer& _timer;
+	Menu& _pauseMenu;
 
 	int _level;
 	int _lines;
