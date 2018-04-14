@@ -17,9 +17,9 @@ void Timer::startTimer(string id)
 	_timers[id] = clock();
 }
 
-void Timer::resetTimer(string id)
+void Timer::resetTimer(string id, double seconds)
 {
-	_timers[id] = clock();
+	_timers[id] = clock() - (seconds * (double)CLOCKS_PER_SEC);
 }
 
 void Timer::stopTimer(string id)

@@ -28,6 +28,7 @@
 #define AUTOREPEAT_DELAY 0.25
 #define AUTOREPEAT_SPEED 0.01
 #define LOCK_DOWN_DELAY 0.5
+#define LOCK_DOWN_SMALL_DELAY 0.2
 #define LOCK_DOWN_MOVE 15
 
 Tetris::Tetris(Menu& pauseMenu, Menu& gameOverMenu)
@@ -287,6 +288,17 @@ void Tetris::stepHardDrop()
 	lock();
 }
 
+void Tetris::smallResetLockDown()
+{
+	if (_timer.exist(LOCK_DOWN))
+	{
+		if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY - LOCK_DOWN_SMALL_DELAY)
+		{
+			_timer.resetTimer(LOCK_DOWN, LOCK_DOWN_SMALL_DELAY);
+		}
+	}
+}
+
 void Tetris::moveLeft()
 {
 	if (_currentTetrimino == NULL)
@@ -296,9 +308,10 @@ void Tetris::moveLeft()
 	{
 		_lastMoveIsTSpin = false;
 		_lastMoveIsMiniTSpin = false;
+		_nbMoveAfterLockDown++;
+		smallResetLockDown();
 		refresh();
-	}
-}
+	}}
 
 void Tetris::moveRight()
 {
@@ -309,6 +322,8 @@ void Tetris::moveRight()
 	{
 		_lastMoveIsTSpin = false;
 		_lastMoveIsMiniTSpin = false;
+		_nbMoveAfterLockDown++;
+		smallResetLockDown();
 		refresh();
 	}
 }
@@ -349,6 +364,8 @@ void Tetris::rotate(DIRECTION direction)
 		_didRotate = true;
 		_lastMoveIsTSpin = false;
 		_lastMoveIsMiniTSpin = false;
+		_nbMoveAfterLockDown++;
+		smallResetLockDown();
 		refresh();
 
 		if (_currentTetrimino->canTSpin())

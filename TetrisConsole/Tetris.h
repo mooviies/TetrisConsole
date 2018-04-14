@@ -52,6 +52,7 @@ protected:
 	void stepMoveRight();
 	void stepHardDrop();
 
+	void smallResetLockDown();
 	void moveLeft();
 	void moveRight();
 	bool moveDown();

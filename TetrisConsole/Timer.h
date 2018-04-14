@@ -12,7 +12,7 @@ public:
 	static Timer & instance();
 
 	void startTimer(string id);
-	void resetTimer(string id);
+	void resetTimer(string id, double seconds = 0.0);
 	void stopTimer(string id);
 	double getSeconds(string id);
 	bool exist(string id);
