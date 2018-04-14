@@ -28,7 +28,7 @@ void decrementLevel(OptionChoice optionChoice);
 
 int main()
 {
-	initConsole(660, 510);
+	initConsole(675, 515);
 	
 	Random::init();
 	SoundEngine::init();
@@ -116,7 +116,7 @@ void initConsole(int width, int height)
 	COORD newSBSize;
 	GetConsoleScreenBufferInfo(out, &sbInfo);
 	newSBSize.X = 80;
-	newSBSize.Y = 28;
+	newSBSize.Y = 29;
 
 	int status = SetConsoleScreenBufferSize(out, newSBSize);
 

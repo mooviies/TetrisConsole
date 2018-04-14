@@ -227,6 +227,7 @@ void Tetris::fall()
 
 	if (Input::hardDrop() && !_ignoreHardDrop)
 	{
+		SoundEngine::playSound("HARD_DROP");
 		_stepState = &Tetris::stepHardDrop;
 		_ignoreHardDrop = true;
 	}
@@ -338,6 +339,7 @@ void Tetris::stepHardDrop()
 
 void Tetris::incrementMove()
 {
+	SoundEngine::playSound("CLICK");
 	if (_lockDownMode)
 		_nbMoveAfterLockDown++;
 }
@@ -759,6 +761,11 @@ void Tetris::lock()
 		_level++;
 		_goal = 0;
 	}
+
+	if(linesCleared == 4)
+		SoundEngine::playSound("TETRIS");
+	else if(linesCleared >= 1)
+		SoundEngine::playSound("LINE_CLEAR");
 
 	_stepState = &Tetris::stepIdle;
 	refresh();

@@ -11,7 +11,7 @@ FMOD::Channel* SoundEngine::_channelPlaying = NULL;
 string SoundEngine::_musicPlaying = "";
 
 float SoundEngine::_musicVolume = 0.1;
-float SoundEngine::_effectVolume = 0.3;
+float SoundEngine::_effectVolume = 0.5;
 
 void SoundEngine::init()
 {
@@ -31,23 +31,39 @@ void SoundEngine::init()
 	_sounds["SCORE"] = NULL;
 
 	_sounds["LOCK"] = NULL;
+	_sounds["HARD_DROP"] = NULL;
+	_sounds["CLICK"] = NULL;
+	_sounds["LINE_CLEAR"] = NULL;
+	_sounds["TETRIS"] = NULL;
 
-	result = _system->createStream("media/tetris-A.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["A"]);
+	result = _system->createStream("media/A.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["A"]);
 	checkFMODError(result);
 
-	result = _system->createStream("media/tetris-B.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["B"]);
+	result = _system->createStream("media/B.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["B"]);
 	checkFMODError(result);
 
-	result = _system->createStream("media/tetris-C.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["C"]);
+	result = _system->createStream("media/C.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["C"]);
 	checkFMODError(result);
 
-	result = _system->createStream("media/tetris-title.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["TITLE"]);
+	result = _system->createStream("media/title.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["TITLE"]);
 	checkFMODError(result);
 
-	result = _system->createStream("media/tetris-score.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["SCORE"]);
+	result = _system->createStream("media/score.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["SCORE"]);
 	checkFMODError(result);
 
-	result = _system->createSound("media/tetrimino-lock.wav", FMOD_DEFAULT, 0, &_sounds["LOCK"]);
+	result = _system->createSound("media/lock.wav", FMOD_DEFAULT, 0, &_sounds["LOCK"]);
+	checkFMODError(result);
+
+	result = _system->createSound("media/harddrop.wav", FMOD_DEFAULT, 0, &_sounds["HARD_DROP"]);
+	checkFMODError(result);
+
+	result = _system->createSound("media/click.wav", FMOD_DEFAULT, 0, &_sounds["CLICK"]);
+	checkFMODError(result);
+
+	result = _system->createSound("media/lineclear.wav", FMOD_DEFAULT, 0, &_sounds["LINE_CLEAR"]);
+	checkFMODError(result);
+
+	result = _system->createSound("media/tetris.wav", FMOD_DEFAULT, 0, &_sounds["TETRIS"]);
 	checkFMODError(result);
 }
 
