@@ -69,6 +69,7 @@ int main()
 	options.addOptionClose("Cancel");
 
 	pause.addOptionClose("Resume");
+	pause.addOptionClose("Restart");
 	pause.addOption("Exit Game", &quit);
 
 	quit.addOption("Yes", &quitGame);

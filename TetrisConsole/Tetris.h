@@ -31,9 +31,9 @@ public:
 	void setMode(MODE mode);
 
 protected:
-	void printLine(int line);
+	void printLine(int line, bool visible);
 
-	void printMatrix();
+	void printMatrix(bool visible = true);
 	void printPreview();
 	void printScore();
 

@@ -155,7 +155,14 @@ void Tetris::step()
 	if (Input::pause())
 	{
 		SoundEngine::pauseMusic();
-		_pauseMenu.open();
+		printMatrix(false);
+		OptionChoice choices = _pauseMenu.open();
+		if (choices.options[choices.selected] == "Restart")
+		{
+			SoundEngine::stopMusic();
+			reset();
+			return;
+		}
 		display();
 		refresh();
 		SoundEngine::unpauseMusic();
@@ -481,10 +488,10 @@ void Tetris::setMode(MODE mode)
 	_mode = mode;
 }
 
-void Tetris::printMatrix()
+void Tetris::printMatrix(bool visible)
 {
 	for (int i = MATRIX_START; i <= MATRIX_END; i++)
-		printLine(i);
+		printLine(i, visible);
 }
 
 void Tetris::printPreview()
@@ -517,7 +524,11 @@ void Tetris::printScore()
 		_highscore = _score;
 
 	rlutil::locate(9, 9);
+	if (_backToBackBonus)
+		rlutil::setColor(rlutil::LIGHTGREEN);
 	cout << Utility::valueToString(_score, 10);
+	rlutil::setColor(rlutil::WHITE);
+
 	rlutil::locate(17, 11);
 	cout << Utility::valueToString(_level, 2);
 	rlutil::locate(15, 13);
@@ -526,7 +537,7 @@ void Tetris::printScore()
 	cout << Utility::valueToString(_highscore, 10);
 }
 
-void Tetris::printLine(int line)
+void Tetris::printLine(int line, bool visible)
 {
 	int x = 31, y = 7 + line - MATRIX_START;
 	
@@ -538,7 +549,7 @@ void Tetris::printLine(int line)
 		bool currentTetriminoHere = false;
 		if(_currentTetrimino != NULL)
 			currentTetriminoHere = _currentTetrimino->isMino(line, i);
-		if (_matrix[line][i] > 0 || currentTetriminoHere)
+		if (visible && (_matrix[line][i] || currentTetriminoHere))
 		{
 			if (currentTetriminoHere)
 				rlutil::setColor(_currentTetrimino->getColor());
