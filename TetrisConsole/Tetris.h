@@ -51,6 +51,7 @@ protected:
 	void stepMoveLeft();
 	void stepMoveRight();
 	void stepHardDrop();
+	void incrementMove();
 
 	void smallResetLockDown();
 	void moveLeft();
@@ -80,6 +81,7 @@ private:
 
 	unsigned int _bagIndex;
 	Tetrimino* _currentTetrimino;
+	Tetrimino* _holdTetrimino;
 	vector<Tetrimino*> _bag;
 
 	double* _speedNormal;
@@ -93,6 +95,9 @@ private:
 	bool _lastMoveIsTSpin;
 	bool _lastMoveIsMiniTSpin;
 	bool _backToBackBonus;
+	bool _lockDownMode;
+	bool _newHold;
+	bool _betterHighscore;
 
 	void(Tetris::*_stepState)();
 

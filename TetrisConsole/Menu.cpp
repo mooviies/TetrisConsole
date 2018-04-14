@@ -126,9 +126,14 @@ void Menu::generate()
 	_dialog.clear();
 
 	int middleWidth = _longestOption + 4;;
-	if (_title.length() > middleWidth)
+	if (_title.length() + 2 > middleWidth)
 	{
-		middleWidth = _title.length();
+		middleWidth = _title.length() + 2;
+	}
+
+	if (_subtitle.length() + 2 > middleWidth)
+	{
+		middleWidth = _subtitle.length() + 2;
 	}
 	
 	if (MINIMUM_INTERIOR_WIDTH > middleWidth)
@@ -254,7 +259,12 @@ void Menu::draw()
 	rlutil::setColor(rlutil::WHITE);
 	for (int i = 0; i < _dialog.size(); i++)
 	{
-		int option = i - 3;
+		int option = i;
+		if (_showSubtitle)
+			option -= 5;
+		else
+			option -= 3;
+
 		rlutil::locate(_x, _y + i);
 		cout << _dialog[i];
 

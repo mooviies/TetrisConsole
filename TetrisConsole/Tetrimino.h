@@ -13,12 +13,13 @@ class Tetrimino
 public:
 	virtual ~Tetrimino();
 
-	void printPreview(int line);
+	void printPreview(int line, bool hold = false);
 	bool setPosition(Vector2i position);
 	bool move(Vector2i distance);
 	bool simulateMove(Vector2i distance);
 	bool rotate(DIRECTION direction);
 	bool lock();
+	void resetRotation();
 
 	bool isMino(int row, int column) const;
 	Vector2i const & getPosition() const { return _currentPosition; }

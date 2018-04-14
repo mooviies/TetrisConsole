@@ -108,6 +108,12 @@ bool Tetrimino::lock()
 	return !gameover;
 }
 
+void Tetrimino::resetRotation()
+{
+	_currentRotation = NORTH;
+	_lastRotationPoint = -1;
+}
+
 bool Tetrimino::isMino(int row, int column) const
 {
 	Vector2i position = Vector2i(row, column);
@@ -154,9 +160,15 @@ bool Tetrimino::checkPositionValidity(Vector2i position, ROTATION rotation)
 	return valid;
 }
 
-void Tetrimino::printPreview(int line)
+void Tetrimino::printPreview(int line, bool hold)
 {
-	rlutil::locate(60, 10 + line);
+	int y = line;
+	if (hold)
+		y += 24;
+	else
+		y += 10;
+
+	rlutil::locate(60, y);
 	rlutil::setColor(getColor());
 
 	if (line == 0)
