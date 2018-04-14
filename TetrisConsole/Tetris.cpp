@@ -543,7 +543,16 @@ void Tetris::printLine(int line)
 			else
 				rlutil::setColor(_matrix[line][i]);
 
-			cout << "ÛÛ";
+			if (currentTetriminoHere)
+				cout << "ÛÛ";
+			else
+			{
+				rlutil::setColor(rlutil::BLACK);
+				rlutil::setBackgroundColor(_matrix[line][i]);
+				cout << "°°";
+				rlutil::setBackgroundColor(rlutil::BLACK);
+			}
+				
 			rlutil::setColor(rlutil::WHITE);
 		}
 		else
