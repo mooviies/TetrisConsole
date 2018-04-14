@@ -7,6 +7,23 @@
 
 using namespace std;
 
+struct OptionChoice
+{
+	OptionChoice(int s, vector<string>& o, map<string, string> v, bool e = false)
+	{
+		selected = s;
+		options = o;
+		values = v;
+		exitAllMenus = e;
+	}
+
+	int selected;
+	bool exitAllMenus;
+
+	vector<string> options;
+	map<string, string> values;
+};
+
 struct ArrowOption
 {
 	ArrowOption()
@@ -14,23 +31,24 @@ struct ArrowOption
 		left = NULL;
 		right = NULL;
 	}
-	void(*left)();
-	void(*right)();
+	void(*left)(OptionChoice);
+	void(*right)(OptionChoice);
 };
 
 class Menu
 {
 public:
-	Menu(string name);
+	Menu(string title, string subtitle = "");
 	~Menu();
 
 	void addOption(string name, Menu* menu);
-	void addOption(string name, void(*callback)());
-	void addOptionArrow(string name, void(*leftCallback)(), void(*rightCallback)());
-	void addOptionClose(string name);
+	void addOption(string name, void(*callback)(OptionChoice));
+	void addOptionArrow(string name, void(*leftCallback)(OptionChoice), void(*rightCallback)(OptionChoice));
+	void addOptionClose(string name, void(*callback)(OptionChoice) = NULL);
+	void addOptionCloseAllMenu(string name, void(*callback)(OptionChoice) = NULL);
 	void addOptionWithValues(string name, vector<string> values);
 
-	void open();
+	OptionChoice open(bool showSubtitle = false);
 
 protected:
 	void addOption(string name);
@@ -38,6 +56,7 @@ protected:
 	string generateOption(string name, int width);
 	string generateNameCenter(string name, int width);
 	string generateBar(const char* start, const char* middle, const char* end, int nbMiddle);
+	map<string, string> generateValues();
 
 	void draw();
 	void save();
@@ -48,16 +67,19 @@ protected:
 	void switchOptions(int choice, int key);
 
 private:
-	string _name;
+	string _title;
+	string _subtitle;
+	bool _showSubtitle;
 
 	vector<string> _options;
 	map<string, Menu*> _menus;
-	map<string, void(*)()> _callbacks;
+	map<string, void(*)(OptionChoice)> _callbacks;
 	map<string, ArrowOption> _arrowOptions;
 	map<string, vector<string>> _optionsValues;
 	map<string, int> _optionsValuesChoices;
 	map<string, int> _optionsValuesChoicesX;
 	set<string> _closeOptions;
+	set<string> _closeAllMenusOptions;
 
 	vector<string> _dialog;
 	string _clearLine;

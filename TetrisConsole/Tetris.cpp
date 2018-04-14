@@ -30,8 +30,8 @@
 #define LOCK_DOWN_DELAY 0.5
 #define LOCK_DOWN_MOVE 15
 
-Tetris::Tetris(Menu& pauseMenu)
-	: _timer(Timer::instance()), _pauseMenu(pauseMenu)
+Tetris::Tetris(Menu& pauseMenu, Menu& gameOverMenu)
+	: _timer(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu), _startingLevel(1), _mode(EXTENDED), _start(false)
 {
 	double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
 	double speedFast[] = { 0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014, 0.0009, 0.00055, 0.00035 };
@@ -72,8 +72,6 @@ Tetris::Tetris(Menu& pauseMenu)
 		highscoreFile << _highscore;
 		highscoreFile.close();
 	}
-
-	reset();
 }
 
 Tetris::~Tetris()
@@ -82,6 +80,12 @@ Tetris::~Tetris()
 	delete[] _speedFast;
 	for (int i = 0; i < _bag.size(); i++)
 		delete _bag[i];
+}
+
+void Tetris::start()
+{
+	reset();
+	_start = true;
 }
 
 void Tetris::display()
@@ -114,6 +118,9 @@ void Tetris::refresh()
 
 void Tetris::step()
 {
+	if (!_start)
+		return;
+
 	(*this.*_stepState)();
 
 	if (Input::pause())
@@ -206,8 +213,7 @@ void Tetris::stepIdle()
        		popTetrimino();
 		if (!_currentTetrimino->setPosition(_currentTetrimino->getStartingPosition()))
 		{
-			_stepState = &Tetris::stepGameOver;
-			_gameOver = true;
+			gameOver();
 			return;
 		}
 		_timer.startTimer(FALL);
@@ -279,54 +285,6 @@ void Tetris::stepHardDrop()
 		_score += 2;
 	}
 	lock();
-}
-
-void Tetris::stepGameOver()
-{
-	if (_gameOver)
-	{
-		rlutil::setColor(rlutil::WHITE);
-		rlutil::locate(29, 15);
-		cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
-		rlutil::locate(29, 16);
-		cout << "º                      º";
-		rlutil::locate(29, 17);
-		cout << "º      GAME  OVER      º";
-		rlutil::locate(29, 18);
-		cout << "º                      º";
-
-		SoundEngine::stopMusic();
-		if (_score > _highscore)
-		{
-			rlutil::locate(29, 19);
-			cout << "º    New High Score!   º";
-			rlutil::locate(29, 20);
-			cout << "º                      º";
-			rlutil::locate(29, 21);
-			cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
-
-			_highscore = _score;
-			ofstream highscoreFile(SCORE_FILE);
-			highscoreFile << _highscore;
-			highscoreFile.close();
-		}
-		else
-		{
-			rlutil::locate(29, 19);
-			cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
-		}
-
-		_gameOver = false;
-	}
-	
-	if (Input::select())
-	{
-		reset();
-		return;
-	}
-
-	if (Input::pause())
-		_exit = true;
 }
 
 void Tetris::moveLeft()
@@ -437,6 +395,16 @@ bool Tetris::doExit()
 	return _exit;
 }
 
+void Tetris::setStartingLevel(int level)
+{
+	_startingLevel = level;
+}
+
+void Tetris::setMode(MODE mode)
+{
+	_mode = mode;
+}
+
 void Tetris::printMatrix()
 {
 	for (int i = MATRIX_START; i <= MATRIX_END; i++)
@@ -477,21 +445,27 @@ void Tetris::printLine(int line)
 				rlutil::setColor(_currentTetrimino->getColor());
 			else
 				rlutil::setColor(_matrix[line][i]);
+
 			cout << "ÛÛ";
 			rlutil::setColor(rlutil::WHITE);
 		}
 		else
-			cout << "  ";
+		{
+			rlutil::setColor(rlutil::DARKGREY);
+			if ((line % 2 == 0 && i % 2 != 0) || (line % 2 != 0 && i % 2 == 0))
+				cout << "°°";
+			else
+				cout << "±±";
+		}
 	}
 }
 
 void Tetris::reset()
 {
-	_level = 1;
+	_level = _startingLevel;
 	_lines = 0;
 	_goal = 0;
 	_score = 0;
-	_gameOver = false;
 	_ignoreHardDrop = false;
 	_lastMoveIsTSpin = false;
 	_lastMoveIsMiniTSpin = false;
@@ -542,8 +516,7 @@ void Tetris::lock()
 
 	if (!_currentTetrimino->lock())
 	{
- 		_stepState = &Tetris::stepGameOver;
-		_gameOver = true;
+		gameOver();
 		return;
 	}
 
@@ -706,4 +679,18 @@ void Tetris::popTetrimino()
 Tetrimino* Tetris::peekTetrimino()
 {
 	return _bag[_bagIndex];
+}
+
+void Tetris::gameOver()
+{
+	SoundEngine::stopMusic();
+
+	bool showVictory = _score > _highscore;
+	_highscore = _score;
+	ofstream highscoreFile(SCORE_FILE);
+	highscoreFile << _highscore;
+	highscoreFile.close();
+	
+	OptionChoice choice = _gameOverMenu.open(showVictory);
+	reset();
 }

@@ -6,8 +6,8 @@
 
 #define MINIMUM_INTERIOR_WIDTH 13
 
-Menu::Menu(string name)
-	: _name(name), _choice(0), _longestOptionWithChoice(0), _longestOption(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false)
+Menu::Menu(string name, string subtitle)
+	: _title(name), _subtitle(subtitle), _showSubtitle(false), _choice(0), _longestOptionWithChoice(0), _longestOption(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false)
 {
 }
 
@@ -21,13 +21,13 @@ void Menu::addOption(string name, Menu *menu)
 	_menus[name] = menu;
 }
 
-void Menu::addOption(string name, void(*callback)())
+void Menu::addOption(string name, void(*callback)(OptionChoice))
 {
 	addOption(name);
 	_callbacks[name] = callback;
 }
 
-void Menu::addOptionArrow(string name, void(*leftCallback)(), void(*rightCallback)())
+void Menu::addOptionArrow(string name, void(*leftCallback)(OptionChoice), void(*rightCallback)(OptionChoice))
 {
 	addOption(name);
 
@@ -37,9 +37,18 @@ void Menu::addOptionArrow(string name, void(*leftCallback)(), void(*rightCallbac
 	_arrowOptions[name] = arrowOption;
 }
 
-void Menu::addOptionClose(string name)
+void Menu::addOptionClose(string name, void(*callback)(OptionChoice))
 {
 	addOption(name);
+	_closeOptions.insert(name);
+	_callbacks[name] = callback;
+}
+
+void Menu::addOptionCloseAllMenu(string name, void(*callback)(OptionChoice))
+{
+	addOption(name);
+	_closeAllMenusOptions.insert(name);
+	_callbacks[name] = callback;
 	_closeOptions.insert(name);
 }
 
@@ -70,11 +79,11 @@ void Menu::addOption(string name)
 		_longestOption = name.length();
 }
 
-void Menu::open()
+OptionChoice Menu::open(bool showSubtitle)
 {
+	_showSubtitle = showSubtitle;
 	generate();
-	//save();
-	
+
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 	while (true)
 	{
@@ -107,6 +116,9 @@ void Menu::open()
 			break;
 	}
 	clear();
+
+	bool exitAllMenu = _closeAllMenusOptions.find(_options[_choice]) != _closeAllMenusOptions.end();
+	return OptionChoice(_choice, _options, generateValues(), exitAllMenu);
 }
 
 void Menu::generate()
@@ -114,9 +126,9 @@ void Menu::generate()
 	_dialog.clear();
 
 	int middleWidth = _longestOption + 4;;
-	if (_name.length() > middleWidth)
+	if (_title.length() > middleWidth)
 	{
-		middleWidth = _name.length();
+		middleWidth = _title.length();
 	}
 	
 	if (MINIMUM_INTERIOR_WIDTH > middleWidth)
@@ -129,7 +141,14 @@ void Menu::generate()
 		_clearLine.append(" ");
 
 	_dialog.push_back(generateBar("É", "Í", "»", middleWidth));
-	_dialog.push_back(generateNameCenter(_name, width));
+	_dialog.push_back(generateNameCenter(_title, width));
+
+	if (_showSubtitle)
+	{
+		_dialog.push_back(generateBar("Ì", "Í", "¹", middleWidth));
+		_dialog.push_back(generateNameCenter(_subtitle, width));
+	}
+
 	_dialog.push_back(generateBar("Ì", "Í", "¹", middleWidth));
 
 	for (int i = 0; i < _options.size(); i++)
@@ -216,6 +235,20 @@ string Menu::generateBar(const char* start, const char* middle, const char* end,
 	return result;
 }
 
+map<string, string> Menu::generateValues()
+{
+	map<string, string> values;
+	for (int i = 0; i < _options.size(); i++)
+	{
+		string name = _options[i];
+		if (_optionsValues.find(name) != _optionsValues.end())
+		{
+			values[name] = _optionsValues[name][_optionsValuesChoices[name]];
+		}
+	}
+	return values;
+}
+
 void Menu::draw()
 {
 	rlutil::setColor(rlutil::WHITE);
@@ -293,8 +326,6 @@ void Menu::restore()
 		rlutil::locate(_x, _y + i);
 		for (int j = 0; j < _background[i].size(); j++)
 		{
-			//rlutil::setColor(_backgroundColor[i][j]);
-			//cout << _background[i][j];
 			cout << " ";
 		}
 	}
@@ -316,14 +347,20 @@ void Menu::select(int choice)
 	if (_menus[name] != NULL)
 	{
 		clear();
-		_menus[name]->open();
-		draw();
+		if (_menus[name]->open().exitAllMenus)
+		{
+			_close = true;
+		}
+		else
+			draw();
 	}
-	else if (_callbacks[name] != NULL)
+
+	if (_callbacks[name] != NULL)
 	{
-		_callbacks[name]();
+		_callbacks[name](OptionChoice(_choice, _options, generateValues()));
 	}
-	else if (_closeOptions.find(name) != _closeOptions.end())
+
+	if (_closeOptions.find(name) != _closeOptions.end())
 	{
 		_close = true;
 	}
@@ -335,9 +372,9 @@ void Menu::switchOptions(int choice, int key)
 	if (_arrowOptions.find(name) != _arrowOptions.end())
 	{
 		if (key == rlutil::KEY_LEFT)
-			_arrowOptions[name].left();
+			_arrowOptions[name].left(OptionChoice(_choice, _options, generateValues()));
 		else if (key == rlutil::KEY_RIGHT)
-			_arrowOptions[name].right();
+			_arrowOptions[name].right(OptionChoice(_choice, _options, generateValues()));
 	}
 	else if (_optionsValues.find(name) != _optionsValues.end())
 	{

@@ -10,20 +10,28 @@
 
 using namespace std;
 
+enum MODE {
+	EXTENDED,
+	EXTENDED_INFINITY,
+	CLASSIC
+};
+
 class Tetris
 {
 public:
-	Tetris(Menu& pauseMenu);
+	Tetris(Menu& pauseMenu, Menu& gameOverMenu);
 	~Tetris();
 
+	void start();
 	void display();
 	void refresh();
 	void step();
 	bool doExit();
+	void setStartingLevel(int level);
+	void setMode(MODE mode);
 
 protected:
 	void printLine(int line);
-	string valueToString(int value, int length);
 
 	void printMatrix();
 	void printPreview();
@@ -35,14 +43,14 @@ protected:
 	void popTetrimino();
 	Tetrimino* peekTetrimino();
 
+	void gameOver();
+
 	void fall();
 
 	void stepIdle();
 	void stepMoveLeft();
 	void stepMoveRight();
 	void stepHardDrop();
-	void stepGameOver();
-	void stepPause();
 
 	void moveLeft();
 	void moveRight();
@@ -56,7 +64,11 @@ private:
 	vector<vector<int>> _matrix;
 	Timer& _timer;
 	Menu& _pauseMenu;
+	Menu& _gameOverMenu;
 
+	MODE _mode;
+
+	int _startingLevel;
 	int _level;
 	int _lines;
 	int _goal;
@@ -72,6 +84,7 @@ private:
 	double* _speedNormal;
 	double* _speedFast;
 
+	bool _start;
 	bool _exit;
 	bool _didRotate;
 	bool _gameOver;

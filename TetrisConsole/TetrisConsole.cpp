@@ -21,10 +21,10 @@
 using namespace std;
 
 void initConsole(int width, int height);
-void start();
-void quitGame();
-void incrementLevel();
-void decrementLevel();
+void setGameSettings(OptionChoice optionChoice);
+void quitGame(OptionChoice optionChoice);
+void incrementLevel(OptionChoice optionChoice);
+void decrementLevel(OptionChoice optionChoice);
 
 int main()
 {
@@ -44,38 +44,45 @@ int main()
 	modes.push_back("Infinite");
 	modes.push_back("Classic");
 
-	Menu main("Main Menu");
-	Menu options("Options");
-	Menu newGame("New Game");
-	Menu pause("Pause");
-	Menu help("Help");
+	Menu main("MAIN MENU");
+	Menu options("SETTINGS");
+	Menu newGame("NEW GAME");
+	Menu pause("PAUSE");
+	Menu help("HELP");
 	Menu quit("Are you sure?");
-	Menu gameover("Game Over");
+	Menu gameover("GAME OVER", "New High Score!");
 	
 	main.addOption("New Game", &newGame);
-	main.addOption("Options", &options);
-	main.addOption("Help", &help);
+	//main.addOption("Settings", &options);
+	//main.addOption("Help", &help);
 	main.addOption("Exit", &quit);
 
-	newGame.addOption("Start", &start);
+	newGame.addOptionCloseAllMenu("Start", &setGameSettings);
 	newGame.addOptionWithValues("Level", levels);
 	newGame.addOptionWithValues("Mode", modes);
 
-	help.addOptionClose("Back");
+	//help.addOptionClose("Back");
+
+	options.addOptionWithValues("Level", levels);
+	options.addOptionWithValues("Mode", modes);
+	options.addOptionCloseAllMenu("Accept", &setGameSettings);
+	options.addOptionClose("Cancel");
 
 	pause.addOptionClose("Resume");
-	pause.addOption("Options", &options);
-	pause.addOption("Exit", &quit);
-
-	options.addOptionClose("Back");
+	pause.addOption("Exit Game", &quit);
 
 	quit.addOption("Yes", &quitGame);
 	quit.addOptionClose("No");
 
-	main.open();
+	gameover.addOptionClose("Retry");
+	gameover.addOption("Settings", &options);
+	gameover.addOption("Exit Game", &quit);
 
-	Tetris tetris(pause);
+	Tetris tetris(pause, gameover);
 	Overseer::setTetris(&tetris);
+
+	main.open();
+	tetris.start();
 	
 	while (!tetris.doExit())
 	{
@@ -120,22 +127,41 @@ void initConsole(int width, int height)
 	SetConsoleMode(input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
 }
 
-void start()
+void setGameSettings(OptionChoice optionChoice)
 {
+	string levelName = optionChoice.values["Level"];
+	string modeName = optionChoice.values["Mode"];
 
+	int level = stoi(levelName);
+	MODE mode;
+	if (modeName == "Extended")
+	{
+		mode = EXTENDED;
+	}
+	else if (modeName == "Infinite")
+	{
+		mode = EXTENDED_INFINITY;
+	}
+	else if (modeName == "Classic")
+	{
+		mode = CLASSIC;
+	}
+
+	Overseer::getTetris().setStartingLevel(level);
+	Overseer::getTetris().setMode(mode);
 }
 
-void quitGame()
+void quitGame(OptionChoice optionChoice)
 {
 	exit(0);
 }
 
-void incrementLevel()
+void incrementLevel(OptionChoice optionChoice)
 {
 
 }
 
-void decrementLevel()
+void decrementLevel(OptionChoice optionChoice)
 {
 
 }
