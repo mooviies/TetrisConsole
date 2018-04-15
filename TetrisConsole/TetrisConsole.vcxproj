@@ -18,6 +18,48 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\Konsole\Input.cpp" />
+    <ClCompile Include="source\Konsole\Menu.cpp" />
+    <ClCompile Include="source\Konsole\Random.cpp" />
+    <ClCompile Include="source\Konsole\SoundEngine.cpp" />
+    <ClCompile Include="source\Konsole\Timer.cpp" />
+    <ClCompile Include="source\Konsole\Utility.cpp" />
+    <ClCompile Include="source\Konsole\Vector2i.cpp" />
+    <ClCompile Include="source\Tetris\Facing.cpp" />
+    <ClCompile Include="source\Tetris\ITetrimino.cpp" />
+    <ClCompile Include="source\Tetris\JTetrimino.cpp" />
+    <ClCompile Include="source\Tetris\LTetrimino.cpp" />
+    <ClCompile Include="source\Tetris\OTetrimino.cpp" />
+    <ClCompile Include="source\Tetris\Overseer.cpp" />
+    <ClCompile Include="source\Tetris\STetrimino.cpp" />
+    <ClCompile Include="source\Tetris\Tetrimino.cpp" />
+    <ClCompile Include="source\Tetris\Tetris.cpp" />
+    <ClCompile Include="source\Tetris\TetrisConsole.cpp" />
+    <ClCompile Include="source\Tetris\TTetrimino.cpp" />
+    <ClCompile Include="source\Tetris\ZTetrimino.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\Konsole\Input.h" />
+    <ClInclude Include="source\Konsole\Menu.h" />
+    <ClInclude Include="source\Konsole\Random.h" />
+    <ClInclude Include="source\Konsole\SoundEngine.h" />
+    <ClInclude Include="source\Konsole\Timer.h" />
+    <ClInclude Include="source\Konsole\Utility.h" />
+    <ClInclude Include="source\Konsole\Vector2i.h" />
+    <ClInclude Include="source\Tetris\Constants.h" />
+    <ClInclude Include="source\Tetris\Facing.h" />
+    <ClInclude Include="source\Tetris\ITetrimino.h" />
+    <ClInclude Include="source\Tetris\JTetrimino.h" />
+    <ClInclude Include="source\Tetris\LTetrimino.h" />
+    <ClInclude Include="source\Tetris\OTetrimino.h" />
+    <ClInclude Include="source\Tetris\Overseer.h" />
+    <ClInclude Include="source\Tetris\STetrimino.h" />
+    <ClInclude Include="source\Tetris\Tetrimino.h" />
+    <ClInclude Include="source\Tetris\Tetris.h" />
+    <ClInclude Include="source\Tetris\TTetrimino.h" />
+    <ClInclude Include="source\Tetris\ZTetrimino.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{8D09F400-CBCA-4DFB-B3BA-839B46657B63}</ProjectGuid>
@@ -72,19 +114,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\source\Tetris;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\source\Konsole;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\include\fmod;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\include;$(IncludePath)</IncludePath>
+    <LibraryPath>S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\source\Tetris;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\source\Konsole;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\include\fmod;S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\include;$(IncludePath)</IncludePath>
+    <LibraryPath>S:\OneDrive\Projets\Games\TetrisConsole\TetrisConsole\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
@@ -113,7 +159,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -148,57 +194,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Facing.cpp" />
-    <ClCompile Include="Input.cpp" />
-    <ClCompile Include="ITetrimino.cpp" />
-    <ClCompile Include="JTetrimino.cpp" />
-    <ClCompile Include="LTetrimino.cpp" />
-    <ClCompile Include="Menu.cpp" />
-    <ClCompile Include="OTetrimino.cpp" />
-    <ClCompile Include="Overseer.cpp" />
-    <ClCompile Include="Random.cpp" />
-    <ClCompile Include="SoundEngine.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="STetrimino.cpp" />
-    <ClCompile Include="Tetrimino.cpp" />
-    <ClCompile Include="Tetris.cpp" />
-    <ClCompile Include="TetrisConsole.cpp" />
-    <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TTetrimino.cpp" />
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="Vector2i.cpp" />
-    <ClCompile Include="ZTetrimino.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Facing.h" />
-    <ClInclude Include="Constants.h" />
-    <ClInclude Include="Input.h" />
-    <ClInclude Include="ITetrimino.h" />
-    <ClInclude Include="JTetrimino.h" />
-    <ClInclude Include="LTetrimino.h" />
-    <ClInclude Include="Menu.h" />
-    <ClInclude Include="OTetrimino.h" />
-    <ClInclude Include="Overseer.h" />
-    <ClInclude Include="Random.h" />
-    <ClInclude Include="rlutil.h" />
-    <ClInclude Include="SoundEngine.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="STetrimino.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Tetrimino.h" />
-    <ClInclude Include="Tetris.h" />
-    <ClInclude Include="Timer.h" />
-    <ClInclude Include="TTetrimino.h" />
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="Vector2i.h" />
-    <ClInclude Include="ZTetrimino.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

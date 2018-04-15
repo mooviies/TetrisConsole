@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "SoundEngine.h"
 
 #include "fmod\fmod.hpp"
