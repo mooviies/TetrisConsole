@@ -84,6 +84,9 @@
     <ClCompile Include="source\Tetris\Facing.cpp">
       <Filter>Fichiers sources\Tetris</Filter>
     </ClCompile>
+    <ClCompile Include="source\Konsole\Graphics.cpp">
+      <Filter>Fichiers sources\Konsole</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Tetris\Constants.h">
@@ -141,6 +144,9 @@
       <Filter>Fichiers d%27en-tête\Konsole</Filter>
     </ClInclude>
     <ClInclude Include="source\Konsole\Utility.h">
+      <Filter>Fichiers d%27en-tête\Konsole</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Konsole\Graphics.h">
       <Filter>Fichiers d%27en-tête\Konsole</Filter>
     </ClInclude>
   </ItemGroup>
