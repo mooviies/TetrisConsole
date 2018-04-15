@@ -550,20 +550,18 @@ void Tetris::printLine(int line, bool visible)
 		if (visible && (_matrix[line][i] || currentTetriminoHere))
 		{
 			if (currentTetriminoHere)
-				rlutil::setColor(_currentTetrimino->getColor());
-			else
-				rlutil::setColor(_matrix[line][i]);
-
-			if (currentTetriminoHere)
-				cout << "ÛÛ";
+			{
+				rlutil::setBackgroundColor(_currentTetrimino->getColor());
+				cout << "  ";
+			}
 			else
 			{
 				rlutil::setColor(rlutil::BLACK);
 				rlutil::setBackgroundColor(_matrix[line][i]);
 				cout << "°°";
-				rlutil::setBackgroundColor(rlutil::BLACK);
 			}
 				
+			rlutil::setBackgroundColor(rlutil::BLACK);
 			rlutil::setColor(rlutil::WHITE);
 		}
 		else

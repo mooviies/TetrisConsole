@@ -189,8 +189,8 @@ void SoundEngine::checkFMODError(FMOD_RESULT result)
 {
 	if (result != FMOD_OK)
 	{
-		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
-		system("pause");
-		exit(-1);
+		//printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+		//system("pause");
+		//exit(-1);
 	}
 }

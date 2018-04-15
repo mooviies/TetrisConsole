@@ -9,15 +9,17 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{94973881-6ee5-4bec-8295-9a1a1ba01a3d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Graphics">
       <UniqueIdentifier>{9bbaef93-554f-4754-8ea4-98cd97e135f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Screen">
+      <UniqueIdentifier>{adfeb81a-44c8-43c3-b13d-efc7ce7f731e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Screen">
+      <UniqueIdentifier>{aeadecab-2a9c-4403-acca-b21277b644e5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -48,11 +50,14 @@
     <ClCompile Include="source\Graphics\GraphicObject.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="source\Screen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\Graphics\GraphicObjDescription.cpp">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Screen\Screen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Screen\ScreenWindows.cpp">
+      <Filter>Source Files\Screen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -80,11 +85,17 @@
     <ClInclude Include="source\Graphics\Graphics.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="source\Screen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\Graphics\GraphicObjDescription.h">
       <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Screen\Screen.h">
+      <Filter>Header Files\Screen</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Screen\ScreenWindows.h">
+      <Filter>Header Files\Screen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

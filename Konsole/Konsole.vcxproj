@@ -72,12 +72,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>S:\Git\ProjectC++\TetrisConsole\Konsole\source\Graphics;S:\Git\ProjectC++\TetrisConsole\Konsole\source;S:\Git\ProjectC++\TetrisConsole\Konsole\include;S:\Git\ProjectC++\TetrisConsole\Konsole\include\fmod;$(IncludePath)</IncludePath>
+    <IncludePath>S:\Git\ProjectC++\TetrisConsole\Konsole\source\Screen;S:\Git\ProjectC++\TetrisConsole\Konsole\source\Graphics;S:\Git\ProjectC++\TetrisConsole\Konsole\source;S:\Git\ProjectC++\TetrisConsole\Konsole\include;S:\Git\ProjectC++\TetrisConsole\Konsole\include\fmod;$(IncludePath)</IncludePath>
     <LibraryPath>S:\Git\ProjectC++\TetrisConsole\Konsole\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>S:\Git\ProjectC++\TetrisConsole\Konsole\source\Graphics;S:\Git\ProjectC++\TetrisConsole\Konsole\source;S:\Git\ProjectC++\TetrisConsole\Konsole\include;S:\Git\ProjectC++\TetrisConsole\Konsole\include\fmod;$(IncludePath)</IncludePath>
+    <IncludePath>S:\Git\ProjectC++\TetrisConsole\Konsole\source\Screen;S:\Git\ProjectC++\TetrisConsole\Konsole\source\Graphics;S:\Git\ProjectC++\TetrisConsole\Konsole\source;S:\Git\ProjectC++\TetrisConsole\Konsole\include;S:\Git\ProjectC++\TetrisConsole\Konsole\include\fmod;$(IncludePath)</IncludePath>
     <LibraryPath>S:\Git\ProjectC++\TetrisConsole\Konsole\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -94,7 +94,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -111,7 +111,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -160,19 +160,22 @@
     <ClCompile Include="source\Input.cpp" />
     <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\Random.cpp" />
-    <ClCompile Include="source\Screen.cpp" />
+    <ClCompile Include="source\Screen\Screen.cpp" />
+    <ClCompile Include="source\Screen\ScreenWindows.cpp" />
     <ClCompile Include="source\SoundEngine.cpp" />
     <ClCompile Include="source\Timer.cpp" />
     <ClCompile Include="source\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\Common.h" />
     <ClInclude Include="source\Graphics\GraphicObjDescription.h" />
     <ClInclude Include="source\Graphics\GraphicObject.h" />
     <ClInclude Include="source\Graphics\Graphics.h" />
     <ClInclude Include="source\Input.h" />
     <ClInclude Include="source\Menu.h" />
     <ClInclude Include="source\Random.h" />
-    <ClInclude Include="source\Screen.h" />
+    <ClInclude Include="source\Screen\Screen.h" />
+    <ClInclude Include="source\Screen\ScreenWindows.h" />
     <ClInclude Include="source\SoundEngine.h" />
     <ClInclude Include="source\Timer.h" />
     <ClInclude Include="source\Utility.h" />
