@@ -2,9 +2,11 @@
 
 #include <iostream>
 #include <Windows.h>
+#include <rlutil.h>
 
 using namespace konsole;
 using namespace std;
+using namespace rlutil;
 
 ScreenWindows::ScreenWindows(uint width, uint height)
 	: Screen(width, height), FONT_WIDTH(8), FONT_HEIGHT(16)
@@ -25,11 +27,6 @@ void ScreenWindows::onInitialize()
 	_output = GetStdHandle(STD_OUTPUT_HANDLE);
 	_input = GetStdHandle(STD_INPUT_HANDLE);
 
-	CONSOLE_CURSOR_INFO     cursorInfo;
-	GetConsoleCursorInfo(_output, &cursorInfo);
-	cursorInfo.bVisible = false;
-	SetConsoleCursorInfo(_output, &cursorInfo);
-
 	DWORD prev_mode;
 	GetConsoleMode(_input, &prev_mode);
 	SetConsoleMode(_input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
@@ -45,6 +42,8 @@ void ScreenWindows::onInitialize()
 	SetCurrentConsoleFontEx(_output, FALSE, &cfi);
 
 	setTitle(TEXT("My Console"));
+
+	hideCursor();
 }
 
 void ScreenWindows::onSetTitle(const std::wstring& title)
@@ -54,6 +53,7 @@ void ScreenWindows::onSetTitle(const std::wstring& title)
 
 void ScreenWindows::onSetSize(uint width, uint height)
 {
+	height++;
 	int screenWidth = width * FONT_WIDTH;
 	int screenHeight = height * FONT_HEIGHT;
 
@@ -73,25 +73,34 @@ void ScreenWindows::onSetSize(uint width, uint height)
 	Rect.Left = 0;
 	Rect.Bottom = height - 1;
 	Rect.Right = width - 1;
-
-	if (!SetConsoleScreenBufferSize(_output, newSBSize))
-	{
-		cout << GetLastError() << endl;
-	}
+	SetConsoleScreenBufferSize(_output, newSBSize);
 	SetConsoleWindowInfo(_output, TRUE, &Rect);
+
+	hideCursor();
 }
 
 void ScreenWindows::onSetColor(Color color)
 {
-
+	rlutil::setColor((int)color);
 }
 
 void ScreenWindows::onSetBackgroundColor(Color color)
 {
-
+	rlutil::setBackgroundColor((int)color);
 }
 
 void ScreenWindows::onSetCursorPosition(uint x, uint y)
 {
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(_output, coord);
+}
 
+void ScreenWindows::hideCursor()
+{
+	CONSOLE_CURSOR_INFO cursorInfo;
+	GetConsoleCursorInfo(_output, &cursorInfo);
+	cursorInfo.bVisible = false;
+	SetConsoleCursorInfo(_output, &cursorInfo);
 }

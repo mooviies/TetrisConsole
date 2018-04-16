@@ -6,7 +6,7 @@ using namespace konsole;
 using namespace std;
 
 Screen::Screen(uint width, uint height, Color initialColor, Color initialBackgroundColor)
-	: _initialized(false), _width(width), _height(height), _currentColor(initialColor), _currentBackgroundColor(initialBackgroundColor)
+	: _initialized(false), _x(0), _y(0), _width(width), _height(height), _currentColor(initialColor), _currentBackgroundColor(initialBackgroundColor)
 {
 }
 
@@ -21,7 +21,7 @@ void Screen::initialize()
 
 	setSize(_width, _height);
 	setColor(_currentColor, true);
-	setColor(_currentBackgroundColor, true);
+	setBackgroundColor(_currentBackgroundColor, true);
 	
 	_initialized = true;
 }
@@ -78,7 +78,7 @@ void Screen::draw(uint x, uint y, char c)
 		return;
 
 	setCursorPosition(x, y);
-	cout << c;
+	print(c);
 }
 
 void Screen::draw(uint x, uint y, char c, Color color, Color backgroundColor)
@@ -100,7 +100,7 @@ void Screen::draw(uint x, uint y, const char* str)
 		return;
 
 	setCursorPosition(x, y);
-	cout << str;
+	print(str);
 }
 
 void Screen::draw(uint x, uint y, const char* str, Color color, Color backgroundColor)
@@ -122,7 +122,7 @@ void Screen::draw(uint x, uint y, const std::string& str)
 		return;
 
 	setCursorPosition(x, y);
-	cout << str;
+	print(str);
 }
 
 void Screen::draw(uint x, uint y, const std::string& str, Color color, Color backgroundColor)
@@ -138,15 +138,6 @@ void Screen::draw(uint x, uint y, const std::string& str, Color color, Color bac
 	setBackgroundColor(previousBackgroundColor);
 }
 
-void Screen::draw(uint x, uint y, uint length)
-{
-	if (!_initialized)
-		return;
-
-	setCursorPosition(x, y);
-	cout << string(length, ' ');
-}
-
 void Screen::draw(uint x, uint y, Color color, uint length)
 {
 	if (!_initialized)
@@ -157,7 +148,8 @@ void Screen::draw(uint x, uint y, Color color, uint length)
 
 	Color previousBackgroundColor = _currentBackgroundColor;
 	setBackgroundColor(color);
-	draw(x, y, length);
+	setCursorPosition(x, y);
+	print(string(length, ' '));
 	setBackgroundColor(previousBackgroundColor);
 }
 
@@ -169,7 +161,7 @@ void Screen::setSize(uint width, uint height)
 	_width = width;
 	_height = height;
 
-	onSetSize(width, height);
+	onSetSize(_width, _height);
 }
 
 void Screen::setColor(Color color, bool force)
@@ -178,7 +170,7 @@ void Screen::setColor(Color color, bool force)
 		return;
 
 	_currentColor = color;
-	onSetColor(color);
+	onSetColor(_currentColor);
 }
 
 void Screen::setBackgroundColor(Color color, bool force)
@@ -187,10 +179,43 @@ void Screen::setBackgroundColor(Color color, bool force)
 		return;
 
 	_currentBackgroundColor = color;
-	onSetBackgroundColor(color);
+	onSetBackgroundColor(_currentBackgroundColor);
 }
 
 void Screen::setCursorPosition(uint x, uint y)
 {
+	_x = x;
+	_y = y;
 	onSetCursorPosition(x, y);
+}
+
+void Screen::print(char c)
+{
+	if (!isValidPosition(_x, _y))
+		return;
+
+	cout << c;
+	_x++;
+}
+
+void Screen::print(const char* str)
+{
+	uint i = 0;
+	char c = str[i++];
+	while (c != '\0')
+	{
+		print(c);
+		c = str[i++];
+	}
+}
+
+void Screen::print(const std::string& str)
+{
+	for (int i = 0; i < str.length(); i++)
+		print(str[i]);
+}
+
+bool Screen::isValidPosition(uint x, uint y) const
+{
+	return (_x < _width) && (_y < _height);
 }

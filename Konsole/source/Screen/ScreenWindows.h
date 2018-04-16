@@ -25,6 +25,9 @@ namespace konsole
 		virtual void onSetCursorPosition(uint x, uint y) override;
 
 	private:
+		void hideCursor();
+
+	private:
 		HWND _console;
 		HWND _desktop;
 
