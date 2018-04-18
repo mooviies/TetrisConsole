@@ -154,9 +154,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Konsole.cpp" />
-    <ClCompile Include="source\Graphics\GraphicObjDescription.cpp" />
     <ClCompile Include="source\Graphics\GraphicObject.cpp" />
-    <ClCompile Include="source\Graphics\Graphics.cpp" />
+    <ClCompile Include="source\Graphics\SymbolsLibrary.cpp" />
+    <ClCompile Include="source\Graphics\Table.cpp" />
     <ClCompile Include="source\Input.cpp" />
     <ClCompile Include="source\Menu.cpp" />
     <ClCompile Include="source\Random.cpp" />
@@ -168,9 +168,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Common.h" />
-    <ClInclude Include="source\Graphics\GraphicObjDescription.h" />
     <ClInclude Include="source\Graphics\GraphicObject.h" />
-    <ClInclude Include="source\Graphics\Graphics.h" />
+    <ClInclude Include="source\Graphics\SymbolsLibrary.h" />
+    <ClInclude Include="source\Graphics\Table.h" />
     <ClInclude Include="source\Input.h" />
     <ClInclude Include="source\Menu.h" />
     <ClInclude Include="source\Random.h" />

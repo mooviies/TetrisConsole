@@ -2,30 +2,11 @@
 
 #include <string>
 
+#include "cstring.h"
 #include "Common.h"
 
 namespace konsole
 {
-	enum class Color
-	{
-		BLACK,
-		BLUE,
-		GREEN,
-		CYAN,
-		RED,
-		MAGENTA,
-		BROWN,
-		GREY,
-		DARKGREY,
-		LIGHTBLUE,
-		LIGHTGREEN,
-		LIGHTCYAN,
-		LIGHTRED,
-		LIGHTMAGENTA,
-		YELLOW,
-		WHITE
-	};
-
 	class Screen
 	{
 	public:
@@ -56,7 +37,8 @@ namespace konsole
 		void draw(uint x, uint y, const std::string& str);
 		void draw(uint x, uint y, const std::string& str, Color color, Color backgroundColor = Color::BLACK);
 
-		void draw(uint x, uint y, uint length = 1);
+		void draw(uint x, uint y, const cstring& str);
+
 		void draw(uint x, uint y, Color color, uint length = 1);
 
 	protected:
