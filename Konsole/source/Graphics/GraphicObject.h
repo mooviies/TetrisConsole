@@ -6,7 +6,7 @@
 
 #include "Common.h"
 #include "Screen.h"
-#include "cstring.h"
+#include "ColoredString.h"
 
 namespace konsole
 {
@@ -41,7 +41,7 @@ namespace konsole
 		uint _width;
 		uint _height;
 
-		std::vector<std::vector<cstring>> _object;
+		std::vector<std::vector<ColoredString>> _object;
 		std::vector<std::string> _objectPrefix;
 		std::vector<std::string> _objectPostfix;
 	};

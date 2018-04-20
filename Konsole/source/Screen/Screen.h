@@ -37,7 +37,7 @@ namespace konsole
 		void draw(uint x, uint y, const std::string& str);
 		void draw(uint x, uint y, const std::string& str, Color color, Color backgroundColor = Color::BLACK);
 
-		void draw(uint x, uint y, const cstring& str);
+		void draw(uint x, uint y, const ColoredString& str);
 
 		void draw(uint x, uint y, Color color, uint length = 1);
 

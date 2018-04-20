@@ -138,7 +138,7 @@ void Screen::draw(uint x, uint y, const std::string& str, Color color, Color bac
 	setBackgroundColor(previousBackgroundColor);
 }
 
-void Screen::draw(uint x, uint y, const cstring& str)
+void Screen::draw(uint x, uint y, const ColoredString& str)
 {
 	if (!_initialized)
 		return;
