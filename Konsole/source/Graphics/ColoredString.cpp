@@ -5,220 +5,93 @@
 using namespace konsole;
 using namespace std;
 
+ColoredChar konsole::toColoredChar(char c, Color textColor, Color backgroundColor)
+{
+	ColoredChar cc;
+	cc.value = c;
+	cc.textColor = textColor;
+	cc.backgroundColor = backgroundColor;
+	return cc;
+}
+
 ColoredString::ColoredString()
-	: _length(0)
 {
+
 }
 
-ColoredString::ColoredString(const std::string& str, TextColor color)
+ColoredString::ColoredString(char c)
 {
-	_strings.push_back(str);
-	_colors.push_back(color);
-	_starts.push_back(0);
-	_length = str.length;
+	ColoredChar cc;
+	cc.value = c;
+	assign(1, cc);
 }
 
-ColoredString::ColoredString(const std::string& str, size_t pos, size_t len, TextColor color)
+ColoredString::ColoredString(size_t n, char c)
 {
-	_strings.push_back(string(str, pos, len));
-	_colors.push_back(color);
-	_starts.push_back(0);
-	_length = _strings[0].length;
+	ColoredChar cc;
+	cc.value = c;
+	assign(n, cc);
 }
 
-ColoredString::ColoredString(const char* s, TextColor color)
+ColoredString::ColoredString(const char* str)
 {
-	_strings.push_back(string(s));
-	_colors.push_back(color);
-	_starts.push_back(0);
-	_length = _strings[0].length;
-}
-
-ColoredString::ColoredString(const char* s, size_t n, TextColor color)
-{
-	_strings.push_back(string(s, n));
-	_colors.push_back(color);
-	_starts.push_back(0);
-	_length = n;
-}
-
-ColoredString::ColoredString(size_t n, char c, TextColor color)
-{
-	_strings.push_back(string(n, c));
-	_colors.push_back(color);
-	_starts.push_back(0);
-	_length = n;
-}
-
-ColoredString::ColoredString(const ColoredString& str)
-{
-	_strings = str._strings;
-	_colors = str._colors;
-	_starts = str._starts;
-	_length = str._length;
-}
-
-ColoredString::ColoredString(const ColoredString& str, size_t pos, size_t len)
-{
-	const vector<size_t>& starts = str._starts;
-	const vector<std::string>& strings = str._strings;
-	const vector<TextColor>& colors = str._colors;
-	size_t strLength = str.length();
-	_length = 0;
-
-	for (size_t i = 0; i < starts.size(); i++)
+	size_t index = 0;
+	while (str[index] != '\0')
 	{
-		size_t begin = starts[i];
-		size_t length = strings[i].length();
-
-		if (pos >= begin && pos < strLength)
-		{
-			size_t s = pos - begin;
-			size_t l = len;
-
-			_strings.push_back(strings[i].substr(s, l));
-			_colors.push_back(colors[i]);
-			_starts.push_back(_length);
-
-			_length += l;
-
-			if (len > length)
-				len -= length;
-			else
-				break;
-		}
+		ColoredChar cc;
+		cc.value = str[index++];
+		append(1, cc);
 	}
 }
 
-ColoredString::ColoredString(size_t n, const ColoredChar& c)
+ColoredString::ColoredString(const std::string& str)
 {
-	_strings.push_back(string(n, c));
-	_colors.push_back(c.color);
-	_starts.push_back(0);
-	_length = n;
-}
-
-ColoredString& ColoredString::operator=(const ColoredChar& c)
-{
-	_strings.clear();
-	_colors.clear();
-	_starts.clear();
-
-	_strings.push_back(string(1, c));
-	_colors.push_back(c.color);
-	_starts.push_back(0);
-	_length = 1;
-
-	return *this;
-}
-
-ColoredString& ColoredString::operator=(const ColoredString& str)
-{
-	_strings = str._strings;
-	_colors = str._colors;
-	_starts = str._starts;
-	_length = str._length;
-}
-
-ColoredString::operator std::string() const
-{
-	string result;
-	for (int i = 0; i < _strings.size(); i++)
-		result.append(_strings[i]);
-
-	return result;
-}
-
-void ColoredString::resize(size_t n, char c = '\0')
-{
-	if (n > _length)
+	for (int i = 0; i < str.length(); i++)
 	{
-
+		ColoredChar cc;
+		cc.value = str[i];
+		append(1, cc);
 	}
 }
 
-void ColoredString::clear()
+std::string ColoredString::toString() const
 {
-	_strings.clear();
-	_colors.clear();
-	_starts.clear();
-	_length = 0;
+	string str;
+	for (int i = 0; i < length(); i++)
+		str.append(1, at(i).value);
+	return str;
 }
 
-char& ColoredString::operator[] (size_t pos)
+Color ColoredString::getColor(size_t index) const
 {
-	return this->at(pos);
+	return at(index).textColor;
 }
 
-const char& ColoredString::operator[] (size_t pos) const
+Color ColoredString::getBackgroundColor(size_t index) const
 {
-	return this->at(pos);
+	return at(index).backgroundColor;
 }
 
-char& ColoredString::at(size_t pos)
+void ColoredString::setColor(Color color)
 {
-	for (size_t i = 0; i < _starts.size(); i++)
-	{
-		size_t begin = _starts[i];
-		size_t end = begin + _strings[i].length();
-
-		if (pos >= begin && pos < end)
-		{
-			size_t s = pos - begin;
-			return _strings[i][pos - begin];
-		}
-	}
-
-	throw out_of_range(OUT_OF_RANGE);
+	for (int i = 0; i < length(); i++)
+		at(i).textColor = color;
 }
 
-const char& ColoredString::at(size_t pos) const
+void ColoredString::setColor(Color color, size_t index, size_t len)
 {
-	for (size_t i = 0; i < _starts.size(); i++)
-	{
-		size_t begin = _starts[i];
-		size_t end = begin + _strings[i].length();
-
-		if (pos >= begin && pos < end)
-		{
-			size_t s = pos - begin;
-			return _strings[i][pos - begin];
-		}
-	}
-
-	throw out_of_range(OUT_OF_RANGE);
+	for (int i = index; i < length() && len > 0; i++, len--)
+		at(i).textColor = color;
 }
 
-char& ColoredString::back()
+void ColoredString::setBackgroundColor(Color color)
 {
-	if(_length == 0)
-		throw out_of_range(OUT_OF_RANGE);
-
-	string& str = _strings[_strings.size() - 1];
-	return str[str.length() - 1];
+	for (int i = 0; i < length(); i++)
+		at(i).backgroundColor = color;
 }
 
-const char& ColoredString::back() const
+void ColoredString::setBackgroundColor(Color color, size_t index, size_t len)
 {
-	if (_length == 0)
-		throw out_of_range(OUT_OF_RANGE);
-
-	const string& str = _strings[_strings.size() - 1];
-	return str[str.length() - 1];
-}
-
-char& ColoredString::front()
-{
-	if (_length == 0)
-		throw out_of_range(OUT_OF_RANGE);
-
-	return _strings[0][0];
-}
-
-const char& ColoredString::front() const
-{
-	if (_length == 0)
-		throw out_of_range(OUT_OF_RANGE);
-
-	return _strings[0][0];
+	for (int i = index; i < length() && len > 0; i++, len--)
+		at(i).backgroundColor = color;
 }

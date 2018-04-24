@@ -6,7 +6,7 @@ using namespace konsole;
 using namespace std;
 
 Screen::Screen(uint width, uint height, Color initialColor, Color initialBackgroundColor)
-	: _initialized(false), _x(0), _y(0), _width(width), _height(height), _currentColor(initialColor), _currentBackgroundColor(initialBackgroundColor)
+	: _initialized(false), _width(width), _height(height), _currentColor(initialColor), _currentBackgroundColor(initialBackgroundColor)
 {
 }
 
@@ -72,84 +72,39 @@ void Screen::setBackgroundColor(Color color)
 	setBackgroundColor(color, false);
 }
 
-void Screen::draw(uint x, uint y, char c)
+void Screen::draw(uint x, uint y, const GraphicObject* obj, Alignement alignement)
 {
-	if (!_initialized)
-		return;
+	size_t height = obj->getHeight();
+	for (size_t i = 0; i < height; i++)
+	{
+		draw(x, y, obj->getLine(i, alignement));
+	}
 
-	setCursorPosition(x, y);
-	print(c);
-}
-
-void Screen::draw(uint x, uint y, char c, Color color, Color backgroundColor)
-{
-	if (!_initialized)
-		return;
-
-	Color previousColor = _currentColor, previousBackgroundColor = _currentBackgroundColor;
-	setColor(color);
-	setBackgroundColor(backgroundColor);
-	draw(x, y, c);
-	setColor(previousColor);
-	setBackgroundColor(previousBackgroundColor);
-}
-
-void Screen::draw(uint x, uint y, const char* str)
-{
-	if (!_initialized)
-		return;
-
-	setCursorPosition(x, y);
-	print(str);
-}
-
-void Screen::draw(uint x, uint y, const char* str, Color color, Color backgroundColor)
-{
-	if (!_initialized)
-		return;
-
-	Color previousColor = _currentColor, previousBackgroundColor = _currentBackgroundColor;
-	setColor(color);
-	setBackgroundColor(backgroundColor);
-	draw(x, y, str);
-	setColor(previousColor);
-	setBackgroundColor(previousBackgroundColor);
-}
-
-void Screen::draw(uint x, uint y, const std::string& str)
-{
-	if (!_initialized)
-		return;
-
-	setCursorPosition(x, y);
-	print(str);
-}
-
-void Screen::draw(uint x, uint y, const std::string& str, Color color, Color backgroundColor)
-{
-	if (!_initialized)
-		return;
-
-	Color previousColor = _currentColor, previousBackgroundColor = _currentBackgroundColor;
-	setColor(color);
-	setBackgroundColor(backgroundColor);
-	draw(x, y, str);
-	setColor(previousColor);
-	setBackgroundColor(previousBackgroundColor);
+	size_t nbChild = obj->getNbChild();
+	for (size_t i = 0; i < nbChild; i++)
+	{
+		const GraphicObject* child = obj->getChild(i);
+		Coordinates coord = child->getRelativeCoordinates(i);
+		draw(x + coord.x, y + coord.y, child, alignement);
+	}
 }
 
 void Screen::draw(uint x, uint y, const ColoredString& str)
 {
+	for (int i = 0; i < str.length(); i++)
+	{
+		draw(x, y, str[i]);
+	}
+}
+
+void Screen::draw(uint x, uint y, const ColoredChar& c)
+{
 	if (!_initialized)
 		return;
 
-	Color previousColor = _currentColor, previousBackgroundColor = _currentBackgroundColor;
-	setColor(str.getColor());
-	setBackgroundColor(str.getBackgroundColor());
-	setCursorPosition(x, y);
-	print(str);
-	setColor(previousColor);
-	setBackgroundColor(previousBackgroundColor);
+	setColor(c.textColor);
+	setBackgroundColor(c.backgroundColor);
+	print(x, y, c.value);
 }
 
 void Screen::draw(uint x, uint y, Color color, uint length)
@@ -160,11 +115,9 @@ void Screen::draw(uint x, uint y, Color color, uint length)
 	if (length == 0)
 		length = 1;
 
-	Color previousBackgroundColor = _currentBackgroundColor;
 	setBackgroundColor(color);
 	setCursorPosition(x, y);
-	print(string(length, ' '));
-	setBackgroundColor(previousBackgroundColor);
+	print(x, y, string(length, ' '));
 }
 
 void Screen::setSize(uint width, uint height)
@@ -198,38 +151,36 @@ void Screen::setBackgroundColor(Color color, bool force)
 
 void Screen::setCursorPosition(uint x, uint y)
 {
-	_x = x;
-	_y = y;
 	onSetCursorPosition(x, y);
 }
 
-void Screen::print(char c)
+void Screen::print(uint& x, uint& y, char c) const
 {
-	if (!isValidPosition(_x, _y))
+	if (!isValidPosition(x, y))
 		return;
 
 	cout << c;
-	_x++;
+	x++;
 }
 
-void Screen::print(const char* str)
+void Screen::print(uint& x, uint& y, const char* str) const
 {
 	uint i = 0;
 	char c = str[i++];
 	while (c != '\0')
 	{
-		print(c);
+		print(x, y, c);
 		c = str[i++];
 	}
 }
 
-void Screen::print(const std::string& str)
+void Screen::print(uint& x, uint& y, const std::string& str) const
 {
 	for (int i = 0; i < str.length(); i++)
-		print(str[i]);
+		print(x, y, str[i]);
 }
 
 bool Screen::isValidPosition(uint x, uint y) const
 {
-	return (_x < _width) && (_y < _height);
+	return (x < _width) && (y < _height);
 }

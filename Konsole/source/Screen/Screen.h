@@ -1,9 +1,6 @@
 #pragma once
 
-#include <string>
-
-#include "cstring.h"
-#include "Common.h"
+#include "GraphicObject.h"
 
 namespace konsole
 {
@@ -28,16 +25,10 @@ namespace konsole
 		void setColor(Color color);
 		void setBackgroundColor(Color color);
 
-		void draw(uint x, uint y, char c);
-		void draw(uint x, uint y, char c, Color color, Color backgroundColor = Color::BLACK);
-
-		void draw(uint x, uint y, const char* str);
-		void draw(uint x, uint y, const char* str, Color color, Color backgroundColor = Color::BLACK);
-
-		void draw(uint x, uint y, const std::string& str);
-		void draw(uint x, uint y, const std::string& str, Color color, Color backgroundColor = Color::BLACK);
+		void draw(uint x, uint y, const GraphicObject* obj, Alignement alignement = Alignement::NONE);
 
 		void draw(uint x, uint y, const ColoredString& str);
+		void draw(uint x, uint y, const ColoredChar& c);
 
 		void draw(uint x, uint y, Color color, uint length = 1);
 
@@ -61,16 +52,13 @@ namespace konsole
 
 		void setCursorPosition(uint x, uint y);
 
-		void print(char c);
-		void print(const char* str);
-		void print(const std::string& str);
+		void print(uint& x, uint& y, char c) const;
+		void print(uint& x, uint& y, const char* str) const;
+		void print(uint& x, uint& y, const std::string& str) const;
 
 		bool isValidPosition(uint x, uint y) const;
 
 	private:
-		uint _x;
-		uint _y;
-
 		uint _width;
 		uint _height;
 

@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Konsole.cpp" />
+    <ClCompile Include="source\Graphics\ColoredString.cpp" />
     <ClCompile Include="source\Graphics\GraphicObject.cpp" />
     <ClCompile Include="source\Graphics\SymbolsLibrary.cpp" />
     <ClCompile Include="source\Graphics\Table.cpp" />
@@ -168,6 +169,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Common.h" />
+    <ClInclude Include="source\Graphics\ColoredString.h" />
     <ClInclude Include="source\Graphics\GraphicObject.h" />
     <ClInclude Include="source\Graphics\SymbolsLibrary.h" />
     <ClInclude Include="source\Graphics\Table.h" />

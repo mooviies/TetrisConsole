@@ -1,16 +1,18 @@
 #pragma once
 
+#include <xstring>
 #include <string>
 #include <vector>
-#include <cstddef>
 
 #include "Common.h"
-#include "Screen.h"
 #include "ColoredString.h"
 
 namespace konsole
 {
-	enum class ALIGNEMENT {
+	class ColoredString;
+
+	enum class Alignement {
+		NONE,
 		LEFT,
 		RIGHT,
 		CENTER
@@ -19,30 +21,37 @@ namespace konsole
 	class GraphicObject
 	{
 	public:
-		GraphicObject(ALIGNEMENT alignement);
+		GraphicObject();
 		~GraphicObject();
 
 		uint getWidth() const { return _width; }
 		uint getHeight() const { return _height; }
-		const string& getLine(size_t index) const { return index < _object.size() ? _object[index] : ""; }
+		const ColoredString& getLine(size_t index, Alignement alignement = Alignement::NONE) const;
 
-		void addLine(const string& line);
-		void editLine(size_t index, const string& line);
+		void addLine(const ColoredString& line);
+		void editLine(size_t index, const ColoredString& line);
+		void removeLine(size_t index);
 
-		void draw(Screen& screen, int x, int y) const;
-		void addChild(const GraphicObject* child, int rx, int ry);
+		size_t getNbChild() const { return _childs.size(); }
+		const GraphicObject* getChild(size_t index) const { return index < _childs.size() ? _childs[index] : nullptr; }
+		Coordinates getRelativeCoordinates(size_t index) const { return index < _childsRelativePos.size() ? _childsRelativePos[index] : Coordinates(); }
+
+		void addChild(const GraphicObject* child, uint relativeX, uint relativeY);
+
+	private:
+		void generateObject();
 
 	private:
 		const GraphicObject* _parent;
-		vector<const GraphicObject*>  _childs;
-		vector<Coordinates> _childsCoordinates;
+		std::vector<const GraphicObject*>  _childs;
+		std::vector<Coordinates>  _childsRelativePos;
 
-		ALIGNEMENT _alignement;
 		uint _width;
 		uint _height;
 
-		std::vector<std::vector<ColoredString>> _object;
-		std::vector<std::string> _objectPrefix;
-		std::vector<std::string> _objectPostfix;
+		std::vector<ColoredString> _object;
+		std::vector<ColoredString> _objectAlignLeft;
+		std::vector<ColoredString> _objectAlignRight;
+		std::vector<ColoredString> _objectAlignCenter;
 	};
 }
