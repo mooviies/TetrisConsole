@@ -77,7 +77,8 @@ void Screen::draw(uint x, uint y, const GraphicObject* obj, Alignement alignemen
 	size_t height = obj->getHeight();
 	for (size_t i = 0; i < height; i++)
 	{
-		draw(x, y, obj->getLine(i, alignement));
+		setCursorPosition(x, y + i);
+		draw(x, y + i, obj->getLine(i, alignement));
 	}
 
 	size_t nbChild = obj->getNbChild();
@@ -102,9 +103,12 @@ void Screen::draw(uint x, uint y, const ColoredChar& c)
 	if (!_initialized)
 		return;
 
+	if (!isValidPosition(x, y))
+		return;
+
 	setColor(c.textColor);
 	setBackgroundColor(c.backgroundColor);
-	print(x, y, c.value);
+	cout << c.value;
 }
 
 void Screen::draw(uint x, uint y, Color color, uint length)
@@ -115,9 +119,7 @@ void Screen::draw(uint x, uint y, Color color, uint length)
 	if (length == 0)
 		length = 1;
 
-	setBackgroundColor(color);
-	setCursorPosition(x, y);
-	print(x, y, string(length, ' '));
+	draw(x, y, string(length, ' '));
 }
 
 void Screen::setSize(uint width, uint height)
@@ -152,32 +154,6 @@ void Screen::setBackgroundColor(Color color, bool force)
 void Screen::setCursorPosition(uint x, uint y)
 {
 	onSetCursorPosition(x, y);
-}
-
-void Screen::print(uint& x, uint& y, char c) const
-{
-	if (!isValidPosition(x, y))
-		return;
-
-	cout << c;
-	x++;
-}
-
-void Screen::print(uint& x, uint& y, const char* str) const
-{
-	uint i = 0;
-	char c = str[i++];
-	while (c != '\0')
-	{
-		print(x, y, c);
-		c = str[i++];
-	}
-}
-
-void Screen::print(uint& x, uint& y, const std::string& str) const
-{
-	for (int i = 0; i < str.length(); i++)
-		print(x, y, str[i]);
 }
 
 bool Screen::isValidPosition(uint x, uint y) const

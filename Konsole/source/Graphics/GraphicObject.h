@@ -9,8 +9,6 @@
 
 namespace konsole
 {
-	class ColoredString;
-
 	enum class Alignement {
 		NONE,
 		LEFT,
@@ -38,8 +36,8 @@ namespace konsole
 
 		void addChild(const GraphicObject* child, uint relativeX, uint relativeY);
 
-	private:
-		void generateObject();
+	protected:
+		virtual void generateObject();
 
 	private:
 		const GraphicObject* _parent;

@@ -52,10 +52,6 @@ namespace konsole
 
 		void setCursorPosition(uint x, uint y);
 
-		void print(uint& x, uint& y, char c) const;
-		void print(uint& x, uint& y, const char* str) const;
-		void print(uint& x, uint& y, const std::string& str) const;
-
 		bool isValidPosition(uint x, uint y) const;
 
 	private:

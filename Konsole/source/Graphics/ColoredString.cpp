@@ -7,11 +7,7 @@ using namespace std;
 
 ColoredChar konsole::toColoredChar(char c, Color textColor, Color backgroundColor)
 {
-	ColoredChar cc;
-	cc.value = c;
-	cc.textColor = textColor;
-	cc.backgroundColor = backgroundColor;
-	return cc;
+	return ColoredChar(c, textColor, backgroundColor);
 }
 
 ColoredString::ColoredString()
@@ -21,16 +17,12 @@ ColoredString::ColoredString()
 
 ColoredString::ColoredString(char c)
 {
-	ColoredChar cc;
-	cc.value = c;
-	assign(1, cc);
+	assign(1, c);
 }
 
 ColoredString::ColoredString(size_t n, char c)
 {
-	ColoredChar cc;
-	cc.value = c;
-	assign(n, cc);
+	assign(n, c);
 }
 
 ColoredString::ColoredString(const char* str)
@@ -38,9 +30,7 @@ ColoredString::ColoredString(const char* str)
 	size_t index = 0;
 	while (str[index] != '\0')
 	{
-		ColoredChar cc;
-		cc.value = str[index++];
-		append(1, cc);
+		append(1, str[index++]);
 	}
 }
 
@@ -48,9 +38,7 @@ ColoredString::ColoredString(const std::string& str)
 {
 	for (int i = 0; i < str.length(); i++)
 	{
-		ColoredChar cc;
-		cc.value = str[i];
-		append(1, cc);
+		append(1, str[i]);
 	}
 }
 

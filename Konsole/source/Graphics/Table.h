@@ -5,6 +5,7 @@
 namespace konsole
 {
 	enum Border {
+		DOUBLE,
 		SOLID,
 		DASHED,
 		DOTTED
@@ -58,7 +59,7 @@ namespace konsole
 	class Table : public GraphicObject
 	{
 	public:
-		Table(uint rows, uint columns, Margin tableMargin = Margin(), Margin elementsMargin = Margin(), Alignement alignement = Alignement::LEFT);
+		Table(uint rows, uint columns, Border border, Margin tableMargin = Margin(), Margin elementsMargin = Margin(), Alignement alignement = Alignement::LEFT);
 		~Table();
 
 		void setAlignement(Alignement alignement);
@@ -89,6 +90,9 @@ namespace konsole
 		void addElement(uint row, uint column, const GraphicObject* element);
 		void removeElement(uint row, uint column);
 
+	protected:
+		virtual void generateObject() override {}
+
 	private:
 		void generate();
 
@@ -96,6 +100,7 @@ namespace konsole
 		uint _rows;
 		uint _columns;
 		Margin _margin;
+		Border _border;
 		
 		Margin _defaultElementMargin;
 		Alignement _defaultElementAlignement;

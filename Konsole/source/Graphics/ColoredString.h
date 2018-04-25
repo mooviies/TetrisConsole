@@ -13,6 +13,22 @@ namespace konsole
 {
 	struct ColoredChar
 	{
+		constexpr ColoredChar()
+		{
+		}
+
+		constexpr ColoredChar(char v)
+		{
+			value = v;
+		}
+
+		constexpr ColoredChar(char v, Color text, Color background)
+		{
+			value = v;
+			textColor = text;
+			backgroundColor = background;
+		}
+
 		char value = '\0';
 		Color textColor = Color::WHITE;
 		Color backgroundColor = Color::BLACK;

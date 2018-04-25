@@ -36,20 +36,6 @@ namespace konsole
 		BORDER_SINGLE_CROSS = 197,
 		BORDER_DASHED_HORIZONTAL = 45,
 		BORDER_DASHED_VERTICAL = 221,
-		BORDER_DOTTED_HORIZONTAL = 250,
-		BORDER_DOTTER_VERTICAL = 58
-	};
-
-	class SymbolsLibrary
-	{
-	public:
-		static char get(Symbol symbol);
-
-	private:
-		SymbolsLibrary() {}
-		~SymbolsLibrary() {}
-
-	private:
-		static const int FACTOR_ASCII_TO_ANSI = 133;
+		BORDER_DOTTED = 250
 	};
 }
