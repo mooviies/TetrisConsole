@@ -26,6 +26,14 @@ namespace konsole
 			*this = value;
 		}
 
+		Spacing(uint le, uint ri, uint to, uint bo)
+		{
+			left = le;
+			right = ri;
+			top = to;
+			bottom = bo;
+		}
+
 		Spacing& operator=(uint value)
 		{
 			left = right = top = bottom = value;
@@ -44,30 +52,22 @@ namespace konsole
 	struct TableElement
 	{
 		TableElement() {}
-		TableElement(const GraphicObject* obj, Margin mar, Alignement align) 
+		TableElement(GraphicObject* obj, Margin mar) 
 		{
 			object = obj;
 			margin = mar;
-			alignement = align;
 		}
 
-		const GraphicObject* object = nullptr;
+		GraphicObject* object = nullptr;
 		Margin margin;
-		Alignement alignement;
 	};
 
 	class Table : public GraphicObject
 	{
 	public:
-		Table(uint rows, uint columns, Border border, Margin tableMargin = Margin(), Margin elementsMargin = Margin(), Alignement alignement = Alignement::LEFT);
+		Table(uint rows, uint columns, Border border, Margin elementsMargin = Margin());
 		~Table();
 
-		void setAlignement(Alignement alignement);
-		void setAlignement(uint row, uint column, Alignement alignement);
-		void setAlignementRow(uint row, Alignement alignement);
-		void setAlignementColumn(uint column, Alignement alignement);
-
-		void setTableMargin(Margin margin);
 		void setMargin(Margin margin);
 		void setMargin(uint row, uint column, Margin margin);
 		void setMarginRow(uint row, Margin margin);
@@ -87,7 +87,7 @@ namespace konsole
 
 		const GraphicObject* getElement(uint row, uint column) const;
 
-		void addElement(uint row, uint column, const GraphicObject* element);
+		void addElement(uint row, uint column, GraphicObject* element);
 		void removeElement(uint row, uint column);
 
 	protected:
@@ -99,11 +99,9 @@ namespace konsole
 	private:
 		uint _rows;
 		uint _columns;
-		Margin _margin;
 		Border _border;
 		
-		Margin _defaultElementMargin;
-		Alignement _defaultElementAlignement;
+		Margin _margin;
 
 		std::vector<std::vector<TableElement>> _elements;
 	};

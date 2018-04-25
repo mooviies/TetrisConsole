@@ -25,7 +25,7 @@ namespace konsole
 		void setColor(Color color);
 		void setBackgroundColor(Color color);
 
-		void draw(uint x, uint y, const GraphicObject* obj, Alignement alignement = Alignement::NONE);
+		void draw(uint x, uint y, const GraphicObject* obj);
 
 		void draw(uint x, uint y, const ColoredString& str);
 		void draw(uint x, uint y, const ColoredChar& c);

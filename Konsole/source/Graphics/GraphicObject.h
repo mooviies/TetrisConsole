@@ -10,7 +10,6 @@
 namespace konsole
 {
 	enum class Alignement {
-		NONE,
 		LEFT,
 		RIGHT,
 		CENTER
@@ -19,13 +18,17 @@ namespace konsole
 	class GraphicObject
 	{
 	public:
-		GraphicObject();
+		GraphicObject(Alignement alignement = Alignement::LEFT);
 		~GraphicObject();
 
 		uint getWidth() const { return _width; }
 		uint getHeight() const { return _height; }
-		const ColoredString& getLine(size_t index, Alignement alignement = Alignement::NONE) const;
+		const ColoredString& getLine(size_t index) const;
 
+		void setMinimumWidth(uint width) { _minimumWidth = width; generateObject(); }
+		void setAlignement(Alignement alignement) { _alignement = alignement; }
+
+		void clear();
 		void addLine(const ColoredString& line);
 		void editLine(size_t index, const ColoredString& line);
 		void removeLine(size_t index);
@@ -40,10 +43,12 @@ namespace konsole
 		virtual void generateObject();
 
 	private:
-		const GraphicObject* _parent;
+		Alignement _alignement;
+
 		std::vector<const GraphicObject*>  _childs;
 		std::vector<Coordinates>  _childsRelativePos;
 
+		uint _minimumWidth;
 		uint _width;
 		uint _height;
 

@@ -72,21 +72,21 @@ void Screen::setBackgroundColor(Color color)
 	setBackgroundColor(color, false);
 }
 
-void Screen::draw(uint x, uint y, const GraphicObject* obj, Alignement alignement)
+void Screen::draw(uint x, uint y, const GraphicObject* obj)
 {
 	size_t height = obj->getHeight();
 	for (size_t i = 0; i < height; i++)
 	{
 		setCursorPosition(x, y + i);
-		draw(x, y + i, obj->getLine(i, alignement));
+		draw(x, y + i, obj->getLine(i));
 	}
 
 	size_t nbChild = obj->getNbChild();
 	for (size_t i = 0; i < nbChild; i++)
 	{
 		const GraphicObject* child = obj->getChild(i);
-		Coordinates coord = child->getRelativeCoordinates(i);
-		draw(x + coord.x, y + coord.y, child, alignement);
+		Coordinates coord = obj->getRelativeCoordinates(i);
+		draw(x + coord.x, y + coord.y, child);
 	}
 }
 

@@ -5,8 +5,8 @@
 using namespace konsole;
 using namespace std;
 
-GraphicObject::GraphicObject()
-	: _parent(nullptr), _width(0), _height(0)
+GraphicObject::GraphicObject(Alignement alignement)
+	: _alignement(alignement), _width(0), _height(0), _minimumWidth(0)
 {
 }
 
@@ -14,17 +14,14 @@ GraphicObject::~GraphicObject()
 {
 }
 
-const ColoredString& GraphicObject::getLine(size_t index, Alignement alignement) const
+const ColoredString& GraphicObject::getLine(size_t index) const
 { 
 	if (index >= _object.size())
 	{
-		if(alignement == Alignement::NONE)
-			return ColoredString("");
-
-		return ColoredString(_width, ' ');
+		return ColoredString("");
 	}
 
-	switch (alignement)
+	switch (_alignement)
 	{
 	case Alignement::LEFT:
 		return _objectAlignLeft[index];
@@ -39,6 +36,18 @@ const ColoredString& GraphicObject::getLine(size_t index, Alignement alignement)
 		return _object[index];
 		break;
 	}
+}
+
+void GraphicObject::clear()
+{
+	_width = 0;
+	_height = 0;
+	_childs.clear();
+	_childsRelativePos.clear();
+	_object.clear();
+	_objectAlignLeft.clear();
+	_objectAlignRight.clear();
+	_objectAlignCenter.clear();
 }
 
 void GraphicObject::addLine(const ColoredString& line)
@@ -88,7 +97,7 @@ void GraphicObject::addChild(const GraphicObject* child, uint relativeX, uint re
 
 void GraphicObject::generateObject()
 {
-	_width = 0;
+	_width = _minimumWidth;
 	_objectAlignLeft.clear();
 	_objectAlignRight.clear();
 	_objectAlignCenter.clear();
@@ -101,23 +110,24 @@ void GraphicObject::generateObject()
 
 	for (size_t i = 0; i < _object.size(); i++)
 	{
+		uint nbSpace = _width - _object[i].length();
 		// LEFT
 		_objectAlignLeft.push_back(_object[i]);
-		_objectAlignLeft[i].append(_width, toColoredChar(' '));
+		_objectAlignLeft[i].append(nbSpace, toColoredChar(' '));
 		
 		// RIGHT
-		_objectAlignRight.push_back(ColoredString(_width, ' '));
+		_objectAlignRight.push_back(ColoredString(nbSpace, ' '));
 		_objectAlignRight[i].append(_object[i]);
 
 		// CENTER
-		uint nbChar = _width / 2;
-		uint carry = _width - nbChar;
+		uint nbChar = nbSpace / 2;
+		uint carry = nbSpace - nbChar * 2;
 		ColoredString toAppend = ColoredString(nbChar, ' ');
 		_objectAlignCenter.push_back(toAppend);
 		_objectAlignCenter[i].append(_object[i]);
-		_objectAlignCenter.push_back(toAppend);
+		_objectAlignCenter[i].append(toAppend);
 
 		if (carry > 0)
-			_objectAlignCenter.push_back(ColoredString(carry, ' '));
+			_objectAlignCenter[i].append(ColoredString(carry, ' '));
 	}
 }

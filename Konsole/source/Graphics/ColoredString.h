@@ -83,10 +83,10 @@ namespace konsole
 		Color getColor(size_t index) const;
 		Color getBackgroundColor(size_t index) const;
 
-		void setColor(Color color);
-		void setColor(Color color, size_t index, size_t len);
+		ColoredString& setColor(Color color);
+		ColoredString& setColor(Color color, size_t index, size_t len);
 
-		void setBackgroundColor(Color color);
-		void setBackgroundColor(Color color, size_t index, size_t len);
+		ColoredString& setBackgroundColor(Color color);
+		ColoredString& setBackgroundColor(Color color, size_t index, size_t len);
 	};
 }

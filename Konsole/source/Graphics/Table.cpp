@@ -5,7 +5,7 @@
 using namespace std;
 using namespace konsole;
 
-Table::Table(uint rows, uint columns, Border border, Margin tableMargin, Margin elementsMargin, Alignement alignement)
+Table::Table(uint rows, uint columns, Border border, Margin margin)
 {
 	if (rows == 0)
 		rows = 1;
@@ -16,16 +16,14 @@ Table::Table(uint rows, uint columns, Border border, Margin tableMargin, Margin 
 	_rows = rows;
 	_columns = columns;
 	_border = border;
-	_margin = tableMargin;
-	_defaultElementMargin = elementsMargin;
-	_defaultElementAlignement = alignement;
+	_margin = margin;
 
 	for (int r = 0; r < _rows; r++)
 	{
 		_elements.push_back(vector<TableElement>());
 		for (int c = 0; c < _columns; c++)
 		{
-			_elements[r].push_back(TableElement(nullptr, elementsMargin, alignement));
+			_elements[r].push_back(TableElement(nullptr, margin));
 		}
 	}
 	generate();
@@ -35,52 +33,9 @@ Table::~Table()
 {
 }
 
-void Table::setAlignement(Alignement alignement)
-{
-	_defaultElementAlignement = alignement;
-	for (int r = 0; r < _rows; r++)
-	{
-		for (int c = 0; c < _columns; c++)
-		{
-			_elements[r][c].alignement = alignement;
-		}
-	}
-	generate();
-}
-
-void Table::setAlignement(uint row, uint column, Alignement alignement)
-{
-	_elements[row][column].alignement = alignement;
-	generate();
-}
-
-void Table::setAlignementRow(uint row, Alignement alignement)
-{
-	for (int c = 0; c < _columns; c++)
-	{
-		_elements[row][c].alignement = alignement;
-	}
-	generate();
-}
-
-void Table::setAlignementColumn(uint column, Alignement alignement)
-{
-	for (int r = 0; r < _rows; r++)
-	{
-		_elements[r][column].alignement = alignement;
-	}
-	generate();
-}
-
-void Table::setTableMargin(Margin margin)
-{
-	_margin = margin;
-	generate();
-}
-
 void Table::setMargin(Margin margin)
 {
-	_defaultElementMargin = margin;
+	_margin = margin;
 	for (int r = 0; r < _rows; r++)
 	{
 		for (int c = 0; c < _columns; c++)
@@ -121,7 +76,7 @@ void Table::addRow()
 	_elements.push_back(vector<TableElement>());
 	for (int c = 0; c < _columns; c++)
 	{
-		_elements[_rows - 1].push_back(TableElement(nullptr, _defaultElementMargin, _defaultElementAlignement));
+		_elements[_rows - 1].push_back(TableElement(nullptr, _margin));
 	}
 	generate();
 }
@@ -131,7 +86,7 @@ void Table::addColumn()
 	_columns++;
 	for (int r = 0; r < _rows; r++)
 	{
-		_elements[r].push_back(TableElement(nullptr, _defaultElementMargin, _defaultElementAlignement));
+		_elements[r].push_back(TableElement(nullptr, _margin));
 	}
 	generate();
 }
@@ -148,7 +103,7 @@ void Table::insertRowBefore(uint row)
 	_elements.insert(_elements.begin() + row, vector<TableElement>());
 	for (int c = 0; c < _columns; c++)
 	{
-		_elements[row].push_back(TableElement(nullptr, _defaultElementMargin, _defaultElementAlignement));
+		_elements[row].push_back(TableElement(nullptr, _margin));
 	}
 	generate();
 }
@@ -164,7 +119,7 @@ void Table::insertColumnBefore(uint column)
 	_columns++;
 	for (int r = 0; r < _rows; r++)
 	{
-		_elements[r].insert(_elements[r].begin() + column, TableElement(nullptr, _defaultElementMargin, _defaultElementAlignement));
+		_elements[r].insert(_elements[r].begin() + column, TableElement(nullptr, _margin));
 	}
 	generate();
 }
@@ -200,7 +155,7 @@ const GraphicObject* Table::getElement(uint row, uint column) const
 	return nullptr;
 }
 
-void Table::addElement(uint row, uint column, const GraphicObject* element)
+void Table::addElement(uint row, uint column, GraphicObject* element)
 {
 	if (row >= _rows || column >= _columns)
 		return;
@@ -210,8 +165,7 @@ void Table::addElement(uint row, uint column, const GraphicObject* element)
 
 	TableElement& tableElement = _elements[row][column];
 	tableElement.object = element;
-	tableElement.alignement = _defaultElementAlignement;
-	tableElement.margin = _defaultElementMargin;
+	tableElement.margin = _margin;
 	generate();
 }
 
@@ -226,39 +180,40 @@ void Table::removeElement(uint row, uint column)
 
 void Table::generate()
 {
+	clear();
 	char corner_tl, corner_tr, corner_bl, corner_br, t_left, t_right, t_top, t_bottom, horizontal, vertical, cross;
 
 	switch (_border)
 	{
 	case Border::DASHED:
-		corner_tl = (char)Symbol::BORDER_SINGLE_CORNER_TL;
-		corner_tr = (char)Symbol::BORDER_SINGLE_CORNER_TR;
-		corner_bl = (char)Symbol::BORDER_SINGLE_CORNER_BL;
-		corner_br = (char)Symbol::BORDER_SINGLE_CORNER_BR;
+		corner_tl = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		corner_tr = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		corner_bl = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		corner_br = (char)Symbol::BORDER_DASHED_HORIZONTAL;
 
-		t_left = (char)Symbol::BORDER_SINGLE_T_LEFT;
-		t_right = (char)Symbol::BORDER_SINGLE_T_RIGHT;
-		t_top = (char)Symbol::BORDER_SINGLE_T_TOP;
-		t_bottom = (char)Symbol::BORDER_SINGLE_T_BOTTOM;
+		t_left = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		t_right = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		t_top = (char)Symbol::BORDER_DASHED_HORIZONTAL;
+		t_bottom = (char)Symbol::BORDER_DASHED_HORIZONTAL;
 
 		horizontal = (char)Symbol::BORDER_DASHED_HORIZONTAL;
 		vertical = (char)Symbol::BORDER_DASHED_VERTICAL;
-		cross = (char)Symbol::BORDER_SINGLE_CROSS;
+		cross = (char)Symbol::BORDER_DASHED_HORIZONTAL;
 		break;
 	case Border::DOTTED:
-		corner_tl = (char)Symbol::BORDER_DOTTED;
-		corner_tr = (char)Symbol::BORDER_DOTTED;
-		corner_bl = (char)Symbol::BORDER_DOTTED;
-		corner_br = (char)Symbol::BORDER_DOTTED;
+		corner_tl = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
+		corner_tr = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
+		corner_bl = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
+		corner_br = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
 
-		t_left = (char)Symbol::BORDER_DOTTED;
-		t_right = (char)Symbol::BORDER_DOTTED;
-		t_top = (char)Symbol::BORDER_DOTTED;
-		t_bottom = (char)Symbol::BORDER_DOTTED;
+		t_left = (char)Symbol::BORDER_DOTTED_VERTICAL;
+		t_right = (char)Symbol::BORDER_DOTTED_VERTICAL;
+		t_top = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
+		t_bottom = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
 
-		horizontal = (char)Symbol::BORDER_DOTTED;
-		vertical = (char)Symbol::BORDER_DOTTED;
-		cross = (char)Symbol::BORDER_DOTTED;
+		horizontal = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
+		vertical = (char)Symbol::BORDER_DOTTED_VERTICAL;
+		cross = (char)Symbol::BORDER_DOTTED_HORIZONTAL;
 		break;
 	case Border::SOLID:
 		corner_tl = (char)Symbol::BORDER_SINGLE_CORNER_TL;
@@ -292,35 +247,38 @@ void Table::generate()
 		break;
 	}
 
-	uint* rowHeights = new uint[_elements.size()];
-	uint* columnWidths = new uint[_elements[0].size()];
+	uint* rowHeights = new uint[_rows];
+	uint* columnWidths = new uint[_columns];
 
-	for (size_t r = 0; r < _elements.size(); r++)
+	uint* rowPos = new uint[_rows];
+	uint* columnPos = new uint[_columns];
+
+	for (size_t r = 0; r < _rows; r++)
 	{
 		rowHeights[r] = 0;
-		for (size_t c = 0; c < _elements[r].size(); c++)
+		for (size_t c = 0; c < _columns; c++)
 		{
 			if (r == 0)
 				columnWidths[c] = 0;
 
 			TableElement& tableElement = _elements[r][c];
-			uint height = tableElement.object ? tableElement.object->getHeight() + tableElement.margin.top + tableElement.margin.bottom : 0;
+			uint height = tableElement.object ? tableElement.object->getHeight() + tableElement.margin.top + tableElement.margin.bottom : tableElement.margin.top + tableElement.margin.bottom;
 			if (height > rowHeights[r])
 				rowHeights[r] = height;
 
-			uint width = tableElement.object ? tableElement.object->getWidth() + tableElement.margin.left + tableElement.margin.right : 0;
+			uint width = tableElement.object ? tableElement.object->getWidth() + tableElement.margin.left + tableElement.margin.right : tableElement.margin.left + tableElement.margin.right;
 			if (width > columnWidths[c])
 				columnWidths[c] = width;
 		}
 	}
 
 	uint totalInsideWidth = 0, totalInsideHeight = 0;
-	for (size_t r = 0; r < _elements.size(); r++)
+	for (size_t r = 0; r < _rows; r++)
 	{
 		totalInsideHeight += rowHeights[r];
 	}
 
-	for (size_t c = 0; c < _elements[0].size(); c++)
+	for (size_t c = 0; c < _columns; c++)
 	{
 		totalInsideWidth += columnWidths[c];
 	}
@@ -332,15 +290,15 @@ void Table::generate()
 	horizontalElement += vertical;
 	horizontalBottom += corner_bl;
 
-	for (int i = 0; i < _columns; i++)
+	for (uint i = 0; i < _columns; i++)
 	{
-		for (int j = 0; j < columnWidths[i]; j++)
+		columnPos[i] = horizontalTop.size() + _margin.left;
+		for (uint j = 0; j < columnWidths[i]; j++)
 		{
 			horizontalTop += horizontal;
 			horizontalInside += horizontal;
-			horizontalElement += ' ';
 			horizontalBottom += horizontal;
-
+			horizontalElement += ' ';
 		}
 
 		horizontalElement += vertical;
@@ -361,9 +319,10 @@ void Table::generate()
 
 	addLine(horizontalTop);
 
-	for (int i = 0; i < _rows; i++)
+	for (uint i = 0; i < _rows; i++)
 	{
-		for (int j = 0; j < rowHeights[i]; j++)
+		rowPos[i] = getHeight() + _margin.top;
+		for (uint j = 0; j < rowHeights[i]; j++)
 		{
 			addLine(horizontalElement);
 		}
@@ -373,7 +332,21 @@ void Table::generate()
 			addLine(horizontalInside);
 	}
 
+	for (uint i = 0; i < _rows; i++)
+	{
+		for (uint j = 0; j < _columns; j++)
+		{
+			if (_elements[i][j].object)
+			{
+				_elements[i][j].object->setMinimumWidth(columnWidths[j] - _margin.left - _margin.right);
+				addChild(_elements[i][j].object, columnPos[j], rowPos[i]);
+			}
+		}
+	}
+
 	delete[] rowHeights;
 	delete[] columnWidths;
+	delete[] rowPos;
+	delete[] columnPos;
 	GraphicObject::generateObject();
 }

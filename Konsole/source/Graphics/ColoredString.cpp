@@ -60,26 +60,34 @@ Color ColoredString::getBackgroundColor(size_t index) const
 	return at(index).backgroundColor;
 }
 
-void ColoredString::setColor(Color color)
+ColoredString& ColoredString::setColor(Color color)
 {
 	for (int i = 0; i < length(); i++)
 		at(i).textColor = color;
+
+	return *this;
 }
 
-void ColoredString::setColor(Color color, size_t index, size_t len)
+ColoredString& ColoredString::setColor(Color color, size_t index, size_t len)
 {
 	for (int i = index; i < length() && len > 0; i++, len--)
 		at(i).textColor = color;
+
+	return *this;
 }
 
-void ColoredString::setBackgroundColor(Color color)
+ColoredString& ColoredString::setBackgroundColor(Color color)
 {
 	for (int i = 0; i < length(); i++)
 		at(i).backgroundColor = color;
+
+	return *this;
 }
 
-void ColoredString::setBackgroundColor(Color color, size_t index, size_t len)
+ColoredString& ColoredString::setBackgroundColor(Color color, size_t index, size_t len)
 {
 	for (int i = index; i < length() && len > 0; i++, len--)
 		at(i).backgroundColor = color;
+
+	return *this;
 }
