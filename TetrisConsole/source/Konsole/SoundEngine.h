@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-#include "fmod\fmod.hpp"
+#include "miniaudio.h"
 
 using namespace std;
 
@@ -26,19 +26,17 @@ public:
 	static void update();
 
 protected:
-	static void checkFMODError(FMOD_RESULT result);
+	static void checkError(ma_result result, const char* description);
 
 private:
 	SoundEngine();
 	~SoundEngine();
 
-	static FMOD::System *_system;
-	static map<string, FMOD::Sound*> _sounds;
-	static map <string, FMOD::Channel*> _channels;
-	static FMOD::Channel* _channelPlaying;
-	static string _musicPlaying;
+	static ma_engine _engine;
+	static map<string, ma_sound*> _sounds;
+	static ma_sound* _musicPlaying;
+	static string _musicPlayingName;
 
 	static float _musicVolume;
 	static float _effectVolume;
 };
-

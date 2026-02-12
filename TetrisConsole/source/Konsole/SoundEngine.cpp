@@ -1,124 +1,112 @@
+#define MINIAUDIO_IMPLEMENTATION
 #include "SoundEngine.h"
 
-#include "fmod\fmod.hpp"
-#include "fmod\fmod_errors.h"
+ma_engine SoundEngine::_engine;
+map<string, ma_sound*> SoundEngine::_sounds;
+ma_sound* SoundEngine::_musicPlaying = nullptr;
+string SoundEngine::_musicPlayingName = "";
 
-FMOD::System *SoundEngine::_system = NULL;
-map<string, FMOD::Sound*> SoundEngine::_sounds;
-map <string, FMOD::Channel*> SoundEngine::_channels;
-FMOD::Channel* SoundEngine::_channelPlaying = NULL;
-string SoundEngine::_musicPlaying = "";
+float SoundEngine::_musicVolume = 0.1f;
+float SoundEngine::_effectVolume = 0.5f;
 
-float SoundEngine::_musicVolume = 0.1;
-float SoundEngine::_effectVolume = 0.5;
+static ma_sound* createStreamSound(ma_engine* engine, const char* file, bool looping)
+{
+	ma_sound* sound = new ma_sound();
+	ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, sound);
+	if (result != MA_SUCCESS)
+	{
+		printf("miniaudio error loading %s (%d)\n", file, result);
+		delete sound;
+		return nullptr;
+	}
+	if (looping)
+		ma_sound_set_looping(sound, MA_TRUE);
+	return sound;
+}
+
+static ma_sound* createEffectSound(ma_engine* engine, const char* file)
+{
+	ma_sound* sound = new ma_sound();
+	ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_DECODE, nullptr, nullptr, sound);
+	if (result != MA_SUCCESS)
+	{
+		printf("miniaudio error loading %s (%d)\n", file, result);
+		delete sound;
+		return nullptr;
+	}
+	return sound;
+}
 
 void SoundEngine::init()
 {
-	FMOD_RESULT result;
-	_system = NULL;
+	ma_result result = ma_engine_init(nullptr, &_engine);
+	checkError(result, "engine init");
 
-	result = FMOD::System_Create(&_system);
-	checkFMODError(result);
+	// Music streams
+	_sounds["A"] = createStreamSound(&_engine, "media/A.mp3", false);
+	_sounds["B"] = createStreamSound(&_engine, "media/B.mp3", false);
+	_sounds["C"] = createStreamSound(&_engine, "media/C.mp3", false);
+	_sounds["TITLE"] = createStreamSound(&_engine, "media/title.mp3", true);
+	_sounds["SCORE"] = createStreamSound(&_engine, "media/score.mp3", true);
 
-	result = _system->init(512, FMOD_INIT_NORMAL, 0);
-	checkFMODError(result);
-
-	_sounds["A"] = NULL;
-	_sounds["B"] = NULL;
-	_sounds["C"] = NULL;
-	_sounds["TITLE"] = NULL;
-	_sounds["SCORE"] = NULL;
-
-	_sounds["LOCK"] = NULL;
-	_sounds["HARD_DROP"] = NULL;
-	_sounds["CLICK"] = NULL;
-	_sounds["LINE_CLEAR"] = NULL;
-	_sounds["TETRIS"] = NULL;
-
-	result = _system->createStream("media/A.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["A"]);
-	checkFMODError(result);
-
-	result = _system->createStream("media/B.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["B"]);
-	checkFMODError(result);
-
-	result = _system->createStream("media/C.mp3", FMOD_LOOP_OFF | FMOD_2D, 0, &_sounds["C"]);
-	checkFMODError(result);
-
-	result = _system->createStream("media/title.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["TITLE"]);
-	checkFMODError(result);
-
-	result = _system->createStream("media/score.mp3", FMOD_LOOP_NORMAL | FMOD_2D, 0, &_sounds["SCORE"]);
-	checkFMODError(result);
-
-	result = _system->createSound("media/lock.wav", FMOD_DEFAULT, 0, &_sounds["LOCK"]);
-	checkFMODError(result);
-
-	result = _system->createSound("media/harddrop.wav", FMOD_DEFAULT, 0, &_sounds["HARD_DROP"]);
-	checkFMODError(result);
-
-	result = _system->createSound("media/click.wav", FMOD_DEFAULT, 0, &_sounds["CLICK"]);
-	checkFMODError(result);
-
-	result = _system->createSound("media/lineclear.wav", FMOD_DEFAULT, 0, &_sounds["LINE_CLEAR"]);
-	checkFMODError(result);
-
-	result = _system->createSound("media/tetris.wav", FMOD_DEFAULT, 0, &_sounds["TETRIS"]);
-	checkFMODError(result);
+	// Sound effects
+	_sounds["LOCK"] = createEffectSound(&_engine, "media/lock.wav");
+	_sounds["HARD_DROP"] = createEffectSound(&_engine, "media/harddrop.wav");
+	_sounds["CLICK"] = createEffectSound(&_engine, "media/click.wav");
+	_sounds["LINE_CLEAR"] = createEffectSound(&_engine, "media/lineclear.wav");
+	_sounds["TETRIS"] = createEffectSound(&_engine, "media/tetris.wav");
 }
 
 void SoundEngine::playMusic(string name)
 {
-	if (_channels[name] == NULL)
-	{
-		_channels[name] = NULL;
-		FMOD_RESULT result = _system->playSound(_sounds[name], 0, true, &_channels[name]);
-		checkFMODError(result);
-	}
+	ma_sound* sound = _sounds[name];
+	if (sound == nullptr)
+		return;
 
-	if (_channelPlaying != NULL)
-	{
-		_channelPlaying->setPaused(true);
-		_channelPlaying->setMute(true);
-		_channels[_musicPlaying] = NULL;
-	}
-	
-	_musicPlaying = name;
-	_channelPlaying = _channels[name];
-	_channelPlaying->setMute(false);
-	_channelPlaying->setVolume(_musicVolume);
-	_channelPlaying->setPaused(false);
+	// Stop current music
+	if (_musicPlaying != nullptr)
+		ma_sound_stop(_musicPlaying);
+
+	_musicPlayingName = name;
+	_musicPlaying = sound;
+
+	ma_sound_seek_to_pcm_frame(sound, 0);
+	ma_sound_set_volume(sound, _musicVolume);
+	ma_sound_start(sound);
 }
 
 void SoundEngine::playSound(string name)
 {
-	FMOD::Channel* channel = NULL;
-	FMOD_RESULT result = _system->playSound(_sounds[name], 0, false, &channel);
-	channel->setVolume(_effectVolume);
-	checkFMODError(result);
+	ma_sound* sound = _sounds[name];
+	if (sound == nullptr)
+		return;
+
+	ma_sound_seek_to_pcm_frame(sound, 0);
+	ma_sound_set_volume(sound, _effectVolume);
+	ma_sound_start(sound);
 }
 
 void SoundEngine::stopMusic()
 {
-	if (_channelPlaying != NULL)
+	if (_musicPlaying != nullptr)
 	{
-		_channelPlaying->setPaused(true);
-		_channelPlaying = NULL;
-		_channels[_musicPlaying] = NULL;
+		ma_sound_stop(_musicPlaying);
+		_musicPlaying = nullptr;
+		_musicPlayingName = "";
 	}
 }
 
 void SoundEngine::pauseMusic()
 {
-	if (_channelPlaying != NULL)
-		_channelPlaying->setPaused(true);
+	if (_musicPlaying != nullptr)
+		ma_sound_stop(_musicPlaying);
 }
 
 void SoundEngine::unpauseMusic()
 {
-	if (_channelPlaying != NULL)
-		_channelPlaying->setPaused(false);
+	if (_musicPlaying != nullptr)
+		ma_sound_start(_musicPlaying);
 }
-
 
 float SoundEngine::getMusicVolume()
 {
@@ -127,11 +115,9 @@ float SoundEngine::getMusicVolume()
 
 void SoundEngine::setMusicVolume(float volume)
 {
-	if (_channelPlaying != NULL)
-	{
-		_musicVolume = volume;
-		_channelPlaying->setVolume(volume);
-	}
+	_musicVolume = volume;
+	if (_musicPlaying != nullptr)
+		ma_sound_set_volume(_musicPlaying, volume);
 }
 
 float SoundEngine::getEffectVolume()
@@ -146,25 +132,16 @@ void SoundEngine::setEffectVolume(float volume)
 
 void SoundEngine::update()
 {
-	_system->update();
-	if (_channelPlaying != NULL)
+	if (_musicPlaying != nullptr)
 	{
-		bool isPlaying;
-		_channelPlaying->isPlaying(&isPlaying);
-		if (!isPlaying)
+		if (ma_sound_at_end(_musicPlaying))
 		{
-			if (_musicPlaying == "A")
-			{
+			if (_musicPlayingName == "A")
 				playMusic("B");
-			}
-			else if (_musicPlaying == "B")
-			{
+			else if (_musicPlayingName == "B")
 				playMusic("C");
-			}
-			else if (_musicPlaying == "C")
-			{
+			else if (_musicPlayingName == "C")
 				playMusic("A");
-			}
 		}
 	}
 }
@@ -173,23 +150,24 @@ SoundEngine::SoundEngine()
 {
 }
 
-
 SoundEngine::~SoundEngine()
 {
-	_sounds["A"]->release();
-	_sounds["B"]->release();
-	_sounds["C"]->release();
-	_sounds["TITLE"]->release();
-	_sounds["SCORE"]->release();
-	_sounds["LOCK"]->release();
-	_system->release();
+	for (auto& pair : _sounds)
+	{
+		if (pair.second != nullptr)
+		{
+			ma_sound_uninit(pair.second);
+			delete pair.second;
+		}
+	}
+	ma_engine_uninit(&_engine);
 }
 
-void SoundEngine::checkFMODError(FMOD_RESULT result)
+void SoundEngine::checkError(ma_result result, const char* description)
 {
-	if (result != FMOD_OK)
+	if (result != MA_SUCCESS)
 	{
-		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+		printf("miniaudio error: %s (%d)\n", description, result);
 		system("pause");
 		exit(-1);
 	}

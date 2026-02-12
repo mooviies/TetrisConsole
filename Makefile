@@ -2,10 +2,9 @@ CXX      = g++
 CXXFLAGS = -Wall -std=c++17
 INCLUDES = -ITetrisConsole/source/Tetris \
            -ITetrisConsole/source/Konsole \
-           -ITetrisConsole/include/fmod \
            -ITetrisConsole/include
-LDFLAGS  = -LTetrisConsole/lib
-LDLIBS   = -lfmod_vc -lwinmm
+LDFLAGS  =
+LDLIBS   = -lole32 -lwinmm
 
 SRCDIR   = TetrisConsole/source
 BUILDDIR = build
