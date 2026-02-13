@@ -15,7 +15,7 @@ void Platform::initConsole()
 	GetWindowRect(desktop, &rectDesktop);
 	int width = 675, height = 515;
 	MoveWindow(console, (rectDesktop.right - width) / 2, (rectDesktop.bottom - height) / 2, width, height, TRUE);
-	SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_SIZEBOX));
+	SetWindowLongPtr(console, GWL_STYLE, GetWindowLongPtr(console, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_SIZEBOX));
 	SetConsoleTitle(TEXT("Tetris Console"));
 
 	system("color 0F");
