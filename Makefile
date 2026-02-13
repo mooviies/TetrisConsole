@@ -2,7 +2,8 @@ CXX      = g++
 CXXFLAGS = -Wall -std=c++17
 INCLUDES = -ITetrisConsole/source/Tetris \
            -ITetrisConsole/source/Konsole \
-           -ITetrisConsole/include
+           -ITetrisConsole/include \
+           -Ibuild
 LDFLAGS  =
 
 SRCDIR   = TetrisConsole/source
@@ -41,14 +42,19 @@ SRCS = $(filter-out $(PLATFORM_EXCLUDE),$(ALL_SRCS))
 
 OBJS = $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRCS))
 
-.PHONY: all clean media
+MEDIA_SRC = $(wildcard TetrisConsole/media/*)
+MEDIA_CPP = $(BUILDDIR)/media_data.cpp
+MEDIA_H   = $(BUILDDIR)/media_data.h
+MEDIA_OBJ = $(BUILDDIR)/media_data.o
 
-all: media $(TARGET)
+.PHONY: all clean
 
-$(TARGET): $(OBJS)
+all: $(TARGET)
+
+$(TARGET): $(OBJS) $(MEDIA_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(MEDIA_H)
 ifneq ($(UNAME_S),Windows)
 	@$(MKDIR_P) $(dir $@)
 else
@@ -56,10 +62,12 @@ else
 endif
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
-media:
-ifneq ($(UNAME_S),Windows)
-	@if [ ! -e media ]; then ln -s TetrisConsole/media media; fi
-endif
+$(MEDIA_CPP) $(MEDIA_H): $(MEDIA_SRC) scripts/embed_media.py
+	@$(MKDIR_P) $(BUILDDIR)
+	python3 scripts/embed_media.py
+
+$(MEDIA_OBJ): $(MEDIA_CPP) $(MEDIA_H)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $(MEDIA_CPP)
 
 clean:
 ifneq ($(UNAME_S),Windows)

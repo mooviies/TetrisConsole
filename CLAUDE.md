@@ -23,10 +23,10 @@ The project is a cross-platform console Tetris built in C++17, split into two la
 
 OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `filter-out` to exclude the wrong platform's files at compile time — no `#ifdef` in game logic.
 
-- **Platform.h** — Console init/cleanup/flush. Linux uses termios raw mode; Windows uses Console API.
-- **Input.h** — Keyboard polling. Linux: non-blocking `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
+- **Platform.h** — Console init/cleanup/flush/getKey. Linux uses termios raw mode (VMIN=1, OPOST|ONLCR), terminal resize via ANSI `\033[8;rows;colst`, and a custom `getKey()` that does blocking reads with `select()`-based ANSI escape sequence parsing. Windows uses Console API and delegates `getKey()` to `rlutil::getkey()`.
+- **Input.h** — Keyboard polling. Linux: non-blocking `select()` + `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
 - **SoundEngine** — Wraps miniaudio. Manages streamed music (A/B/C cycle) and decoded sound effects.
-- **Menu** — Self-contained hierarchical menu system using rlutil's blocking `getkey()` for navigation.
+- **Menu** — Self-contained hierarchical menu system using `Platform::getKey()` for blocking navigation input.
 
 ### Game Logic (`source/Tetris/`)
 
@@ -39,7 +39,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `
 ### Dependencies (header-only, vendored in `include/`)
 
 - **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp.
-- **rlutil.h** — Console colors, cursor positioning, `getkey()`. Already cross-platform internally via `#ifdef _WIN32`.
+- **rlutil.h** — Console colors, cursor positioning, `getkey()`. Already cross-platform internally via `#ifdef _WIN32`. Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
 
 ### Key Quirks
 
@@ -47,3 +47,6 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `
 - Media files live in `TetrisConsole/media/`; the Makefile creates a `media/` symlink at the project root so relative paths work.
 - The `Menu::save()` method body is empty — it previously used Windows-only `ReadConsoleOutput` and was dead code.
 - `score.bin` at the project root persists the high score between sessions.
+- Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8. The tetrimino preview strings in `[IJLOSTZ]Tetrimino.cpp` use UTF-8 block chars.
+- `Tetris::refresh()` flushes stdout after drawing — necessary in termios raw mode where line-buffering is disabled.
+- The Makefile does not track header dependencies; changes to `.h` files require `make clean && make`.

@@ -1,5 +1,7 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "SoundEngine.h"
+#include "media_data.h"
+#include <cstring>
 
 ma_engine SoundEngine::_engine;
 map<string, ma_sound*> SoundEngine::_sounds;
@@ -8,6 +10,109 @@ string SoundEngine::_musicPlayingName = "";
 
 float SoundEngine::_musicVolume = 0.1f;
 float SoundEngine::_effectVolume = 0.5f;
+
+// --- Embedded VFS for serving media from compiled-in data ---
+
+struct EmbeddedFile {
+	const unsigned char* data;
+	size_t size;
+	size_t cursor;
+};
+
+struct EmbeddedVFS {
+	ma_vfs_callbacks cb;
+};
+
+static ma_result embeddedVFS_onOpen(ma_vfs* pVFS, const char* pFilePath, ma_uint32 openMode, ma_vfs_file* pFile)
+{
+	(void)pVFS;
+	if (openMode & MA_OPEN_MODE_WRITE)
+		return MA_NOT_IMPLEMENTED;
+
+	const unsigned char* data;
+	size_t size;
+	if (!findEmbeddedMedia(pFilePath, &data, &size))
+		return MA_DOES_NOT_EXIST;
+
+	EmbeddedFile* ef = new EmbeddedFile();
+	ef->data = data;
+	ef->size = size;
+	ef->cursor = 0;
+	*pFile = (ma_vfs_file)ef;
+	return MA_SUCCESS;
+}
+
+static ma_result embeddedVFS_onOpenW(ma_vfs* pVFS, const wchar_t* pFilePath, ma_uint32 openMode, ma_vfs_file* pFile)
+{
+	(void)pVFS; (void)pFilePath; (void)openMode; (void)pFile;
+	return MA_NOT_IMPLEMENTED;
+}
+
+static ma_result embeddedVFS_onClose(ma_vfs* pVFS, ma_vfs_file file)
+{
+	(void)pVFS;
+	delete (EmbeddedFile*)file;
+	return MA_SUCCESS;
+}
+
+static ma_result embeddedVFS_onRead(ma_vfs* pVFS, ma_vfs_file file, void* pDst, size_t sizeInBytes, size_t* pBytesRead)
+{
+	(void)pVFS;
+	EmbeddedFile* ef = (EmbeddedFile*)file;
+	size_t remaining = ef->size - ef->cursor;
+	size_t toRead = (sizeInBytes < remaining) ? sizeInBytes : remaining;
+	if (toRead == 0) {
+		if (pBytesRead) *pBytesRead = 0;
+		return MA_AT_END;
+	}
+	memcpy(pDst, ef->data + ef->cursor, toRead);
+	ef->cursor += toRead;
+	if (pBytesRead) *pBytesRead = toRead;
+	return MA_SUCCESS;
+}
+
+static ma_result embeddedVFS_onWrite(ma_vfs* pVFS, ma_vfs_file file, const void* pSrc, size_t sizeInBytes, size_t* pBytesWritten)
+{
+	(void)pVFS; (void)file; (void)pSrc; (void)sizeInBytes; (void)pBytesWritten;
+	return MA_NOT_IMPLEMENTED;
+}
+
+static ma_result embeddedVFS_onSeek(ma_vfs* pVFS, ma_vfs_file file, ma_int64 offset, ma_seek_origin origin)
+{
+	(void)pVFS;
+	EmbeddedFile* ef = (EmbeddedFile*)file;
+	ma_int64 newCursor;
+	switch (origin) {
+		case ma_seek_origin_start:   newCursor = offset; break;
+		case ma_seek_origin_current: newCursor = (ma_int64)ef->cursor + offset; break;
+		case ma_seek_origin_end:     newCursor = (ma_int64)ef->size + offset; break;
+		default: return MA_INVALID_ARGS;
+	}
+	if (newCursor < 0 || (size_t)newCursor > ef->size)
+		return MA_INVALID_ARGS;
+	ef->cursor = (size_t)newCursor;
+	return MA_SUCCESS;
+}
+
+static ma_result embeddedVFS_onTell(ma_vfs* pVFS, ma_vfs_file file, ma_int64* pCursor)
+{
+	(void)pVFS;
+	EmbeddedFile* ef = (EmbeddedFile*)file;
+	*pCursor = (ma_int64)ef->cursor;
+	return MA_SUCCESS;
+}
+
+static ma_result embeddedVFS_onInfo(ma_vfs* pVFS, ma_vfs_file file, ma_file_info* pInfo)
+{
+	(void)pVFS;
+	EmbeddedFile* ef = (EmbeddedFile*)file;
+	pInfo->sizeInBytes = ef->size;
+	return MA_SUCCESS;
+}
+
+static EmbeddedVFS g_embeddedVFS;
+
+// --- End Embedded VFS ---
 
 static ma_sound* createStreamSound(ma_engine* engine, const char* file, bool looping)
 {
@@ -39,7 +144,25 @@ static ma_sound* createEffectSound(ma_engine* engine, const char* file)
 
 void SoundEngine::init()
 {
-	ma_result result = ma_engine_init(nullptr, &_engine);
+	g_embeddedVFS.cb.onOpen  = embeddedVFS_onOpen;
+	g_embeddedVFS.cb.onOpenW = embeddedVFS_onOpenW;
+	g_embeddedVFS.cb.onClose = embeddedVFS_onClose;
+	g_embeddedVFS.cb.onRead  = embeddedVFS_onRead;
+	g_embeddedVFS.cb.onWrite = embeddedVFS_onWrite;
+	g_embeddedVFS.cb.onSeek  = embeddedVFS_onSeek;
+	g_embeddedVFS.cb.onTell  = embeddedVFS_onTell;
+	g_embeddedVFS.cb.onInfo  = embeddedVFS_onInfo;
+
+	ma_engine_config config = ma_engine_config_init();
+	ma_resource_manager_config rmConfig = ma_resource_manager_config_init();
+	rmConfig.pVFS = (ma_vfs*)&g_embeddedVFS;
+
+	static ma_resource_manager resourceManager;
+	ma_result result = ma_resource_manager_init(&rmConfig, &resourceManager);
+	checkError(result, "resource manager init");
+
+	config.pResourceManager = &resourceManager;
+	result = ma_engine_init(&config, &_engine);
 	checkError(result, "engine init");
 
 	// Music streams
