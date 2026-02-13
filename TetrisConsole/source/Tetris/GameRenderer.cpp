@@ -126,7 +126,7 @@ void GameRenderer::printScore(const GameState& state) {
     rlutil::locate(9 + ox, 26 + oy);
     cout << Utility::valueToString(state._highscore, 10);
 
-    rlutil::locate(21 + ox, 9 + oy);
+    rlutil::locate(78 + ox, 2 + oy);
     switch (SoundEngine::getMuteState()) {
         case MuteState::UNMUTED:      rlutil::setColor(rlutil::WHITE);  break;
         case MuteState::MUSIC_MUTED:  rlutil::setColor(rlutil::YELLOW); break;
