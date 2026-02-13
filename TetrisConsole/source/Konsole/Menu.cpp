@@ -23,30 +23,30 @@ void Menu::addOption(const string &name, Menu *menu) {
     _menus[name] = menu;
 }
 
-void Menu::addOption(const string &name, void (*callback)(OptionChoice)) {
+void Menu::addOption(const string &name, std::function<void(OptionChoice)> callback) {
     addOption(name);
-    _callbacks[name] = callback;
+    _callbacks[name] = std::move(callback);
 }
 
-void Menu::addOptionArrow(const string& name, void (*leftCallback)(OptionChoice), void (*rightCallback)(OptionChoice)) {
+void Menu::addOptionArrow(const string& name, std::function<void(OptionChoice)> leftCallback, std::function<void(OptionChoice)> rightCallback) {
     addOption(name);
 
     ArrowOption arrowOption;
-    arrowOption.left = leftCallback;
-    arrowOption.right = rightCallback;
-    _arrowOptions[name] = arrowOption;
+    arrowOption.left = std::move(leftCallback);
+    arrowOption.right = std::move(rightCallback);
+    _arrowOptions[name] = std::move(arrowOption);
 }
 
-void Menu::addOptionClose(const string& name, void (*callback)(OptionChoice)) {
+void Menu::addOptionClose(const string& name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeOptions.insert(name);
-    _callbacks[name] = callback;
+    _callbacks[name] = std::move(callback);
 }
 
-void Menu::addOptionCloseAllMenu(const string& name, void (*callback)(OptionChoice)) {
+void Menu::addOptionCloseAllMenu(const string& name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeAllMenusOptions.insert(name);
-    _callbacks[name] = callback;
+    _callbacks[name] = std::move(callback);
     _closeOptions.insert(name);
 }
 
@@ -294,7 +294,7 @@ void Menu::select(int choice) {
             draw();
     }
 
-    if (auto it = _callbacks.find(name); it != _callbacks.end() && it->second != nullptr) {
+    if (auto it = _callbacks.find(name); it != _callbacks.end() && it->second) {
         it->second(OptionChoice(_choice, _options, generateValues()));
     }
 

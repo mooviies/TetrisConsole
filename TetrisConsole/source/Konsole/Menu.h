@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <functional>
 
 struct OptionChoice
 {
@@ -24,13 +25,8 @@ struct OptionChoice
 
 struct ArrowOption
 {
-	ArrowOption()
-	{
-		left = nullptr;
-		right = nullptr;
-	}
-	void(*left)(OptionChoice);
-	void(*right)(OptionChoice);
+	std::function<void(OptionChoice)> left;
+	std::function<void(OptionChoice)> right;
 };
 
 class Menu
@@ -40,10 +36,10 @@ public:
 	~Menu();
 
 	void addOption(const std::string& name, Menu* menu);
-	void addOption(const std::string& name, void(*callback)(OptionChoice));
-	void addOptionArrow(const std::string& name, void(*leftCallback)(OptionChoice), void(*rightCallback)(OptionChoice));
-	void addOptionClose(const std::string& name, void(*callback)(OptionChoice) = nullptr);
-	void addOptionCloseAllMenu(const std::string& name, void(*callback)(OptionChoice) = nullptr);
+	void addOption(const std::string& name, std::function<void(OptionChoice)> callback);
+	void addOptionArrow(const std::string& name, std::function<void(OptionChoice)> leftCallback, std::function<void(OptionChoice)> rightCallback);
+	void addOptionClose(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
+	void addOptionCloseAllMenu(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
 
 	OptionChoice open(bool showSubtitle = false);
@@ -72,7 +68,7 @@ private:
 
 	std::vector<std::string> _options;
 	std::map<std::string, Menu*> _menus;
-	std::map<std::string, void(*)(OptionChoice)> _callbacks;
+	std::map<std::string, std::function<void(OptionChoice)>> _callbacks;
 	std::map<std::string, ArrowOption> _arrowOptions;
 	std::map<std::string, std::vector<std::string>> _optionsValues;
 	std::map<std::string, int> _optionsValuesChoices;
@@ -96,4 +92,3 @@ private:
 
 	bool _close;
 };
-
