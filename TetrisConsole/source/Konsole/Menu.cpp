@@ -1,7 +1,7 @@
 #include "Menu.h"
 
-#include <Windows.h>
 #include "rlutil.h"
+#include "Platform.h"
 
 #define MINIMUM_INTERIOR_WIDTH 13
 
@@ -83,7 +83,7 @@ OptionChoice Menu::open(bool showSubtitle)
 	_showSubtitle = showSubtitle;
 	generate();
 
-	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+	Platform::flushInput();
 	while (true)
 	{
 		draw();
@@ -144,23 +144,23 @@ void Menu::generate()
 	for (int i = 0; i < width; i++)
 		_clearLine.append(" ");
 
-	_dialog.push_back(generateBar("É", "Í", "»", middleWidth));
+	_dialog.push_back(generateBar("â•”", "â•", "â•—", middleWidth));
 	_dialog.push_back(generateNameCenter(_title, width));
 
 	if (_showSubtitle)
 	{
-		_dialog.push_back(generateBar("Ì", "Í", "¹", middleWidth));
+		_dialog.push_back(generateBar("â• ", "â•", "â•£", middleWidth));
 		_dialog.push_back(generateNameCenter(_subtitle, width));
 	}
 
-	_dialog.push_back(generateBar("Ì", "Í", "¹", middleWidth));
+	_dialog.push_back(generateBar("â• ", "â•", "â•£", middleWidth));
 
 	for (int i = 0; i < _options.size(); i++)
 	{
 		_dialog.push_back(generateOption(_options[i], width));
 	}
 
-	_dialog.push_back(generateBar("È", "Í", "¼", middleWidth));
+	_dialog.push_back(generateBar("â•š", "â•", "â•", middleWidth));
 
 	int windowWidth = 80;
 	int windowHeight = 28;
@@ -176,7 +176,7 @@ void Menu::generate()
 string Menu::generateOption(string name, int width)
 {
 	int interiorWidth = width - 2;
-	string result = "º";
+	string result = "â•‘";
 	for (int i = 0; i < 3; i++)
 	{
 		result.append(" ");
@@ -193,7 +193,7 @@ string Menu::generateOption(string name, int width)
 
 		result.append(" : ");
 
-		_optionsValuesChoicesX[name] = result.length();
+		_optionsValuesChoicesX[name] = 1 + 3 + name.length() + nbSpaceBeforeSub + 3;
 
 		nbSpaceEnd -= nbSpaceBeforeSub + 3;
 	}
@@ -202,7 +202,7 @@ string Menu::generateOption(string name, int width)
 	{
 		result.append(" ");
 	}
-	result.append("º");
+	result.append("â•‘");
 
 	return result;
 }
@@ -210,7 +210,7 @@ string Menu::generateOption(string name, int width)
 string Menu::generateNameCenter(string name, int width)
 {
 	int interiorWidth = width - 2;
-	string result = "º";
+	string result = "â•‘";
 
 	int nbSpaceBegin = (interiorWidth / 2) - (name.length() / 2);
 	int nbSpaceEnd = interiorWidth - (nbSpaceBegin + name.length());
@@ -223,7 +223,7 @@ string Menu::generateNameCenter(string name, int width)
 	for (int i = 0; i < nbSpaceEnd; i++)
 		result.append(" ");
 
-	result.append("º");
+	result.append("â•‘");
 	
 	return result;
 }
@@ -293,39 +293,6 @@ void Menu::save()
 {
 	_background.clear();
 	_backgroundColor.clear();
-
-	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-	CHAR_INFO* buffer = new CHAR_INFO[_width * _height];
-
-	COORD bufferSize;
-	bufferSize.X = _width;
-	bufferSize.Y = _height;
-
-	COORD bufferCoord;
-	bufferCoord.X = 0;
-	bufferCoord.Y = 0;
-
-	SMALL_RECT consoleRect;
-	consoleRect.Left = _x;
-	consoleRect.Top = _y;
-	consoleRect.Right = _x + _width - 1;
-	consoleRect.Bottom = _y + _height - 1;
-
-	ReadConsoleOutput(out, buffer, bufferSize, bufferCoord, &consoleRect);
-
-	for (int i = 0; i < _height; i++)
-	{
-		string result = "";
-		_backgroundColor.push_back(vector<int>());
-
-		for (int j = 0; j < _width; j++)
-		{
-			CHAR_INFO info = buffer[(i * _width) + j];
-			result += info.Char.AsciiChar;
-			_backgroundColor[i].push_back(info.Attributes & (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED));
-		}
-		_background.push_back(result);
-	}
 }
 
 void Menu::restore()

@@ -13,18 +13,18 @@ Utility::~Utility()
 void Utility::afficherTitre(string sousTitre)
 {
 	// Initialisation d'une variable qui vaut la longueur du sous-titre
-	// Cette valeur est réutilisé plusieurs fois on évite donc de toujours
-	// repassé par la fonction length() qui est plus lente que la simple
+	// Cette valeur est rÃ©utilisÃ© plusieurs fois on Ã©vite donc de toujours
+	// repassÃ© par la fonction length() qui est plus lente que la simple
 	// lecture d'un int
 	int longueur = sousTitre.length();
 
 	// Affichage du titre principale
-	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»º"
+	cout << "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—â•‘"
 		<< "                                Tetris Console"
-		<< "                                ºÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
-		<< "º";
+		<< "                                â•‘â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£"
+		<< "â•‘";
 
-	// On affiche des espace avant le sous-titre et de façon à ce qu'il soit centré
+	// On affiche des espace avant le sous-titre et de faÃ§on Ã  ce qu'il soit centrÃ©
 	for (int i = 0; i < 39 - (longueur / 2); i++)
 	{
 		cout << ' ';
@@ -33,18 +33,18 @@ void Utility::afficherTitre(string sousTitre)
 	// On affiche le sous-titre
 	cout << sousTitre;
 
-	// On vérifie si le nombre de lettre du sous-titre est pair ou impaire pour évité un bug d'affichage
-	// Car s'il est impair alors le nombre d'espace avant et après le sous-titre sera différent
+	// On vÃ©rifie si le nombre de lettre du sous-titre est pair ou impaire pour Ã©vitÃ© un bug d'affichage
+	// Car s'il est impair alors le nombre d'espace avant et aprÃ¨s le sous-titre sera diffÃ©rent
 	if (longueur % 2 != 0)
 		longueur++;
 
-	// On affiche des espaces après le sous-titre
+	// On affiche des espaces aprÃ¨s le sous-titre
 	for (int i = 0; i < 39 - (longueur / 2); i++)
 	{
 		cout << ' ';
 	}
 	// Puis on affiche la fermeture du cadre
-	cout << "ºÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl;
+	cout << "â•‘â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" << endl;
 }
 
 string Utility::valueToString(int value, int length)
@@ -59,11 +59,9 @@ string Utility::valueToString(int value, int length)
 		decimal *= 10;
 	}
 
-	char buffer[10];
 	if (value > 0)
 	{
-		_itoa_s(value, buffer, 10, 10);
-		result += buffer;
+		result += std::to_string(value);
 	}
 
 	return result;

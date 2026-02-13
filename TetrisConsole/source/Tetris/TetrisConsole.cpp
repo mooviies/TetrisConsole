@@ -1,11 +1,9 @@
-﻿#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <cstdlib>
 #include <ctime>
 #include <limits>
-#include <windows.h>
-#include <conio.h>
 #include <queue>
 
 #include "Tetris.h"
@@ -15,10 +13,10 @@
 #include "Utility.h"
 #include "Menu.h"
 #include "Overseer.h"
+#include "Platform.h"
 
 using namespace std;
 
-void initConsole(int width, int height);
 void setGameSettings(OptionChoice optionChoice);
 void quitGame(OptionChoice optionChoice);
 void incrementLevel(OptionChoice optionChoice);
@@ -26,8 +24,9 @@ void decrementLevel(OptionChoice optionChoice);
 
 int main()
 {
-	initConsole(675, 515);
-	
+	Platform::initConsole();
+	Input::init();
+
 	Random::init();
 	SoundEngine::init();
 
@@ -49,7 +48,7 @@ int main()
 	Menu help("HELP");
 	Menu quit("Are you sure?");
 	Menu gameover("GAME OVER", "New High Score!");
-	
+
 	main.addOption("New Game", &newGame);
 	//main.addOption("Settings", &options);
 	//main.addOption("Help", &help);
@@ -82,48 +81,18 @@ int main()
 
 	main.open();
 	tetris.start();
-	
+
 	while (!tetris.doExit())
 	{
+		Input::pollKeys();
 		tetris.step();
 		SoundEngine::update();
 	}
 
+	Input::cleanup();
+	Platform::cleanupConsole();
+
     return 0;
-}
-
-void initConsole(int width, int height)
-{
-	HWND console = GetConsoleWindow();
-	HWND desktop = GetDesktopWindow();
-	RECT rectDesktop, rectConsole;
-	GetWindowRect(desktop, &rectDesktop);
-	MoveWindow(console, (rectDesktop.right - width) / 2, (rectDesktop.bottom - height) / 2, width, height, TRUE);
-	SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_SIZEBOX));
-	SetConsoleTitle(TEXT("Tetris Console"));
-
-	system("color 0F");
-
-	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	CONSOLE_CURSOR_INFO     cursorInfo;
-	GetConsoleCursorInfo(out, &cursorInfo);
-	cursorInfo.bVisible = false;
-	SetConsoleCursorInfo(out, &cursorInfo);
-	
-	CONSOLE_SCREEN_BUFFER_INFO sbInfo;
-	COORD newSBSize;
-	GetConsoleScreenBufferInfo(out, &sbInfo);
-	newSBSize.X = 80;
-	newSBSize.Y = 29;
-
-	int status = SetConsoleScreenBufferSize(out, newSBSize);
-
-	HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
-
-	DWORD prev_mode;
-	GetConsoleMode(input, &prev_mode);
-	SetConsoleMode(input, prev_mode & ~ENABLE_QUICK_EDIT_MODE);
 }
 
 void setGameSettings(OptionChoice optionChoice)
@@ -152,6 +121,8 @@ void setGameSettings(OptionChoice optionChoice)
 
 void quitGame(OptionChoice optionChoice)
 {
+	Input::cleanup();
+	Platform::cleanupConsole();
 	exit(0);
 }
 

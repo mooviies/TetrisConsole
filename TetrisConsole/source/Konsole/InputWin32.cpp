@@ -2,6 +2,18 @@
 
 #include <Windows.h>
 
+void Input::init()
+{
+}
+
+void Input::cleanup()
+{
+}
+
+void Input::pollKeys()
+{
+}
+
 bool Input::left()
 {
 	return (GetKeyState(VK_LEFT) & 0x8000) ||

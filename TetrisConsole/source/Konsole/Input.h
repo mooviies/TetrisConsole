@@ -3,6 +3,10 @@
 class Input
 {
 public:
+	static void init();
+	static void cleanup();
+	static void pollKeys();
+
 	static bool left();
 	static bool right();
 	static bool hardDrop();
@@ -17,4 +21,3 @@ private:
 	Input();
 	~Input();
 };
-

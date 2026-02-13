@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
@@ -91,49 +91,49 @@ void Tetris::display()
 {
 	rlutil::locate(1, 6);
 	
-	cout << "    ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»       ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»       ÉÍÍÍÍÍÍÍÍÍÍÍÍ»" << endl;
-	cout << "    º     Score      º       º                    º       º    Next    º" << endl;
-	cout << "    ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹       º                    º       ÌÍÍÍÍÍÍÍÍÍÍÍÍ¹" << endl;
-	cout << "    º   0000000000   º       º                    º       º            º" << endl;
-	cout << "    ÌÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍ¹       º                    º       º            º" << endl;
-	cout << "    º Level º   01   º       º                    º       º            º" << endl;
-	cout << "    ÌÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍ¹       º                    º       º            º" << endl;
-	cout << "    º Lines º 000001 º       º                    º       ÈÍÍÍÍÍÍÍÍÍÍÍÍ¼" << endl;
-	cout << "    ÈÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍ¼       º                    º                     " << endl;
+	cout << "    ╔════════════════╗       ╔════════════════════╗       ╔════════════╗" << endl;
+	cout << "    ║     Score      ║       ║                    ║       ║    Next    ║" << endl;
+	cout << "    ╠════════════════╣       ║                    ║       ╠════════════╣" << endl;
+	cout << "    ║   0000000000   ║       ║                    ║       ║            ║" << endl;
+	cout << "    ╠═══════╦════════╣       ║                    ║       ║            ║" << endl;
+	cout << "    ║ Level ║   01   ║       ║                    ║       ║            ║" << endl;
+	cout << "    ╠═══════╬════════╣       ║                    ║       ║            ║" << endl;
+	cout << "    ║ Lines ║ 000001 ║       ║                    ║       ╚════════════╝" << endl;
+	cout << "    ╚═══════╩════════╝       ║                    ║                     " << endl;
 
 	for (int i = 28; i <= MATRIX_END; i++)
 	{
-		cout << "                             º                    º                     " << endl;
+		cout << "                             ║                    ║                     " << endl;
 	}
-	cout << "                             ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼                     " << endl << endl;
+	cout << "                             ╚════════════════════╝                     " << endl << endl;
 
 	rlutil::locate(5, 23);
-	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»";
+	cout << "╔════════════════╗";
 	rlutil::locate(5, 24);
-	cout << "º   High Score   º";
+	cout << "║   High Score   ║";
 	rlutil::locate(5, 25);
-	cout << "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹";
+	cout << "╠════════════════╣";
 	rlutil::locate(5, 26);
-	cout << "º   0000000000   º";
+	cout << "║   0000000000   ║";
 	rlutil::locate(5, 27);
-	cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+	cout << "╚════════════════╝";
 
 	rlutil::locate(59, 20);
-	cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍ»";
+	cout << "╔════════════╗";
 	rlutil::locate(59, 21);
-	cout << "º    Hold    º";
+	cout << "║    Hold    ║";
 	rlutil::locate(59, 22);
-	cout << "ÌÍÍÍÍÍÍÍÍÍÍÍÍ¹";
+	cout << "╠════════════╣";
 	rlutil::locate(59, 23);
-	cout << "º            º";
+	cout << "║            ║";
 	rlutil::locate(59, 24);
-	cout << "º            º";
+	cout << "║            ║";
 	rlutil::locate(59, 25);
-	cout << "º            º";
+	cout << "║            ║";
 	rlutil::locate(59, 26);
-	cout << "º            º";
+	cout << "║            ║";
 	rlutil::locate(59, 27);
-	cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍ¼";
+	cout << "╚════════════╝";
 }
 
 void Tetris::refresh()
@@ -555,12 +555,12 @@ void Tetris::printLine(int line, bool visible)
 				rlutil::setColor(_matrix[line][i]);
 
 			if (currentTetriminoHere)
-				cout << "ÛÛ";
+				cout << "██";
 			else
 			{
 				rlutil::setColor(rlutil::BLACK);
 				rlutil::setBackgroundColor(_matrix[line][i]);
-				cout << "°°";
+				cout << "░░";
 				rlutil::setBackgroundColor(rlutil::BLACK);
 			}
 				
@@ -570,9 +570,9 @@ void Tetris::printLine(int line, bool visible)
 		{
 			rlutil::setColor(rlutil::DARKGREY);
 			if ((line % 2 == 0 && i % 2 != 0) || (line % 2 != 0 && i % 2 == 0))
-				cout << "°°";
+				cout << "░░";
 			else
-				cout << "±±";
+				cout << "▒▒";
 		}
 	}
 }

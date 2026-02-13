@@ -168,7 +168,6 @@ void SoundEngine::checkError(ma_result result, const char* description)
 	if (result != MA_SUCCESS)
 	{
 		printf("miniaudio error: %s (%d)\n", description, result);
-		system("pause");
 		exit(-1);
 	}
 }
