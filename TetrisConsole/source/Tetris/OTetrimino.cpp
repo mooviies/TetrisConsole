@@ -4,11 +4,11 @@
 OTetrimino::OTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "    ████    ", "    ████    ")
 {
-	vector<Vector2i> north = vector<Vector2i>();
-	north.push_back(Vector2i());
-	north.push_back(Vector2i(-1, 0));
-	north.push_back(Vector2i(-1, 1));
-	north.push_back(Vector2i(0, 1));
+	auto north = vector<Vector2i>();
+	north.emplace_back();
+	north.emplace_back(-1, 0);
+	north.emplace_back(-1, 1);
+	north.emplace_back(0, 1);
 		
 	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(), Vector2i()) };
 
@@ -19,5 +19,4 @@ OTetrimino::OTetrimino(vector<vector<int>>& matrix)
 }
 
 OTetrimino::~OTetrimino()
-{
-}
+= default;

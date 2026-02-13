@@ -22,19 +22,19 @@ struct RotationPoint
 		_exist = false;
 	}
 
-	RotationPoint(Vector2i translationLeft, Vector2i translationRight)
+	RotationPoint(const Vector2i& translationLeft, const Vector2i& translationRight)
 	{
 		_translations[LEFT] = translationLeft;
 		_translations[RIGHT] = translationRight;
 		_exist = true;
 	}
 
-	bool exist() const
+	[[nodiscard]] bool exist() const
 	{
 		return _exist;
 	}
 
-	Vector2i const & getTranslation(DIRECTION direction) const
+	[[nodiscard]] Vector2i const & getTranslation(DIRECTION direction) const
 	{
 		return _translations[direction];
 	}
@@ -50,13 +50,13 @@ class Facing
 {
 public:
 	Facing();
-	Facing(ROTATION direction, vector<Vector2i> minos, RotationPoint rotationPoints[5]);
+	Facing(ROTATION direction, const vector<Vector2i> &minos, RotationPoint rotationPoints[5]);
 	~Facing();
 
-	ROTATION getDirection() const;
-	int getMinoCount() const;
-	Vector2i getMino(int mino) const;
-	RotationPoint const & getRotationPoint(int point) const;
+	[[nodiscard]] ROTATION getDirection() const;
+	[[nodiscard]] int getMinoCount() const;
+	[[nodiscard]] Vector2i getMino(int mino) const;
+	[[nodiscard]] RotationPoint const & getRotationPoint(int point) const;
 
 private:
 	vector<Vector2i> _minos;

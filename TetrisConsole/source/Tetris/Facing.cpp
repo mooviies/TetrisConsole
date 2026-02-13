@@ -6,7 +6,7 @@ Facing::Facing()
 	_direction = NORTH;
 }
 
-Facing::Facing(ROTATION direction, vector<Vector2i> minos, RotationPoint rotationPoints[5])
+Facing::Facing(const ROTATION direction, const vector<Vector2i> &minos, RotationPoint rotationPoints[5])
 {
 	_direction = direction;
 	_minos = minos;
@@ -16,8 +16,7 @@ Facing::Facing(ROTATION direction, vector<Vector2i> minos, RotationPoint rotatio
 }
 
 Facing::~Facing()
-{
-}
+= default;
 
 ROTATION Facing::getDirection() const
 {
@@ -26,10 +25,10 @@ ROTATION Facing::getDirection() const
 
 int Facing::getMinoCount() const
 {
-	return _minos.size();
+	return static_cast<int>(_minos.size());
 }
 
-Vector2i Facing::getMino(int mino) const
+Vector2i Facing::getMino(const int mino) const
 {
 	return _minos[mino];
 }

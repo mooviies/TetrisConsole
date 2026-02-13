@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "Tetrimino.h"
 
 using namespace std;
@@ -9,11 +7,9 @@ using namespace std;
 struct TSpinPositions
 {
 	TSpinPositions()
-	{
+	= default;
 
-	}
-
-	TSpinPositions(Vector2i a, Vector2i b, Vector2i c, Vector2i d)
+	TSpinPositions(const Vector2i& a, const Vector2i& b, const Vector2i& c, const Vector2i& d)
 		: A(a), B(b), C(c), D(d)
 	{
 
@@ -29,12 +25,12 @@ class TTetrimino : public Tetrimino
 {
 public:
 	TTetrimino(vector<vector<int>>& matrix);
-	virtual ~TTetrimino();
-	virtual int getColor() const override  { return rlutil::MAGENTA; }
-	virtual bool canTSpin() const override  { return true; }
-	virtual bool checkTSpin() override;
-	virtual bool checkMiniTSpin() override;
-	virtual void onLock() override;
+	~TTetrimino() override;
+	[[nodiscard]] int getColor() const override  { return rlutil::MAGENTA; }
+	[[nodiscard]] bool canTSpin() const override  { return true; }
+	bool checkTSpin() override;
+	bool checkMiniTSpin() override;
+	void onLock() override;
 
 private:
 	TSpinPositions _tSpinPositions[4];

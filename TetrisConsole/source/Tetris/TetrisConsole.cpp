@@ -116,9 +116,7 @@ void setGameSettings(OptionChoice optionChoice) {
 }
 
 void quitGame(OptionChoice optionChoice) {
-    Input::cleanup();
-    Platform::cleanupConsole();
-    exit(0);
+    Overseer::getTetris().exit();
 }
 
 void incrementLevel(OptionChoice optionChoice) {

@@ -4,21 +4,19 @@
 
 
 Utility::Utility()
-{
-}
+= default;
 
 
 Utility::~Utility()
-{
-}
+= default;
 
-void Utility::showTitle(string sousTitre)
+void Utility::showTitle(const string& sousTitre)
 {
 	// Initialisation d'une variable qui vaut la longueur du sous-titre
 	// Cette valeur est réutilisé plusieurs fois on évite donc de toujours
 	// repassé par la fonction length() qui est plus lente que la simple
 	// lecture d'un int
-	int longueur = sousTitre.length();
+	int longueur = static_cast<int>(sousTitre.length());
 
 	// Affichage du titre principale
 	cout << "╔══════════════════════════════════════════════════════════════════════════════╗║"

@@ -11,7 +11,6 @@ public:
 	static int getKey();
 	static std::string getDataDir();
 
-private:
-	Platform();
-	~Platform();
+	Platform() = delete;
+	~Platform() = delete;
 };

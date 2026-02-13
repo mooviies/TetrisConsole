@@ -11,9 +11,9 @@ class SoundEngine
 {
 public:
 	static void init();
-	static void playMusic(string name);
+	static void playMusic(const string &name);
 	static void stopMusic();
-	static void playSound(string name);
+	static void playSound(const string &name);
 	static void pauseMusic();
 	static void unpauseMusic();
 

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-#include <time.h>
+#include <ctime>
 
 using namespace std;
 
@@ -11,11 +11,11 @@ class Timer
 public:
 	static Timer & instance();
 
-	void startTimer(string id);
-	void resetTimer(string id, double seconds = 0.0);
-	void stopTimer(string id);
-	double getSeconds(string id);
-	bool exist(string id);
+	void startTimer(const string &id);
+	void resetTimer(const string &id, double seconds = 0.0);
+	void stopTimer(const string &id);
+	double getSeconds(const string &id);
+	[[nodiscard]] bool exist(const string &id) const;
 
 private:
 	Timer();

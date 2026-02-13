@@ -4,29 +4,29 @@
 JTetrimino::JTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "   ██       ", "   ██████   ")
 {
-	vector<Vector2i> north = vector<Vector2i>();
-	north.push_back(Vector2i());
-	north.push_back(Vector2i(0, -1));
-	north.push_back(Vector2i(0, 1));
-	north.push_back(Vector2i(-1, -1));
+	auto north = vector<Vector2i>();
+	north.emplace_back();
+	north.emplace_back(0, -1);
+	north.emplace_back(0, 1);
+	north.emplace_back(-1, -1);
 
-	vector<Vector2i> east = vector<Vector2i>();
-	east.push_back(Vector2i());
-	east.push_back(Vector2i(-1, 0));
-	east.push_back(Vector2i(1, 0));
-	east.push_back(Vector2i(-1, 1));
+	auto east = vector<Vector2i>();
+	east.emplace_back();
+	east.emplace_back(-1, 0);
+	east.emplace_back(1, 0);
+	east.emplace_back(-1, 1);
 
-	vector<Vector2i> south = vector<Vector2i>();
-	south.push_back(Vector2i());
-	south.push_back(Vector2i(0, -1));
-	south.push_back(Vector2i(0, 1));
-	south.push_back(Vector2i(1, 1));
+	auto south = vector<Vector2i>();
+	south.emplace_back();
+	south.emplace_back(0, -1);
+	south.emplace_back(0, 1);
+	south.emplace_back(1, 1);
 
-	vector<Vector2i> west = vector<Vector2i>();
-	west.push_back(Vector2i());
-	west.push_back(Vector2i(1, 0));
-	west.push_back(Vector2i(-1, 0));
-	west.push_back(Vector2i(1, -1));
+	auto west = vector<Vector2i>();
+	west.emplace_back();
+	west.emplace_back(1, 0);
+	west.emplace_back(-1, 0);
+	west.emplace_back(1, -1);
 		
 	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(),	Vector2i()), 
 										RotationPoint(Vector2i(0, 1),	Vector2i(0, -1)),
@@ -60,5 +60,4 @@ JTetrimino::JTetrimino(vector<vector<int>>& matrix)
 
 
 JTetrimino::~JTetrimino()
-{
-}
+= default;

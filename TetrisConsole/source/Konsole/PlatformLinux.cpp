@@ -2,7 +2,6 @@
 
 #include <termios.h>
 #include <unistd.h>
-#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -14,7 +13,7 @@
 #define CONSOLE_WIDTH 80
 #define CONSOLE_HEIGHT 29
 
-static struct termios s_originalTermios;
+static termios s_originalTermios;
 static bool s_termiosRestored = false;
 static int s_savedRows = 0;
 static int s_savedCols = 0;
@@ -83,7 +82,7 @@ int Platform::getKey()
 	{
 		// Check if more bytes follow (escape sequence) with short timeout
 		fd_set fds;
-		struct timeval tv;
+		timeval tv{};
 		FD_ZERO(&fds);
 		FD_SET(STDIN_FILENO, &fds);
 		tv.tv_sec = 0;
@@ -101,6 +100,7 @@ int Platform::getKey()
 					case 'B': return 15; // KEY_DOWN
 					case 'C': return 17; // KEY_RIGHT
 					case 'D': return 16; // KEY_LEFT
+						default: ;
 					}
 				}
 			}

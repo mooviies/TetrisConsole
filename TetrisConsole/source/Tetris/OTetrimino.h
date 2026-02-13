@@ -10,7 +10,7 @@ class OTetrimino : public Tetrimino
 {
 public:
 	OTetrimino(vector<vector<int>>& matrix);
-	virtual ~OTetrimino();
-	virtual int getColor() const { return rlutil::YELLOW; }
+	~OTetrimino() override;
+	[[nodiscard]] int getColor() const override { return rlutil::YELLOW; }
 };
 

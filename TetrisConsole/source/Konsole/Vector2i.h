@@ -24,16 +24,17 @@ struct Vector2i
 	{
 		this->row += right.row;
 		this->column += right.column;
+		return *this;
 	}
 
 	Vector2i operator+(const Vector2i& right) const
 	{
-		return Vector2i(row + right.row, column + right.column);
+		return {row + right.row, column + right.column};
 	}
 
 	Vector2i operator-(const Vector2i& right) const
 	{
-		return Vector2i(row - right.row, column - right.column);
+		return {row - right.row, column - right.column};
 	}
 
 	bool operator==(const Vector2i& right) const

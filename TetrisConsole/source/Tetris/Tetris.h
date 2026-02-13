@@ -24,12 +24,13 @@ public:
 	static void display();
 	void refresh();
 	void step();
-	bool doExit() const;
+	void exit();
+	[[nodiscard]] bool doExit() const;
 	void setStartingLevel(int level);
 	void setMode(MODE mode);
 
 protected:
-	void printLine(int line, bool visible);
+	void printLine(int line, bool visible) const;
 
 	void printMatrix(bool visible = true);
 	void printPreview() const;

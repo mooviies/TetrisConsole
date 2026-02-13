@@ -1,7 +1,9 @@
 #include "Menu.h"
 
+#include <sstream>
 #include <utility>
 
+#include "Overseer.h"
 #include "rlutil.h"
 #include "Platform.h"
 
@@ -99,13 +101,13 @@ OptionChoice Menu::open(const bool showSubtitle) {
             default: ;
         }
 
-        if (_close)
+        if (_close || Overseer::getTetris().doExit())
             break;
     }
     clear();
 
     const bool exitAllMenu = _closeAllMenusOptions.find(_options[_choice]) != _closeAllMenusOptions.end();
-    return OptionChoice(_choice, _options, generateValues(), exitAllMenu);
+    return {_choice, _options, generateValues(), exitAllMenu};
 }
 
 void Menu::generate() {
@@ -158,20 +160,21 @@ void Menu::generate() {
 
 string Menu::generateOption(const string& name, const int width) {
     const int interiorWidth = width - 2;
-    string result = "║";
+    std::ostringstream builder;
+    builder << "║";
     for (int i = 0; i < 3; i++) {
-        result.append(" ");
+        builder <<  " ";
     }
-    result.append(name);
+    builder << name;
 
     int nbSpaceEnd = interiorWidth - static_cast<int>(name.length()) - 3;
 
     if (_optionsValues.find(name) != _optionsValues.end()) {
         const int nbSpaceBeforeSub = _longestOptionWithChoice - static_cast<int>(name.length());
         for (int i = 0; i < nbSpaceBeforeSub; i++)
-            result.append(" ");
+            builder << " ";
 
-        result.append(" : ");
+        builder << " : ";
 
         _optionsValuesChoicesX[name] = 1 + 3 + static_cast<int>(name.length()) + nbSpaceBeforeSub + 3;
 
@@ -179,31 +182,32 @@ string Menu::generateOption(const string& name, const int width) {
     }
 
     for (int i = 0; i < nbSpaceEnd; i++) {
-        result.append(" ");
+        builder << " ";
     }
-    result.append("║");
+    builder << "║";
 
-    return result;
+    return builder.str();
 }
 
 string Menu::generateNameCenter(const string& name, const int width) {
     const int interiorWidth = width - 2;
-    string result = "║";
+    std::ostringstream builder;
+    builder << "║";
 
     const int nbSpaceBegin = interiorWidth / 2 - static_cast<int>(name.length() / 2);
     const int nbSpaceEnd = interiorWidth - (nbSpaceBegin + static_cast<int>(name.length()));
 
     for (int i = 0; i < nbSpaceBegin; i++)
-        result.append(" ");
+        builder << " ";
 
-    result.append(name);
+    builder << name;
 
     for (int i = 0; i < nbSpaceEnd; i++)
-        result.append(" ");
+        builder << " ";
 
-    result.append("║");
+    builder << "║";
 
-    return result;
+    return builder.str();
 }
 
 string Menu::generateBar(const char *start, const char *middle, const char *end, int nbMiddle) {

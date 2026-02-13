@@ -6,7 +6,7 @@
 ma_engine SoundEngine::_engine;
 map<string, ma_sound*> SoundEngine::_sounds;
 ma_sound* SoundEngine::_musicPlaying = nullptr;
-string SoundEngine::_musicPlayingName = "";
+string SoundEngine::_musicPlayingName;
 
 float SoundEngine::_musicVolume = 0.1f;
 float SoundEngine::_effectVolume = 0.5f;
@@ -34,11 +34,11 @@ static ma_result embeddedVFS_onOpen(ma_vfs* pVFS, const char* pFilePath, ma_uint
 	if (!findEmbeddedMedia(pFilePath, &data, &size))
 		return MA_DOES_NOT_EXIST;
 
-	EmbeddedFile* ef = new EmbeddedFile();
+	auto* ef = new EmbeddedFile();
 	ef->data = data;
 	ef->size = size;
 	ef->cursor = 0;
-	*pFile = (ma_vfs_file)ef;
+	*pFile = static_cast<ma_vfs_file>(ef);
 	return MA_SUCCESS;
 }
 
@@ -51,16 +51,16 @@ static ma_result embeddedVFS_onOpenW(ma_vfs* pVFS, const wchar_t* pFilePath, ma_
 static ma_result embeddedVFS_onClose(ma_vfs* pVFS, ma_vfs_file file)
 {
 	(void)pVFS;
-	delete (EmbeddedFile*)file;
+	delete static_cast<EmbeddedFile *>(file);
 	return MA_SUCCESS;
 }
 
 static ma_result embeddedVFS_onRead(ma_vfs* pVFS, ma_vfs_file file, void* pDst, size_t sizeInBytes, size_t* pBytesRead)
 {
 	(void)pVFS;
-	EmbeddedFile* ef = (EmbeddedFile*)file;
-	size_t remaining = ef->size - ef->cursor;
-	size_t toRead = (sizeInBytes < remaining) ? sizeInBytes : remaining;
+	auto* ef = static_cast<EmbeddedFile *>(file);
+	const size_t remaining = ef->size - ef->cursor;
+	const size_t toRead = (sizeInBytes < remaining) ? sizeInBytes : remaining;
 	if (toRead == 0) {
 		if (pBytesRead) *pBytesRead = 0;
 		return MA_AT_END;
@@ -80,32 +80,32 @@ static ma_result embeddedVFS_onWrite(ma_vfs* pVFS, ma_vfs_file file, const void*
 static ma_result embeddedVFS_onSeek(ma_vfs* pVFS, ma_vfs_file file, ma_int64 offset, ma_seek_origin origin)
 {
 	(void)pVFS;
-	EmbeddedFile* ef = (EmbeddedFile*)file;
+	const auto ef = static_cast<EmbeddedFile *>(file);
 	ma_int64 newCursor;
 	switch (origin) {
 		case ma_seek_origin_start:   newCursor = offset; break;
-		case ma_seek_origin_current: newCursor = (ma_int64)ef->cursor + offset; break;
-		case ma_seek_origin_end:     newCursor = (ma_int64)ef->size + offset; break;
+		case ma_seek_origin_current: newCursor = static_cast<ma_int64>(ef->cursor) + offset; break;
+		case ma_seek_origin_end:     newCursor = static_cast<ma_int64>(ef->size) + offset; break;
 		default: return MA_INVALID_ARGS;
 	}
-	if (newCursor < 0 || (size_t)newCursor > ef->size)
+	if (newCursor < 0 || static_cast<size_t>(newCursor) > ef->size)
 		return MA_INVALID_ARGS;
-	ef->cursor = (size_t)newCursor;
+	ef->cursor = static_cast<size_t>(newCursor);
 	return MA_SUCCESS;
 }
 
 static ma_result embeddedVFS_onTell(ma_vfs* pVFS, ma_vfs_file file, ma_int64* pCursor)
 {
 	(void)pVFS;
-	EmbeddedFile* ef = (EmbeddedFile*)file;
-	*pCursor = (ma_int64)ef->cursor;
+	const auto ef = static_cast<EmbeddedFile *>(file);
+	*pCursor = static_cast<ma_int64>(ef->cursor);
 	return MA_SUCCESS;
 }
 
 static ma_result embeddedVFS_onInfo(ma_vfs* pVFS, ma_vfs_file file, ma_file_info* pInfo)
 {
 	(void)pVFS;
-	EmbeddedFile* ef = (EmbeddedFile*)file;
+	const auto ef = static_cast<EmbeddedFile *>(file);
 	pInfo->sizeInBytes = ef->size;
 	return MA_SUCCESS;
 }
@@ -116,9 +116,8 @@ static EmbeddedVFS g_embeddedVFS;
 
 static ma_sound* createStreamSound(ma_engine* engine, const char* file, bool looping)
 {
-	ma_sound* sound = new ma_sound();
-	ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, sound);
-	if (result != MA_SUCCESS)
+	const auto sound = new ma_sound();
+	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, sound); result != MA_SUCCESS)
 	{
 		printf("miniaudio error loading %s (%d)\n", file, result);
 		delete sound;
@@ -131,9 +130,8 @@ static ma_sound* createStreamSound(ma_engine* engine, const char* file, bool loo
 
 static ma_sound* createEffectSound(ma_engine* engine, const char* file)
 {
-	ma_sound* sound = new ma_sound();
-	ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_DECODE, nullptr, nullptr, sound);
-	if (result != MA_SUCCESS)
+	const auto sound = new ma_sound();
+	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_DECODE, nullptr, nullptr, sound); result != MA_SUCCESS)
 	{
 		printf("miniaudio error loading %s (%d)\n", file, result);
 		delete sound;
@@ -155,7 +153,7 @@ void SoundEngine::init()
 
 	ma_engine_config config = ma_engine_config_init();
 	ma_resource_manager_config rmConfig = ma_resource_manager_config_init();
-	rmConfig.pVFS = (ma_vfs*)&g_embeddedVFS;
+	rmConfig.pVFS = static_cast<ma_vfs *>(&g_embeddedVFS);
 
 	static ma_resource_manager resourceManager;
 	ma_result result = ma_resource_manager_init(&rmConfig, &resourceManager);
@@ -180,7 +178,7 @@ void SoundEngine::init()
 	_sounds["TETRIS"] = createEffectSound(&_engine, "media/tetris.wav");
 }
 
-void SoundEngine::playMusic(string name)
+void SoundEngine::playMusic(const string& name)
 {
 	ma_sound* sound = _sounds[name];
 	if (sound == nullptr)
@@ -198,7 +196,7 @@ void SoundEngine::playMusic(string name)
 	ma_sound_start(sound);
 }
 
-void SoundEngine::playSound(string name)
+void SoundEngine::playSound(const string& name)
 {
 	ma_sound* sound = _sounds[name];
 	if (sound == nullptr)
@@ -236,7 +234,7 @@ float SoundEngine::getMusicVolume()
 	return _musicVolume;
 }
 
-void SoundEngine::setMusicVolume(float volume)
+void SoundEngine::setMusicVolume(const float volume)
 {
 	_musicVolume = volume;
 	if (_musicPlaying != nullptr)
@@ -248,7 +246,7 @@ float SoundEngine::getEffectVolume()
 	return _effectVolume;
 }
 
-void SoundEngine::setEffectVolume(float volume)
+void SoundEngine::setEffectVolume(const float volume)
 {
 	_effectVolume = volume;
 }
@@ -269,24 +267,22 @@ void SoundEngine::update()
 	}
 }
 
-SoundEngine::SoundEngine()
-{
-}
+SoundEngine::SoundEngine() = default;
 
 SoundEngine::~SoundEngine()
 {
-	for (auto& pair : _sounds)
+	for (auto&[fst, snd] : _sounds)
 	{
-		if (pair.second != nullptr)
+		if (snd != nullptr)
 		{
-			ma_sound_uninit(pair.second);
-			delete pair.second;
+			ma_sound_uninit(snd);
+			delete snd;
 		}
 	}
 	ma_engine_uninit(&_engine);
 }
 
-void SoundEngine::checkError(ma_result result, const char* description)
+void SoundEngine::checkError(const ma_result result, const char* description)
 {
 	if (result != MA_SUCCESS)
 	{

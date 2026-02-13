@@ -13,10 +13,8 @@ Tetris& Overseer::getTetris()
 }
 
 Overseer::Overseer()
-{
-}
+= default;
 
 
 Overseer::~Overseer()
-{
-}
+= default;

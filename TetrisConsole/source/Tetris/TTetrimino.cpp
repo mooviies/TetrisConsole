@@ -4,29 +4,29 @@
 TTetrimino::TTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "     ██     ", "   ██████   ")
 {
-	vector<Vector2i> north = vector<Vector2i>();
-	north.push_back(Vector2i());
-	north.push_back(Vector2i(0, -1));
-	north.push_back(Vector2i(0, 1));
-	north.push_back(Vector2i(-1, 0));
+	auto north = vector<Vector2i>();
+	north.emplace_back();
+	north.emplace_back(0, -1);
+	north.emplace_back(0, 1);
+	north.emplace_back(-1, 0);
 
-	vector<Vector2i> east = vector<Vector2i>();
-	east.push_back(Vector2i());
-	east.push_back(Vector2i(0, 1));
-	east.push_back(Vector2i(-1, 0));
-	east.push_back(Vector2i(1, 0));
+	auto east = vector<Vector2i>();
+	east.emplace_back();
+	east.emplace_back(0, 1);
+	east.emplace_back(-1, 0);
+	east.emplace_back(1, 0);
 
-	vector<Vector2i> south = vector<Vector2i>();
-	south.push_back(Vector2i());
-	south.push_back(Vector2i(0, -1));
-	south.push_back(Vector2i(0, 1));
-	south.push_back(Vector2i(1, 0));
+	auto south = vector<Vector2i>();
+	south.emplace_back();
+	south.emplace_back(0, -1);
+	south.emplace_back(0, 1);
+	south.emplace_back(1, 0);
 
-	vector<Vector2i> west = vector<Vector2i>();
-	west.push_back(Vector2i());
-	west.push_back(Vector2i(0, -1));
-	west.push_back(Vector2i(-1, 0));
-	west.push_back(Vector2i(1, 0));
+	auto west = vector<Vector2i>();
+	west.emplace_back();
+	west.emplace_back(0, -1);
+	west.emplace_back(-1, 0);
+	west.emplace_back(1, 0);
 		
 	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(),		Vector2i()), 
 										RotationPoint(Vector2i(0, 1),	Vector2i(0, -1)),
@@ -68,8 +68,7 @@ TTetrimino::TTetrimino(vector<vector<int>>& matrix)
 
 
 TTetrimino::~TTetrimino()
-{
-}
+= default;
 
 bool TTetrimino::checkTSpin()
 {
@@ -77,9 +76,8 @@ bool TTetrimino::checkTSpin()
 		return false;
 
 	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
-	Vector2i position = getPosition();
 
-	if (getMino(position + tspinPos.A) && getMino(position + tspinPos.B) && (getMino(position + tspinPos.C) || getMino(position + tspinPos.D)))
+	if (const Vector2i position = getPosition(); getMino(position + tspinPos.A) && getMino(position + tspinPos.B) && (getMino(position + tspinPos.C) || getMino(position + tspinPos.D)))
 	{
 		if (getLastRotationPoint() == 5)
 			_didTSpinWith5 = true;
@@ -105,8 +103,7 @@ bool TTetrimino::checkMiniTSpin()
 
 	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
 
-	Vector2i position = getPosition();
-	if (getMino(position + tspinPos.C) && getMino(position + tspinPos.D) && (getMino(position + tspinPos.A) || getMino(position + tspinPos.B)))
+	if (const Vector2i position = getPosition(); getMino(position + tspinPos.C) && getMino(position + tspinPos.D) && (getMino(position + tspinPos.A) || getMino(position + tspinPos.B)))
 	{
 		return true;
 	}
