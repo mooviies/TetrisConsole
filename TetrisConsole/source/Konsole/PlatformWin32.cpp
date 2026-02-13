@@ -1,7 +1,9 @@
 #include "Platform.h"
 
 #include <windows.h>
+#include <shlobj.h>
 #include <conio.h>
+#include <string>
 
 #include "rlutil.h"
 
@@ -50,4 +52,13 @@ void Platform::flushInput()
 int Platform::getKey()
 {
 	return rlutil::getkey();
+}
+
+std::string Platform::getDataDir()
+{
+	char path[MAX_PATH];
+	SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path);
+	std::string dir = std::string(path) + "\\TetrisConsole";
+	CreateDirectoryA(dir.c_str(), NULL);
+	return dir;
 }

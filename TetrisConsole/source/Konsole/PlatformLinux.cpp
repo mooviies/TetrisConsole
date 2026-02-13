@@ -3,7 +3,10 @@
 #include <termios.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
+#include <string>
+#include <sys/stat.h>
 #include <sys/select.h>
 
 #include "rlutil.h"
@@ -112,4 +115,16 @@ int Platform::getKey()
 		return 32; // KEY_SPACE
 
 	return c;
+}
+
+std::string Platform::getDataDir()
+{
+	std::string dir;
+	const char* xdg = std::getenv("XDG_DATA_HOME");
+	if (xdg && xdg[0] != '\0')
+		dir = std::string(xdg) + "/TetrisConsole";
+	else
+		dir = std::string(std::getenv("HOME")) + "/.local/share/TetrisConsole";
+	mkdir(dir.c_str(), 0755);
+	return dir;
 }

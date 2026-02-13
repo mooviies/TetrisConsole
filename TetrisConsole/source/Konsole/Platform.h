@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class Platform
 {
 public:
@@ -7,6 +9,7 @@ public:
 	static void cleanupConsole();
 	static void flushInput();
 	static int getKey();
+	static std::string getDataDir();
 
 private:
 	Platform();

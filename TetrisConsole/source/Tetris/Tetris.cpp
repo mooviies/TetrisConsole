@@ -15,13 +15,14 @@
 #include "Input.h"
 #include "Utility.h"
 #include "SoundEngine.h"
+#include "Platform.h"
 
 #define FALL "fall"
 #define AUTOREPEAT_LEFT "autorepeatleft"
 #define AUTOREPEAT_RIGHT "autorepeatright"
 #define LOCK_DOWN "lockdown"
 
-#define SCORE_FILE "score.bin"
+#define SCORE_FILE (Platform::getDataDir() + "/score.bin")
 
 #define AUTOREPEAT_DELAY 0.25
 #define AUTOREPEAT_SPEED 0.01
