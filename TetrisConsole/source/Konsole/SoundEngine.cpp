@@ -13,6 +13,10 @@ string SoundEngine::_musicPlayingName;
 float SoundEngine::_musicVolume = 0.1f;
 float SoundEngine::_effectVolume = 0.5f;
 
+MuteState SoundEngine::_muteState = MuteState::UNMUTED;
+float SoundEngine::_savedMusicVolume = 0.1f;
+float SoundEngine::_savedEffectVolume = 0.5f;
+
 // --- Embedded VFS for serving media from compiled-in data ---
 
 struct EmbeddedFile {
@@ -201,6 +205,9 @@ void SoundEngine::playMusic(const string& name)
 
 void SoundEngine::playSound(const string& name)
 {
+	if (_muteState == MuteState::ALL_MUTED)
+		return;
+
 	auto it = _sounds.find(name);
 	if (it == _sounds.end() || it->second == nullptr)
 		return;
@@ -269,6 +276,32 @@ void SoundEngine::update()
 				playMusic("A");
 		}
 	}
+}
+
+void SoundEngine::cycleMute()
+{
+	switch (_muteState) {
+		case MuteState::UNMUTED:
+			_savedMusicVolume = _musicVolume;
+			setMusicVolume(0.0f);
+			_muteState = MuteState::MUSIC_MUTED;
+			break;
+		case MuteState::MUSIC_MUTED:
+			_savedEffectVolume = _effectVolume;
+			_effectVolume = 0.0f;
+			_muteState = MuteState::ALL_MUTED;
+			break;
+		case MuteState::ALL_MUTED:
+			setMusicVolume(_savedMusicVolume);
+			_effectVolume = _savedEffectVolume;
+			_muteState = MuteState::UNMUTED;
+			break;
+	}
+}
+
+MuteState SoundEngine::getMuteState()
+{
+	return _muteState;
 }
 
 SoundEngine::SoundEngine() = default;

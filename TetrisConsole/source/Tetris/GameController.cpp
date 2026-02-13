@@ -61,6 +61,14 @@ void GameController::step(GameState& state) {
         SoundEngine::unpauseMusic();
     }
 
+    {
+        static bool wasMutePressed = false;
+        bool mutePressed = Input::mute();
+        if (mutePressed && !wasMutePressed)
+            SoundEngine::cycleMute();
+        wasMutePressed = mutePressed;
+    }
+
     if (!state._didRotate) {
         if (Input::rotateClockwise())
             rotate(state, RIGHT);

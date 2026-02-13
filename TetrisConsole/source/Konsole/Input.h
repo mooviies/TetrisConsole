@@ -15,6 +15,7 @@ public:
 	static bool rotateCounterClockwise();
 	static bool hold();
 	static bool pause();
+	static bool mute();
 	static bool select();
 
 private:

@@ -5,6 +5,8 @@
 
 #include "miniaudio.h"
 
+enum class MuteState { UNMUTED, MUSIC_MUTED, ALL_MUTED };
+
 class SoundEngine
 {
 public:
@@ -20,6 +22,9 @@ public:
 
 	static float getEffectVolume();
 	static void setEffectVolume(float volume);
+
+	static void cycleMute();
+	static MuteState getMuteState();
 
 	static void update();
 
@@ -37,4 +42,8 @@ private:
 
 	static float _musicVolume;
 	static float _effectVolume;
+
+	static MuteState _muteState;
+	static float _savedMusicVolume;
+	static float _savedEffectVolume;
 };

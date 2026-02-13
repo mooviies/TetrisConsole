@@ -6,6 +6,7 @@
 #include "Constants.h"
 #include "Platform.h"
 #include "Utility.h"
+#include "SoundEngine.h"
 #include "rlutil.h"
 
 using namespace std;
@@ -124,6 +125,15 @@ void GameRenderer::printScore(const GameState& state) {
     cout << Utility::valueToString(state._lines, 6);
     rlutil::locate(9 + ox, 26 + oy);
     cout << Utility::valueToString(state._highscore, 10);
+
+    rlutil::locate(21 + ox, 9 + oy);
+    switch (SoundEngine::getMuteState()) {
+        case MuteState::UNMUTED:      rlutil::setColor(rlutil::WHITE);  break;
+        case MuteState::MUSIC_MUTED:  rlutil::setColor(rlutil::YELLOW); break;
+        case MuteState::ALL_MUTED:    rlutil::setColor(rlutil::RED);    break;
+    }
+    cout << "♪";
+    rlutil::setColor(rlutil::WHITE);
 }
 
 void GameRenderer::printLine(const GameState& state, const int line, const bool visible) {

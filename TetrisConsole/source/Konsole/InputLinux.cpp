@@ -11,6 +11,7 @@ static bool s_rotCW = false;
 static bool s_rotCCW = false;
 static bool s_hold = false;
 static bool s_pause = false;
+static bool s_mute = false;
 static bool s_select = false;
 
 void Input::init() {
@@ -28,6 +29,7 @@ void Input::pollKeys() {
     s_rotCCW = false;
     s_hold = false;
     s_pause = false;
+    s_mute = false;
     s_select = false;
 
     unsigned char buf[64];
@@ -79,6 +81,9 @@ void Input::pollKeys() {
                     case 'c':
                     case 'C': s_hold = true;
                         break;
+                    case 'm':
+                    case 'M': s_mute = true;
+                        break;
                     default: ;
                 }
             }
@@ -116,6 +121,10 @@ bool Input::hold() {
 
 bool Input::pause() {
     return s_pause;
+}
+
+bool Input::mute() {
+    return s_mute;
 }
 
 bool Input::select() {

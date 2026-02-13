@@ -68,6 +68,11 @@ bool Input::pause()
 		(GetKeyState(VK_F1) & 0x8000);
 }
 
+bool Input::mute()
+{
+	return GetKeyState('M') & 0x8000;
+}
+
 bool Input::select()
 {
 	return GetKeyState(VK_RETURN) & 0x8000;
