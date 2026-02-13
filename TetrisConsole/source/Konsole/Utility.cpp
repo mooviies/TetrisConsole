@@ -1,5 +1,7 @@
 #include "Utility.h"
 
+#include <iostream>
+
 
 Utility::Utility()
 {
@@ -10,7 +12,7 @@ Utility::~Utility()
 {
 }
 
-void Utility::afficherTitre(string sousTitre)
+void Utility::showTitle(string sousTitre)
 {
 	// Initialisation d'une variable qui vaut la longueur du sous-titre
 	// Cette valeur est réutilisé plusieurs fois on évite donc de toujours

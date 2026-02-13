@@ -1,6 +1,6 @@
 #include "Overseer.h"
 
-Tetris* Overseer::_tetris = NULL;
+Tetris* Overseer::_tetris = nullptr;
 
 void Overseer::setTetris(Tetris* tetris)
 {

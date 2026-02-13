@@ -9,7 +9,7 @@ using namespace std;
 
 struct OptionChoice
 {
-	OptionChoice(int s, vector<string>& o, map<string, string> v, bool e = false)
+	OptionChoice(const int s, const vector<string>& o, const map<string, string> &v, const bool e = false)
 	{
 		selected = s;
 		options = o;
@@ -28,8 +28,8 @@ struct ArrowOption
 {
 	ArrowOption()
 	{
-		left = NULL;
-		right = NULL;
+		left = nullptr;
+		right = nullptr;
 	}
 	void(*left)(OptionChoice);
 	void(*right)(OptionChoice);
@@ -38,30 +38,31 @@ struct ArrowOption
 class Menu
 {
 public:
-	Menu(string title, string subtitle = "");
+	explicit Menu(string title, string subtitle = "");
 	~Menu();
 
-	void addOption(string name, Menu* menu);
-	void addOption(string name, void(*callback)(OptionChoice));
-	void addOptionArrow(string name, void(*leftCallback)(OptionChoice), void(*rightCallback)(OptionChoice));
-	void addOptionClose(string name, void(*callback)(OptionChoice) = NULL);
-	void addOptionCloseAllMenu(string name, void(*callback)(OptionChoice) = NULL);
-	void addOptionWithValues(string name, vector<string> values);
+	void addOption(const string& name, Menu* menu);
+	void addOption(const string& name, void(*callback)(OptionChoice));
+	void addOptionArrow(const string& name, void(*leftCallback)(OptionChoice), void(*rightCallback)(OptionChoice));
+	void addOptionClose(const string& name, void(*callback)(OptionChoice) = nullptr);
+	void addOptionCloseAllMenu(const string& name, void(*callback)(OptionChoice) = nullptr);
+	void addOptionWithValues(const string &name, const vector<string> &values);
 
 	OptionChoice open(bool showSubtitle = false);
 
 protected:
-	void addOption(string name);
+	void addOption(const string& name);
 	void generate();
-	string generateOption(string name, int width);
-	string generateNameCenter(string name, int width);
-	string generateBar(const char* start, const char* middle, const char* end, int nbMiddle);
+	string generateOption(const string& name, int width);
+	static string generateNameCenter(const string& name, int width);
+
+	static string generateBar(const char* start, const char* middle, const char* end, int nbMiddle);
 	map<string, string> generateValues();
 
 	void draw();
 	void save();
-	void restore();
-	void clear();
+	void restore() const;
+	void clear() const;
 
 	void select(int choice);
 	void switchOptions(int choice, int key);

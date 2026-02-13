@@ -1,6 +1,4 @@
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
 #include <fstream>
 
 #include "Tetris.h"
@@ -31,15 +29,15 @@
 #define LOCK_DOWN_MOVE 15
 
 Tetris::Tetris(Menu& pauseMenu, Menu& gameOverMenu)
-	: _timer(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu), _startingLevel(1), _mode(EXTENDED), _start(false), _newHold(false), _holdTetrimino(NULL)
+	: _timer(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu), _mode(EXTENDED), _startingLevel(1), _holdTetrimino(nullptr), _start(false), _newHold(false)
 {
-	double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
-	double speedFast[] = { 0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014, 0.0009, 0.00055, 0.00035 };
 	_speedNormal = new double[16];
 	_speedFast = new double[16];
 
 	for (int i = 0; i < 16; i++)
 	{
+		double speedFast[] = { 0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014, 0.0009, 0.00055, 0.00035 };
+		double speedNormal[] = { 0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007 };
 		_speedNormal[i] = speedNormal[i];
 		_speedFast[i] = speedFast[i];
 	}
@@ -55,22 +53,20 @@ Tetris::Tetris(Menu& pauseMenu, Menu& gameOverMenu)
 
 	for (int i = 0; i < TETRIS_HEIGHT; i++)
 	{
-		_matrix.push_back(vector<int>(TETRIS_WIDTH));
+		_matrix.emplace_back(TETRIS_WIDTH);
 	}
 
-	ifstream highscoreFile(SCORE_FILE);
-
-	if (highscoreFile.is_open())
+	if (ifstream highscoreFileRead(SCORE_FILE); highscoreFileRead.is_open())
 	{
-		highscoreFile >> _highscore;
-		highscoreFile.close();
+		highscoreFileRead >> _highscore;
+		highscoreFileRead.close();
 	}
 	else
 	{
-		ofstream highscoreFile(SCORE_FILE);
+		ofstream highscoreFileWrite(SCORE_FILE);
 		_highscore = 0;
-		highscoreFile << _highscore;
-		highscoreFile.close();
+		highscoreFileWrite << _highscore;
+		highscoreFileWrite.close();
 	}
 }
 
@@ -78,8 +74,8 @@ Tetris::~Tetris()
 {
 	delete[] _speedNormal;
 	delete[] _speedFast;
-	for (int i = 0; i < _bag.size(); i++)
-		delete _bag[i];
+	for (const auto & i : _bag)
+		delete i;
 }
 
 void Tetris::start()
@@ -150,14 +146,13 @@ void Tetris::step()
 	if (!_start)
 		return;
 
-	(*this.*_stepState)();
+	(this->*_stepState)();
 
 	if (Input::pause())
 	{
 		SoundEngine::pauseMusic();
 		printMatrix(false);
-		OptionChoice choices = _pauseMenu.open();
-		if (choices.options[choices.selected] == "Restart")
+		if (const OptionChoice choices = _pauseMenu.open(); choices.options[choices.selected] == "Restart")
 		{
 			SoundEngine::stopMusic();
 			reset();
@@ -184,14 +179,14 @@ void Tetris::step()
 
 void Tetris::fall()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return;
 
 	int speedIndex = _level;
 	if (speedIndex > 15)
 		speedIndex = 15;
 
-	double* speedArray = _speedNormal;
+	const double* speedArray = _speedNormal;
 	bool isSoftDropping = false;
 	isSoftDropping = Input::softDrop();
 	if (isSoftDropping)
@@ -246,7 +241,7 @@ void Tetris::fall()
 
 void Tetris::stepIdle()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 	{
         popTetrimino();
 		if (!_currentTetrimino->setPosition(_currentTetrimino->getStartingPosition()))
@@ -268,7 +263,7 @@ void Tetris::stepIdle()
 		Tetrimino* buffer = _holdTetrimino;;
 		_holdTetrimino = _currentTetrimino;
 		_currentTetrimino = buffer;
-		if (_currentTetrimino != NULL)
+		if (_currentTetrimino != nullptr)
 		{
 			_currentTetrimino->resetRotation();
 			if (!_currentTetrimino->setPosition(_currentTetrimino->getStartingPosition()))
@@ -285,7 +280,7 @@ void Tetris::stepIdle()
 
 void Tetris::stepMoveLeft()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 	{
 		_stepState = &Tetris::stepIdle;
 		return;
@@ -308,7 +303,7 @@ void Tetris::stepMoveLeft()
 
 void Tetris::stepMoveRight()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 	{
 		_stepState = &Tetris::stepIdle;
 		return;
@@ -331,7 +326,7 @@ void Tetris::stepMoveRight()
 
 void Tetris::stepHardDrop()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 	{
 		_stepState = &Tetris::stepIdle;
 		return;
@@ -351,8 +346,7 @@ void Tetris::incrementMove()
 		_nbMoveAfterLockDown++;
 }
 
-void Tetris::smallResetLockDown()
-{
+void Tetris::smallResetLockDown() const {
 	if (_mode == CLASSIC)
 		return;
 
@@ -367,7 +361,7 @@ void Tetris::smallResetLockDown()
 
 void Tetris::moveLeft()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return;
 
 	if (_currentTetrimino->move(Vector2i(0, -1)))
@@ -381,7 +375,7 @@ void Tetris::moveLeft()
 
 void Tetris::moveRight()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return;
 
 	if (_currentTetrimino->move(Vector2i(0, 1)))
@@ -396,7 +390,7 @@ void Tetris::moveRight()
 
 bool Tetris::moveDown()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return false;
 
 	if (_currentTetrimino->move(Vector2i(1, 0)))
@@ -420,9 +414,9 @@ void Tetris::rotateCounterClockwise()
 	rotate(LEFT);
 }
 
-void Tetris::rotate(DIRECTION direction)
+void Tetris::rotate(const DIRECTION direction)
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return;
 
 	if (_currentTetrimino->rotate(direction))
@@ -450,20 +444,20 @@ void Tetris::rotate(DIRECTION direction)
 	}
 }
 
-void Tetris::checkAutorepeat(bool input, string timer, void(Tetris::*move)(), void(Tetris::*state)())
+void Tetris::checkAutorepeat(const bool input, const string& timer, void(Tetris::*move)(), void(Tetris::*state)())
 {
 	if (input)
 	{
 		if (!_timer.exist(timer))
 		{
-			(*this.*move)();
+			(this->*move)();
 			_timer.startTimer(timer);
 		}
 
 		if (_timer.getSeconds(timer) >= AUTOREPEAT_DELAY)
 		{
 			_timer.startTimer(timer);
-			(*this.*move)();
+			(this->*move)();
 			_stepState = state;
 		}
 	}
@@ -473,7 +467,7 @@ void Tetris::checkAutorepeat(bool input, string timer, void(Tetris::*move)(), vo
 	}
 }
 
-bool Tetris::doExit()
+bool Tetris::doExit() const
 {
 	return _exit;
 }
@@ -483,23 +477,22 @@ void Tetris::setStartingLevel(int level)
 	_startingLevel = level;
 }
 
-void Tetris::setMode(MODE mode)
+void Tetris::setMode(const MODE mode)
 {
 	_mode = mode;
 }
 
-void Tetris::printMatrix(bool visible)
+void Tetris::printMatrix(const bool visible)
 {
 	for (int i = MATRIX_START; i <= MATRIX_END; i++)
 		printLine(i, visible);
 }
 
-void Tetris::printPreview()
-{
+void Tetris::printPreview() const {
 	peekTetrimino()->printPreview(0);
 	peekTetrimino()->printPreview(1);
 
-	if (_holdTetrimino == NULL)
+	if (_holdTetrimino == nullptr)
 	{
 		rlutil::locate(60, 24);
 		cout << "            ";
@@ -547,7 +540,7 @@ void Tetris::printLine(int line, bool visible)
 		x += 2;
 
 		bool currentTetriminoHere = false;
-		if(_currentTetrimino != NULL)
+		if(_currentTetrimino != nullptr)
 			currentTetriminoHere = _currentTetrimino->isMino(line, i);
 		if (visible && (_matrix[line][i] || currentTetriminoHere))
 		{
@@ -601,8 +594,8 @@ void Tetris::reset()
 		}
 	}
 
-	_holdTetrimino = NULL;
-	_currentTetrimino = NULL;
+	_holdTetrimino = nullptr;
+	_currentTetrimino = nullptr;
 	_bagIndex = 0;
 	shuffle();
 
@@ -624,7 +617,7 @@ void Tetris::reset()
 
 void Tetris::lock()
 {
-	if (_currentTetrimino == NULL)
+	if (_currentTetrimino == nullptr)
 		return;
 
 	if (_currentTetrimino->simulateMove(Vector2i(1, 0)))
@@ -650,7 +643,7 @@ void Tetris::lock()
 	_nbMoveAfterLockDown = 0;
 	_lowestLine = 0;
 	_timer.stopTimer(LOCK_DOWN);
-    _currentTetrimino = NULL;
+    _currentTetrimino = nullptr;
 
 	int linesCleared = 0;
 	for (int i = MATRIX_END; i >= MATRIX_START; i--)
@@ -696,12 +689,13 @@ void Tetris::lock()
 				value = 1200;
 				awardedLines = 16;
 				break;
+			default: ;
 			}
 
 			if (_backToBackBonus)
 			{
 				value += value / 2;
-				awardedLines += 0.5 * linesCleared;
+				awardedLines += linesCleared / 2;
 			}
 
 			_score += value * _level;
@@ -718,7 +712,7 @@ void Tetris::lock()
 			if (_backToBackBonus)
 			{
 				value += value / 2;
-				awardedLines += 0.5 * linesCleared;
+				awardedLines += linesCleared / 2;
 			}
 
 			_score += value * _level;
@@ -751,11 +745,12 @@ void Tetris::lock()
 			if (_backToBackBonus)
 			{
 				value += value / 2;
-				awardedLines += 0.5 * linesCleared;
+				awardedLines += linesCleared / 2;
 			}
 
 			_backToBackBonus = true;
 			break;
+		default: ;
 		}
 
 		_score += value * _level;
@@ -784,7 +779,7 @@ void Tetris::lock()
 
 void Tetris::shuffle()
 {
-	for (int i = _bag.size() - 1; i >= 0; i--)
+	for (int i = static_cast<int>(_bag.size()) - 1; i >= 0; i--)
 	{
 		int j = Random::getInteger(0, i);
 		if (i == j)
@@ -806,8 +801,7 @@ void Tetris::popTetrimino()
 	}
 }
 
-Tetrimino* Tetris::peekTetrimino()
-{
+Tetrimino* Tetris::peekTetrimino() const {
 	return _bag[_bagIndex];
 }
 

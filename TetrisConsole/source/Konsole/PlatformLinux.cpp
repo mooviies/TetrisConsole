@@ -88,7 +88,7 @@ int Platform::getKey()
 		FD_SET(STDIN_FILENO, &fds);
 		tv.tv_sec = 0;
 		tv.tv_usec = 50000; // 50ms
-		if (::select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0)
+		if (::select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv) > 0)
 		{
 			unsigned char seq[2];
 			if (read(STDIN_FILENO, &seq[0], 1) == 1 && seq[0] == '[')

@@ -1,10 +1,10 @@
 #include "Timer.h"
 
-Timer* Timer::_instance = NULL;
+Timer* Timer::_instance = nullptr;
 
 Timer & Timer::instance()
 {
-	if (_instance == NULL)
+	if (_instance == nullptr)
 		_instance = new Timer();
 
 	return *_instance;

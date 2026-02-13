@@ -1,23 +1,28 @@
 #pragma once
 
-#include <cstdlib>
-#include <ctime>
+#include <random>
 
-class Random
-{
+class Random {
 public:
-	static void init()
-	{
-		srand(time(NULL));
-	}
+    static void init() {
+        _random = new std::random_device();
+        _generator = new std::mt19937(_random->operator()());
+    }
 
-	static int getInteger(int min, int max)
-	{
-		return min + (int)(((max - min) + 1) * rand() / (RAND_MAX + 1.0));
-	}
+    static void cleanup() {
+        delete _random;
+        delete _generator;
+    }
+
+    static int getInteger(const int min, const int max) {
+        std::uniform_int_distribution distribution(min, max);
+        return distribution(*_generator);
+    }
+
+    Random() = delete;
+    ~Random() = delete;
 
 private:
-	Random();
-	~Random();
+    static std::random_device *_random;
+    static std::mt19937 *_generator;
 };
-

@@ -1,10 +1,8 @@
 #pragma once
 
 #include <string>
-#include <queue>
 
 #include "Tetrimino.h"
-#include "Vector2i.h"
 #include "Timer.h"
 #include "Menu.h"
 
@@ -23,10 +21,10 @@ public:
 	~Tetris();
 
 	void start();
-	void display();
+	static void display();
 	void refresh();
 	void step();
-	bool doExit();
+	bool doExit() const;
 	void setStartingLevel(int level);
 	void setMode(MODE mode);
 
@@ -34,14 +32,14 @@ protected:
 	void printLine(int line, bool visible);
 
 	void printMatrix(bool visible = true);
-	void printPreview();
+	void printPreview() const;
 	void printScore();
 
 	void reset();
 	void lock();
 	void shuffle();
 	void popTetrimino();
-	Tetrimino* peekTetrimino();
+	[[nodiscard]] Tetrimino* peekTetrimino() const;
 
 	void gameOver();
 
@@ -53,14 +51,14 @@ protected:
 	void stepHardDrop();
 	void incrementMove();
 
-	void smallResetLockDown();
+	void smallResetLockDown() const;
 	void moveLeft();
 	void moveRight();
 	bool moveDown();
 	void rotate(DIRECTION direction);
 	void rotateClockwise();
 	void rotateCounterClockwise();
-	void checkAutorepeat(bool input, string timer, void(Tetris::*move)(), void(Tetris::*state)());
+	void checkAutorepeat(bool input, const string& timer, void(Tetris::*move)(), void(Tetris::*state)());
 
 private:
 	vector<vector<int>> _matrix;
@@ -71,16 +69,16 @@ private:
 	MODE _mode;
 
 	int _startingLevel;
-	int _level;
-	int _lines;
-	int _goal;
-	int _score;
+	int _level{};
+	int _lines{};
+	int _goal{};
+	int _score{};
 	int _highscore;
-	int _nbMoveAfterLockDown;
-	int _lowestLine;
+	int _nbMoveAfterLockDown{};
+	int _lowestLine{};
 
-	unsigned int _bagIndex;
-	Tetrimino* _currentTetrimino;
+	unsigned int _bagIndex{};
+	Tetrimino* _currentTetrimino{};
 	Tetrimino* _holdTetrimino;
 	vector<Tetrimino*> _bag;
 
@@ -88,18 +86,18 @@ private:
 	double* _speedFast;
 
 	bool _start;
-	bool _exit;
-	bool _didRotate;
-	bool _gameOver;
-	bool _ignoreHardDrop;
-	bool _lastMoveIsTSpin;
-	bool _lastMoveIsMiniTSpin;
-	bool _backToBackBonus;
-	bool _lockDownMode;
+	bool _exit{};
+	bool _didRotate{};
+	bool _gameOver{};
+	bool _ignoreHardDrop{};
+	bool _lastMoveIsTSpin{};
+	bool _lastMoveIsMiniTSpin{};
+	bool _backToBackBonus{};
+	bool _lockDownMode{};
 	bool _newHold;
-	bool _betterHighscore;
+	bool _betterHighscore{};
 
-	void(Tetris::*_stepState)();
+	void(Tetris::*_stepState)(){};
 
 	Tetrimino* _tspinTest;
 };
