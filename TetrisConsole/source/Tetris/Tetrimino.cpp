@@ -6,22 +6,25 @@
 using namespace std;
 
 
-Tetrimino::Tetrimino(vector<vector<int>>& matrix, const string &previewLine1, const string &previewLine2)
+Tetrimino::Tetrimino(PieceType type, vector<vector<int>>& matrix)
 	: _matrix(matrix)
 {
+	const PieceData& data = getPieceData(type);
+	_color = data.color;
+	_startingPosition = data.startingPosition;
+	_previewLine1 = data.previewLine1;
+	_previewLine2 = data.previewLine2;
+	_facings = data.facings;
+	_hasTSpin = data.hasTSpin;
+	_tSpinPositions = data.tSpinPositions;
+
 	_currentRotation = NORTH;
-	_previewLine1 = previewLine1;
-	_previewLine2 = previewLine2;
 	_lastRotationPoint = -1;
+	_didTSpinWith5 = false;
 }
 
 Tetrimino::~Tetrimino()
 = default;
-
-void Tetrimino::setFacing(const ROTATION direction, const Facing& facing)
-{
-	_facings[direction] = facing;
-}
 
 bool Tetrimino::setPosition(const Vector2i& position)
 {
@@ -30,7 +33,7 @@ bool Tetrimino::setPosition(const Vector2i& position)
 		_currentPosition = position;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -42,7 +45,7 @@ bool Tetrimino::move(const Vector2i& distance)
 		_lastRotationPoint = -1;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -97,7 +100,7 @@ bool Tetrimino::lock()
 	for (int i = 0; i < minoCount; i++)
 	{
 		const Vector2i minoPos = _currentPosition + facing.getMino(i);
-		_matrix[minoPos.row][minoPos.column] = getColor();
+		_matrix[minoPos.row][minoPos.column] = _color;
 		if (minoPos.row >= MATRIX_START)
 			gameOver = false;
 	}
@@ -168,7 +171,7 @@ void Tetrimino::printPreview(const int line, const bool hold) const {
 		y += 10;
 
 	rlutil::locate(60, y);
-	rlutil::setColor(getColor());
+	rlutil::setColor(_color);
 
 	if (line == 0)
 		cout << _previewLine1;
@@ -176,6 +179,67 @@ void Tetrimino::printPreview(const int line, const bool hold) const {
 		cout << _previewLine2;
 	else
 		cout << "            ";
-	
+
 	rlutil::setColor(rlutil::WHITE);
+}
+
+// T-spin detection uses the 3-corner rule:
+// For a T-spin, at least 3 of the 4 diagonal cells adjacent to the T-piece center
+// must be occupied. Positions A and B are the two corners "in front" of the T
+// (relative to the current facing), and C and D are the two "behind" it.
+//
+// Full T-spin: A and B both occupied, plus at least one of C or D.
+// The special case: if the 5th SRS kick was used, a mini T-spin is promoted to full.
+//
+// Mini T-spin: C and D both occupied, plus at least one of A or B.
+bool Tetrimino::checkTSpin()
+{
+	if (!_hasTSpin)
+		return false;
+
+	if (getLastRotationPoint() < 0)
+		return false;
+
+	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
+
+	if (const Vector2i position = getPosition(); getMino(position + tspinPos.A) && getMino(position + tspinPos.B) && (getMino(position + tspinPos.C) || getMino(position + tspinPos.D)))
+	{
+		if (getLastRotationPoint() == 5)
+			_didTSpinWith5 = true;
+
+		return true;
+	}
+
+	if (checkMiniTSpin())
+	{
+		if (_didTSpinWith5)
+			return true;
+
+		return getLastRotationPoint() == 5;
+	}
+
+	return false;
+}
+
+bool Tetrimino::checkMiniTSpin()
+{
+	if (!_hasTSpin)
+		return false;
+
+	if (getLastRotationPoint() < 0)
+		return false;
+
+	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
+
+	if (const Vector2i position = getPosition(); getMino(position + tspinPos.C) && getMino(position + tspinPos.D) && (getMino(position + tspinPos.A) || getMino(position + tspinPos.B)))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void Tetrimino::onLock()
+{
+	_didTSpinWith5 = false;
 }

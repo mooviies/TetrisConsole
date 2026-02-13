@@ -6,13 +6,7 @@
 #include "Tetris.h"
 
 #include "Constants.h"
-#include "OTetrimino.h"
-#include "ITetrimino.h"
-#include "TTetrimino.h"
-#include "LTetrimino.h"
-#include "JTetrimino.h"
-#include "STetrimino.h"
-#include "ZTetrimino.h"
+#include "PieceData.h"
 
 #include "Random.h"
 #include "Input.h"
@@ -41,13 +35,13 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
       _holdTetrimino(nullptr), _isStarted(false), _isNewHold(false) {
     _shouldExit = false;
 
-    _bag.push_back(std::make_unique<OTetrimino>(_matrix));
-    _bag.push_back(std::make_unique<ITetrimino>(_matrix));
-    _bag.push_back(std::make_unique<TTetrimino>(_matrix));
-    _bag.push_back(std::make_unique<LTetrimino>(_matrix));
-    _bag.push_back(std::make_unique<JTetrimino>(_matrix));
-    _bag.push_back(std::make_unique<STetrimino>(_matrix));
-    _bag.push_back(std::make_unique<ZTetrimino>(_matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::O, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::I, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::T, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::L, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::J, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::S, _matrix));
+    _bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
     for (int i = 0; i < TETRIS_HEIGHT; i++) {
         _matrix.emplace_back(TETRIS_WIDTH);
     }

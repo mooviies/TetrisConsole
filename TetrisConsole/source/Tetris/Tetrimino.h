@@ -2,14 +2,16 @@
 
 #include <string>
 #include <array>
+#include <vector>
 
-#include "Facing.h"
+#include "PieceData.h"
 #include "rlutil.h"
 
 class Tetrimino
 {
 public:
-	virtual ~Tetrimino();
+	Tetrimino(PieceType type, std::vector<std::vector<int>>& matrix);
+	~Tetrimino();
 
 	void printPreview(int line, bool hold = false) const;
 	[[nodiscard]] bool setPosition(const Vector2i &position);
@@ -22,17 +24,14 @@ public:
 	[[nodiscard]] bool isMino(int row, int column) const;
 	[[nodiscard]] Vector2i const & getPosition() const { return _currentPosition; }
 
-	[[nodiscard]] virtual int getColor() const = 0;
-	[[nodiscard]] virtual Vector2i getStartingPosition() const { return {19, 4}; }
-	[[nodiscard]] virtual bool canTSpin() const { return false; }
-	virtual bool checkTSpin() { return false;  }
-	virtual bool checkMiniTSpin() { return false; }
+	[[nodiscard]] int getColor() const { return _color; }
+	[[nodiscard]] Vector2i getStartingPosition() const { return _startingPosition; }
+	[[nodiscard]] bool canTSpin() const { return _hasTSpin; }
+	bool checkTSpin();
+	bool checkMiniTSpin();
 
-protected:
-	Tetrimino(std::vector<std::vector<int>>& matrix, const std::string &previewLine1, const std::string &previewLine2);
-
-	virtual void onLock() {}
-	void setFacing(ROTATION direction, const Facing &facing);
+private:
+	void onLock();
 
 	[[nodiscard]] int getMino(int row, int column) const;
 	[[nodiscard]] int getMino(const Vector2i& position) const;
@@ -41,9 +40,10 @@ protected:
 	[[nodiscard]] int getLastRotationPoint() const { return _lastRotationPoint; }
 	[[nodiscard]] ROTATION getCurrentRotation() const { return _currentRotation; }
 
-private:
 	std::vector<std::vector<int>>& _matrix;
 
+	int _color;
+	Vector2i _startingPosition;
 	std::array<Facing, 4> _facings;
 	int _lastRotationPoint;
 
@@ -52,4 +52,9 @@ private:
 
 	ROTATION _currentRotation;
 	Vector2i _currentPosition;
+
+	// T-spin data (only meaningful for T piece)
+	bool _hasTSpin;
+	std::array<TSpinPositions, 4> _tSpinPositions;
+	bool _didTSpinWith5 = false;
 };
