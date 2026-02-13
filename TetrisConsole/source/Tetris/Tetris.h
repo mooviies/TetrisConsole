@@ -9,6 +9,8 @@
 #include "Timer.h"
 #include "Menu.h"
 
+enum class GameStep { Idle, MoveLeft, MoveRight, HardDrop };
+
 enum MODE {
 	EXTENDED,
 	EXTENDED_INFINITY,
@@ -60,7 +62,7 @@ protected:
 	void rotate(DIRECTION direction);
 	void rotateClockwise();
 	void rotateCounterClockwise();
-	void checkAutorepeat(bool input, const std::string& timer, void(Tetris::*move)(), void(Tetris::*state)());
+	void checkAutorepeat(bool input, const std::string& timer, void(Tetris::*move)(), GameStep nextState);
 
 private:
 	std::vector<std::vector<int>> _matrix;
@@ -106,8 +108,5 @@ private:
 	bool _isNewHold;
 	bool _hasBetterHighscore{};
 
-	// Function-pointer state machine. Points to stepIdle/stepMoveLeft/stepMoveRight/stepHardDrop.
-	void(Tetris::*_stepState)(){};
-
-	Tetrimino* _tspinTest;
+	GameStep _stepState = GameStep::Idle;
 };

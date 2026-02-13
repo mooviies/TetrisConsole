@@ -48,8 +48,6 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     _bag.push_back(std::make_unique<JTetrimino>(_matrix));
     _bag.push_back(std::make_unique<STetrimino>(_matrix));
     _bag.push_back(std::make_unique<ZTetrimino>(_matrix));
-    _tspinTest = _bag[2].get();
-
     for (int i = 0; i < TETRIS_HEIGHT; i++) {
         _matrix.emplace_back(TETRIS_WIDTH);
     }
@@ -133,7 +131,12 @@ void Tetris::step() {
     if (!_isStarted)
         return;
 
-    (this->*_stepState)();
+    switch (_stepState) {
+        case GameStep::Idle:      stepIdle(); break;
+        case GameStep::MoveLeft:  stepMoveLeft(); break;
+        case GameStep::MoveRight: stepMoveRight(); break;
+        case GameStep::HardDrop:  stepHardDrop(); break;
+    }
 
     if (Input::pause()) {
         SoundEngine::pauseMusic();
@@ -205,7 +208,7 @@ void Tetris::fall() {
 
     if (Input::hardDrop() && !_shouldIgnoreHardDrop) {
         SoundEngine::playSound("HARD_DROP");
-        _stepState = &Tetris::stepHardDrop;
+        _stepState = GameStep::HardDrop;
         _shouldIgnoreHardDrop = true;
     } else if (!Input::hardDrop() && _shouldIgnoreHardDrop) {
         _shouldIgnoreHardDrop = false;
@@ -225,8 +228,8 @@ void Tetris::stepIdle() {
 
     fall();
 
-    checkAutorepeat(Input::left(), AUTOREPEAT_LEFT, &Tetris::moveLeft, &Tetris::stepMoveLeft);
-    checkAutorepeat(Input::right(), AUTOREPEAT_RIGHT, &Tetris::moveRight, &Tetris::stepMoveRight);
+    checkAutorepeat(Input::left(), AUTOREPEAT_LEFT, &Tetris::moveLeft, GameStep::MoveLeft);
+    checkAutorepeat(Input::right(), AUTOREPEAT_RIGHT, &Tetris::moveRight, GameStep::MoveRight);
 
     if (!_isNewHold && Input::hold()) {
         Tetrimino *buffer = _holdTetrimino;;
@@ -247,14 +250,14 @@ void Tetris::stepIdle() {
 
 void Tetris::stepMoveLeft() {
     if (_currentTetrimino == nullptr) {
-        _stepState = &Tetris::stepIdle;
+        _stepState = GameStep::Idle;
         return;
     }
 
     fall();
 
     if (!Input::left()) {
-        _stepState = &Tetris::stepIdle;
+        _stepState = GameStep::Idle;
         _timer.stopTimer(AUTOREPEAT_LEFT);
     }
 
@@ -266,14 +269,14 @@ void Tetris::stepMoveLeft() {
 
 void Tetris::stepMoveRight() {
     if (_currentTetrimino == nullptr) {
-        _stepState = &Tetris::stepIdle;
+        _stepState = GameStep::Idle;
         return;
     }
 
     fall();
 
     if (!Input::right()) {
-        _stepState = &Tetris::stepIdle;
+        _stepState = GameStep::Idle;
         _timer.stopTimer(AUTOREPEAT_RIGHT);
     }
 
@@ -285,7 +288,7 @@ void Tetris::stepMoveRight() {
 
 void Tetris::stepHardDrop() {
     if (_currentTetrimino == nullptr) {
-        _stepState = &Tetris::stepIdle;
+        _stepState = GameStep::Idle;
         return;
     }
 
@@ -384,7 +387,7 @@ void Tetris::rotate(const DIRECTION direction) {
     }
 }
 
-void Tetris::checkAutorepeat(const bool input, const string &timer, void (Tetris::*move)(), void (Tetris::*state)()) {
+void Tetris::checkAutorepeat(const bool input, const string &timer, void (Tetris::*move)(), GameStep nextState) {
     if (input) {
         if (!_timer.exist(timer)) {
             (this->*move)();
@@ -394,7 +397,7 @@ void Tetris::checkAutorepeat(const bool input, const string &timer, void (Tetris
         if (_timer.getSeconds(timer) >= AUTOREPEAT_DELAY) {
             _timer.startTimer(timer);
             (this->*move)();
-            _stepState = state;
+            _stepState = nextState;
         }
     } else {
         _timer.stopTimer(timer);
@@ -516,7 +519,7 @@ void Tetris::reset() {
     _bagIndex = 0;
     shuffle();
 
-    _stepState = &Tetris::stepIdle;
+    _stepState = GameStep::Idle;
     _didRotate = false;
     _nbMoveAfterLockDown = 0;
     _lowestLine = 0;
@@ -674,7 +677,7 @@ void Tetris::lock() {
     else if (linesCleared >= 1)
         SoundEngine::playSound("LINE_CLEAR");
 
-    _stepState = &Tetris::stepIdle;
+    _stepState = GameStep::Idle;
     refresh();
 }
 
