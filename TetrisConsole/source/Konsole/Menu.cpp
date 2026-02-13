@@ -75,7 +75,7 @@ void Menu::addOption(const string& name) {
         _longestOption = name.length();
 }
 
-OptionChoice Menu::open(const bool showSubtitle) {
+OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
     _showSubtitle = showSubtitle;
     generate();
 
@@ -102,6 +102,12 @@ OptionChoice Menu::open(const bool showSubtitle) {
                 break;
             case rlutil::KEY_ENTER:
                 select(_choice);
+                break;
+            case rlutil::KEY_ESCAPE:
+                if (escapeCloses) {
+                    _choice = 0;
+                    _close = true;
+                }
                 break;
             default: ;
         }

@@ -45,7 +45,7 @@ public:
 	static std::function<bool()> shouldExitGame;
 	static std::function<void()> onResize;
 
-	OptionChoice open(bool showSubtitle = false);
+	OptionChoice open(bool showSubtitle = false, bool escapeCloses = false);
 
 protected:
 	void addOption(const std::string& name);

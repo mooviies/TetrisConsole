@@ -51,7 +51,7 @@ void GameController::step(GameState& state) {
     if (Input::pause()) {
         SoundEngine::pauseMusic();
         _renderer.printMatrix(state, false);
-        if (const OptionChoice choices = _pauseMenu.open(); choices.options[choices.selected] == "Restart") {
+        if (const OptionChoice choices = _pauseMenu.open(false, true); choices.options[choices.selected] == "Restart") {
             SoundEngine::stopMusic();
             reset(state);
             return;
