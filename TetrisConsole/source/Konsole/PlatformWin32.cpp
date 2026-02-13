@@ -9,6 +9,9 @@
 
 void Platform::initConsole()
 {
+	// Ignore Ctrl+C — quit through the in-app menu
+	SetConsoleCtrlHandler(NULL, TRUE);
+
 	HWND console = GetConsoleWindow();
 	HWND desktop = GetDesktopWindow();
 	RECT rectDesktop;

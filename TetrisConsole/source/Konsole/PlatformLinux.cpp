@@ -31,6 +31,9 @@ void Platform::initConsole()
 	tcgetattr(STDIN_FILENO, &s_originalTermios);
 	s_termiosRestored = false;
 
+	// Enter alternate screen buffer (like vim) — restores main screen on exit
+	std::cout << "\033[?1049h" << std::flush;
+
 	// Register SIGWINCH handler for terminal resize detection.
 	// No SA_RESTART: let read() in getKey() return EINTR so the menu loop
 	// can immediately detect the resize and redraw without waiting for input.
@@ -39,11 +42,12 @@ void Platform::initConsole()
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGWINCH, &sa, nullptr);
 
-	// Set raw mode: char-at-a-time, no echo, blocking reads (VMIN=1)
+	// Set raw mode: char-at-a-time, no echo, no signal generation, blocking reads.
+	// ISIG disabled so Ctrl+C doesn't kill the process — quit via in-app menu.
 	// VMIN=1 is needed so blocking reads work properly in menus.
 	// The game loop uses select() in Input::pollKeys() to avoid blocking.
 	struct termios raw = s_originalTermios;
-	raw.c_lflag &= ~(ICANON | ECHO);
+	raw.c_lflag &= ~(ICANON | ECHO | ISIG);
 	raw.c_oflag |= (OPOST | ONLCR);
 	raw.c_cc[VMIN] = 1;
 	raw.c_cc[VTIME] = 0;
@@ -67,10 +71,10 @@ void Platform::cleanupConsole()
 		s_termiosRestored = true;
 	}
 
-	rlutil::cls();
 	rlutil::showcursor();
 	rlutil::resetColor();
-	std::cout << std::flush;
+	// Leave alternate screen buffer — restores the original main screen
+	std::cout << "\033[?1049l" << std::flush;
 }
 
 void Platform::flushInput()
