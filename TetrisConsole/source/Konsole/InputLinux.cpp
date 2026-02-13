@@ -1,7 +1,7 @@
 #include "Input.h"
 
 #include <unistd.h>
-#include <cstring>
+#include <sys/select.h>
 
 static bool s_left = false;
 static bool s_right = false;
@@ -35,8 +35,22 @@ void Input::pollKeys()
 
 	unsigned char buf[64];
 	int n;
-	while ((n = read(STDIN_FILENO, buf, sizeof(buf))) > 0)
+	fd_set fds;
+	struct timeval tv;
+
+	while (true)
 	{
+		FD_ZERO(&fds);
+		FD_SET(STDIN_FILENO, &fds);
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		if (::select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) <= 0)
+			break;
+
+		n = read(STDIN_FILENO, buf, sizeof(buf));
+		if (n <= 0)
+			break;
+
 		for (int i = 0; i < n; i++)
 		{
 			if (buf[i] == '\033' && i + 2 < n && buf[i + 1] == '[')

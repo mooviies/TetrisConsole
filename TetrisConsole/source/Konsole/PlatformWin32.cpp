@@ -46,3 +46,8 @@ void Platform::flushInput()
 {
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
+
+int Platform::getKey()
+{
+	return rlutil::getkey();
+}

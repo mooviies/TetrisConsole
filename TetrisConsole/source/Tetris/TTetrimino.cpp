@@ -2,7 +2,7 @@
 
 
 TTetrimino::TTetrimino(vector<vector<int>>& matrix)
-	: Tetrimino(matrix, "     €€     ", "   €€€€€€   ")
+	: Tetrimino(matrix, "     ‚ñà‚ñà     ", "   ‚ñà‚ñà‚ñà‚ñà‚ñà‚ñà   ")
 {
 	vector<Vector2i> north = vector<Vector2i>();
 	north.push_back(Vector2i());

@@ -2,7 +2,7 @@
 
 
 ITetrimino::ITetrimino(vector<vector<int>>& matrix)
-	: Tetrimino(matrix, "  ÜÜÜÜÜÜÜÜ  ", "  ßßßßßßßß  ")
+	: Tetrimino(matrix, "  â–„â–„â–„â–„â–„â–„â–„â–„  ", "  â–€â–€â–€â–€â–€â–€â–€â–€  ")
 {
 	vector<Vector2i> north = vector<Vector2i>();
 	north.push_back(Vector2i());

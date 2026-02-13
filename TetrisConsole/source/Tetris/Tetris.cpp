@@ -141,6 +141,7 @@ void Tetris::refresh()
 	printMatrix();
 	printPreview();
 	printScore();
+	cout << flush;
 }
 
 void Tetris::step()

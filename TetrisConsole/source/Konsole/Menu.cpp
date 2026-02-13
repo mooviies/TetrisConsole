@@ -87,7 +87,7 @@ OptionChoice Menu::open(bool showSubtitle)
 	while (true)
 	{
 		draw();
-		int key = rlutil::getkey();
+		int key = Platform::getKey();
 		switch (key)
 		{
 		case rlutil::KEY_UP:
@@ -287,6 +287,7 @@ void Menu::draw()
 			}
 		}
 	}
+	cout << flush;
 }
 
 void Menu::save()
