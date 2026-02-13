@@ -1,6 +1,7 @@
 #include "Tetrimino.h"
 
 #include "Constants.h"
+#include "Platform.h"
 #include "rlutil.h"
 
 using namespace std;
@@ -170,7 +171,7 @@ void Tetrimino::printPreview(const int line, const bool hold) const {
 	else
 		y += 10;
 
-	rlutil::locate(60, y);
+	rlutil::locate(60 + Platform::offsetX(), y + Platform::offsetY());
 	rlutil::setColor(_color);
 
 	if (line == 0)

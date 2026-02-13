@@ -2,6 +2,8 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <algorithm>
+#include <csignal>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -15,8 +17,13 @@
 
 static termios s_originalTermios;
 static bool s_termiosRestored = false;
-static int s_savedRows = 0;
-static int s_savedCols = 0;
+static volatile sig_atomic_t s_resized = 0;
+static int s_offsetX = 0;
+static int s_offsetY = 0;
+
+static void handleSigwinch(int) {
+	s_resized = 1;
+}
 
 void Platform::initConsole()
 {
@@ -24,12 +31,13 @@ void Platform::initConsole()
 	tcgetattr(STDIN_FILENO, &s_originalTermios);
 	s_termiosRestored = false;
 
-	// Save original terminal size
-	s_savedRows = rlutil::trows();
-	s_savedCols = rlutil::tcols();
-
-	// Resize terminal to fixed game dimensions
-	std::cout << "\033[8;" << CONSOLE_HEIGHT << ";" << CONSOLE_WIDTH << "t" << std::flush;
+	// Register SIGWINCH handler for terminal resize detection.
+	// No SA_RESTART: let read() in getKey() return EINTR so the menu loop
+	// can immediately detect the resize and redraw without waiting for input.
+	struct sigaction sa = {};
+	sa.sa_handler = handleSigwinch;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGWINCH, &sa, nullptr);
 
 	// Set raw mode: char-at-a-time, no echo, blocking reads (VMIN=1)
 	// VMIN=1 is needed so blocking reads work properly in menus.
@@ -47,6 +55,8 @@ void Platform::initConsole()
 	rlutil::setColor(rlutil::WHITE);
 	rlutil::setBackgroundColor(rlutil::BLACK);
 	std::cout << std::flush;
+
+	updateOffsets();
 }
 
 void Platform::cleanupConsole()
@@ -56,10 +66,6 @@ void Platform::cleanupConsole()
 		tcsetattr(STDIN_FILENO, TCSANOW, &s_originalTermios);
 		s_termiosRestored = true;
 	}
-
-	// Restore original terminal size
-	if (s_savedRows > 0 && s_savedCols > 0)
-		std::cout << "\033[8;" << s_savedRows << ";" << s_savedCols << "t" << std::flush;
 
 	rlutil::cls();
 	rlutil::showcursor();
@@ -115,6 +121,53 @@ int Platform::getKey()
 		return 32; // KEY_SPACE
 
 	return c;
+}
+
+bool Platform::wasResized()
+{
+	if (!s_resized)
+		return false;
+
+	s_resized = 0;
+
+	if (isTerminalTooSmall()) {
+		rlutil::cls();
+		int row = std::max(1, rlutil::trows() / 2);
+		rlutil::locate(1, row);
+		rlutil::setColor(rlutil::WHITE);
+		std::cout << "  Please resize terminal to "
+		          << CONSOLE_WIDTH << "x" << CONSOLE_HEIGHT << std::flush;
+		return false;
+	}
+
+	updateOffsets();
+	rlutil::cls();
+	rlutil::setColor(rlutil::WHITE);
+	rlutil::setBackgroundColor(rlutil::BLACK);
+	return true;
+}
+
+bool Platform::isTerminalTooSmall()
+{
+	return rlutil::tcols() < CONSOLE_WIDTH || rlutil::trows() < CONSOLE_HEIGHT;
+}
+
+int Platform::offsetX()
+{
+	return s_offsetX;
+}
+
+int Platform::offsetY()
+{
+	return s_offsetY;
+}
+
+void Platform::updateOffsets()
+{
+	int cols = rlutil::tcols();
+	int rows = rlutil::trows();
+	s_offsetX = std::max(0, (cols - CONSOLE_WIDTH) / 2);
+	s_offsetY = std::max(0, (rows - CONSOLE_HEIGHT) / 2);
 }
 
 std::string Platform::getDataDir()

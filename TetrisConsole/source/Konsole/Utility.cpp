@@ -4,6 +4,9 @@
 #include <sstream>
 #include <iomanip>
 
+#include "Platform.h"
+#include "rlutil.h"
+
 using namespace std;
 
 
@@ -16,35 +19,33 @@ Utility::~Utility()
 
 void Utility::showTitle(const string& sousTitre)
 {
-	// Cache the subtitle length (reused multiple times below)
+	int ox = Platform::offsetX();
+	int oy = Platform::offsetY();
+
+	rlutil::locate(1 + ox, 1 + oy);
+	cout << "╔══════════════════════════════════════════════════════════════════════════════╗";
+	rlutil::locate(1 + ox, 2 + oy);
+	cout << "║                                Tetris Console                                ║";
+	rlutil::locate(1 + ox, 3 + oy);
+	cout << "╠══════════════════════════════════════════════════════════════════════════════╣";
+	rlutil::locate(1 + ox, 4 + oy);
+
+	// Build subtitle line: ║ + centered subtitle + ║ (80 chars total)
+	cout << "║";
 	int longueur = static_cast<int>(sousTitre.length());
-
-	// Display the main title frame
-	cout << "╔══════════════════════════════════════════════════════════════════════════════╗║"
-		<< "                                Tetris Console"
-		<< "                                ║╠══════════════════════════════════════════════════════════════════════════════╣"
-		<< "║";
-
-	// Print leading spaces to center the subtitle
-	for (int i = 0; i < 39 - (longueur / 2); i++)
-	{
+	int leadingSpaces = 39 - (longueur / 2);
+	for (int i = 0; i < leadingSpaces; i++)
 		cout << ' ';
-	}
-
-	// Print the subtitle
 	cout << sousTitre;
-
-	// If the subtitle length is odd, bump it up so trailing spaces are symmetric
 	if (longueur % 2 != 0)
 		longueur++;
-
-	// Print trailing spaces after the subtitle
-	for (int i = 0; i < 39 - (longueur / 2); i++)
-	{
+	int trailingSpaces = 39 - (longueur / 2);
+	for (int i = 0; i < trailingSpaces; i++)
 		cout << ' ';
-	}
-	// Close the frame
-	cout << "║╚══════════════════════════════════════════════════════════════════════════════╝" << endl;
+	cout << "║";
+
+	rlutil::locate(1 + ox, 5 + oy);
+	cout << "╚══════════════════════════════════════════════════════════════════════════════╝";
 }
 
 string Utility::valueToString(int64_t value, int length)

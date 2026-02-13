@@ -3,6 +3,7 @@
 #include "GameState.h"
 #include "GameRenderer.h"
 #include "GameController.h"
+#include "Utility.h"
 #include "Timer.h"
 #include "Menu.h"
 
@@ -14,6 +15,7 @@ public:
 
 	void start()  { _controller.start(_state); }
 	void step()   { _controller.step(_state); }
+	void redraw() { GameRenderer::display(); Utility::showTitle("A classic in console!"); _renderer.refresh(_state); }
 	void exit()   { _state._shouldExit = true; }
 	[[nodiscard]] bool doExit() const { return _state._shouldExit; }
 	void setStartingLevel(int level) { _controller.setStartingLevel(_state, level); }

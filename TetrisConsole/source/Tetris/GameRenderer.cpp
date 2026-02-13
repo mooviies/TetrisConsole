@@ -4,6 +4,7 @@
 
 #include "GameState.h"
 #include "Constants.h"
+#include "Platform.h"
 #include "Utility.h"
 #include "rlutil.h"
 
@@ -13,49 +14,61 @@ GameRenderer::GameRenderer() = default;
 GameRenderer::~GameRenderer() = default;
 
 void GameRenderer::display() {
-    rlutil::locate(1, 6);
+    int ox = Platform::offsetX();
+    int oy = Platform::offsetY();
 
-    cout << "    ╔════════════════╗       ╔════════════════════╗       ╔════════════╗" << endl;
-    cout << "    ║     Score      ║       ║                    ║       ║    Next    ║" << endl;
-    cout << "    ╠════════════════╣       ║                    ║       ╠════════════╣" << endl;
-    cout << "    ║   0000000000   ║       ║                    ║       ║            ║" << endl;
-    cout << "    ╠═══════╦════════╣       ║                    ║       ║            ║" << endl;
-    cout << "    ║ Level ║   01   ║       ║                    ║       ║            ║" << endl;
-    cout << "    ╠═══════╬════════╣       ║                    ║       ║            ║" << endl;
-    cout << "    ║ Lines ║ 000001 ║       ║                    ║       ╚════════════╝" << endl;
-    cout << "    ╚═══════╩════════╝       ║                    ║                     " << endl;
+    rlutil::locate(1 + ox, 6 + oy);
+    cout << "    ╔════════════════╗       ╔════════════════════╗       ╔════════════╗";
+    rlutil::locate(1 + ox, 7 + oy);
+    cout << "    ║     Score      ║       ║                    ║       ║    Next    ║";
+    rlutil::locate(1 + ox, 8 + oy);
+    cout << "    ╠════════════════╣       ║                    ║       ╠════════════╣";
+    rlutil::locate(1 + ox, 9 + oy);
+    cout << "    ║   0000000000   ║       ║                    ║       ║            ║";
+    rlutil::locate(1 + ox, 10 + oy);
+    cout << "    ╠═══════╦════════╣       ║                    ║       ║            ║";
+    rlutil::locate(1 + ox, 11 + oy);
+    cout << "    ║ Level ║   01   ║       ║                    ║       ║            ║";
+    rlutil::locate(1 + ox, 12 + oy);
+    cout << "    ╠═══════╬════════╣       ║                    ║       ║            ║";
+    rlutil::locate(1 + ox, 13 + oy);
+    cout << "    ║ Lines ║ 000001 ║       ║                    ║       ╚════════════╝";
+    rlutil::locate(1 + ox, 14 + oy);
+    cout << "    ╚═══════╩════════╝       ║                    ║                     ";
 
     for (int i = 28; i <= MATRIX_END; i++) {
-        cout << "                             ║                    ║                     " << endl;
+        rlutil::locate(1 + ox, 15 + (i - 28) + oy);
+        cout << "                             ║                    ║                     ";
     }
-    cout << "                             ╚════════════════════╝                     " << endl << endl;
+    rlutil::locate(1 + ox, 15 + (MATRIX_END - 28) + 1 + oy);
+    cout << "                             ╚════════════════════╝                     ";
 
-    rlutil::locate(5, 23);
+    rlutil::locate(5 + ox, 23 + oy);
     cout << "╔════════════════╗";
-    rlutil::locate(5, 24);
+    rlutil::locate(5 + ox, 24 + oy);
     cout << "║   High Score   ║";
-    rlutil::locate(5, 25);
+    rlutil::locate(5 + ox, 25 + oy);
     cout << "╠════════════════╣";
-    rlutil::locate(5, 26);
+    rlutil::locate(5 + ox, 26 + oy);
     cout << "║   0000000000   ║";
-    rlutil::locate(5, 27);
+    rlutil::locate(5 + ox, 27 + oy);
     cout << "╚════════════════╝";
 
-    rlutil::locate(59, 20);
+    rlutil::locate(59 + ox, 20 + oy);
     cout << "╔════════════╗";
-    rlutil::locate(59, 21);
+    rlutil::locate(59 + ox, 21 + oy);
     cout << "║    Hold    ║";
-    rlutil::locate(59, 22);
+    rlutil::locate(59 + ox, 22 + oy);
     cout << "╠════════════╣";
-    rlutil::locate(59, 23);
+    rlutil::locate(59 + ox, 23 + oy);
     cout << "║            ║";
-    rlutil::locate(59, 24);
+    rlutil::locate(59 + ox, 24 + oy);
     cout << "║            ║";
-    rlutil::locate(59, 25);
+    rlutil::locate(59 + ox, 25 + oy);
     cout << "║            ║";
-    rlutil::locate(59, 26);
+    rlutil::locate(59 + ox, 26 + oy);
     cout << "║            ║";
-    rlutil::locate(59, 27);
+    rlutil::locate(59 + ox, 27 + oy);
     cout << "╚════════════╝";
 }
 
@@ -83,9 +96,11 @@ void GameRenderer::printPreview(const GameState& state) {
     state.peekTetrimino()->printPreview(1);
 
     if (state._holdTetrimino == nullptr) {
-        rlutil::locate(60, 24);
+        int ox = Platform::offsetX();
+        int oy = Platform::offsetY();
+        rlutil::locate(60 + ox, 24 + oy);
         cout << "            ";
-        rlutil::locate(60, 25);
+        rlutil::locate(60 + ox, 25 + oy);
         cout << "            ";
     } else {
         state._holdTetrimino->printPreview(0, true);
@@ -94,23 +109,28 @@ void GameRenderer::printPreview(const GameState& state) {
 }
 
 void GameRenderer::printScore(const GameState& state) {
-    rlutil::locate(9, 9);
+    int ox = Platform::offsetX();
+    int oy = Platform::offsetY();
+
+    rlutil::locate(9 + ox, 9 + oy);
     if (state._backToBackBonus)
         rlutil::setColor(rlutil::LIGHTGREEN);
     cout << Utility::valueToString(state._score, 10);
     rlutil::setColor(rlutil::WHITE);
 
-    rlutil::locate(17, 11);
+    rlutil::locate(17 + ox, 11 + oy);
     cout << Utility::valueToString(state._level, 2);
-    rlutil::locate(15, 13);
+    rlutil::locate(15 + ox, 13 + oy);
     cout << Utility::valueToString(state._lines, 6);
-    rlutil::locate(9, 26);
+    rlutil::locate(9 + ox, 26 + oy);
     cout << Utility::valueToString(state._highscore, 10);
 }
 
 void GameRenderer::printLine(const GameState& state, const int line, const bool visible) {
-    int x = 31;
-    const int y = 7 + line - MATRIX_START;
+    int ox = Platform::offsetX();
+    int oy = Platform::offsetY();
+    int x = 31 + ox;
+    const int y = 7 + line - MATRIX_START + oy;
 
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         rlutil::locate(x, y);

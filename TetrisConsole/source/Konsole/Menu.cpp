@@ -9,6 +9,7 @@
 using namespace std;
 
 std::function<bool()> Menu::shouldExitGame;
+std::function<void()> Menu::onResize;
 
 #define MINIMUM_INTERIOR_WIDTH 13
 
@@ -80,7 +81,8 @@ OptionChoice Menu::open(const bool showSubtitle) {
 
     Platform::flushInput();
     while (true) {
-        draw();
+        if (!Platform::isTerminalTooSmall())
+            draw();
         switch (Platform::getKey()) {
             case rlutil::KEY_UP:
                 _choice--;
@@ -102,6 +104,15 @@ OptionChoice Menu::open(const bool showSubtitle) {
                 select(_choice);
                 break;
             default: ;
+        }
+
+        if (Platform::wasResized()) {
+            if (!Platform::isTerminalTooSmall()) {
+                generate();
+                if (onResize)
+                    onResize();
+            }
+            continue;
         }
 
         if (_close || (shouldExitGame && shouldExitGame()))
@@ -155,8 +166,8 @@ void Menu::generate() {
 
     _width = width;
     _height = static_cast<int>(_dialog.size());
-    _x = (windowWidth / 2) - (_width / 2);
-    _y = (windowHeight / 2) - (_height / 2);
+    _x = Platform::offsetX() + (windowWidth / 2) - (_width / 2);
+    _y = Platform::offsetY() + (windowHeight / 2) - (_height / 2);
     _choice = 0;
     _close = false;
 }

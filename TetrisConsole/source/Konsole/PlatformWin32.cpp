@@ -54,6 +54,30 @@ int Platform::getKey()
 	return rlutil::getkey();
 }
 
+bool Platform::wasResized()
+{
+	return false;
+}
+
+bool Platform::isTerminalTooSmall()
+{
+	return false;
+}
+
+int Platform::offsetX()
+{
+	return 0;
+}
+
+int Platform::offsetY()
+{
+	return 0;
+}
+
+void Platform::updateOffsets()
+{
+}
+
 std::string Platform::getDataDir()
 {
 	char path[MAX_PATH];

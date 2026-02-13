@@ -43,6 +43,7 @@ public:
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
 
 	static std::function<bool()> shouldExitGame;
+	static std::function<void()> onResize;
 
 	OptionChoice open(bool showSubtitle = false);
 
