@@ -5,6 +5,7 @@
 #include <memory>
 #include <cstdint>
 
+#include "Constants.h"
 #include "Tetrimino.h"
 #include "Timer.h"
 #include "Menu.h"
@@ -65,7 +66,7 @@ protected:
 	void checkAutorepeat(bool input, const std::string& timer, void(Tetris::*move)(), GameStep nextState);
 
 private:
-	std::vector<std::vector<int>> _matrix;
+	GameMatrix _matrix;
 	Timer& _timer;
 	Menu& _pauseMenu;
 	Menu& _gameOverMenu;

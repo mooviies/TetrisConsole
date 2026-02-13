@@ -6,7 +6,7 @@
 using namespace std;
 
 
-Tetrimino::Tetrimino(PieceType type, vector<vector<int>>& matrix)
+Tetrimino::Tetrimino(PieceType type, GameMatrix& matrix)
 	: _matrix(matrix)
 {
 	const PieceData& data = getPieceData(type);

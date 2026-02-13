@@ -2,15 +2,15 @@
 
 #include <string>
 #include <array>
-#include <vector>
 
+#include "Constants.h"
 #include "PieceData.h"
 #include "rlutil.h"
 
 class Tetrimino
 {
 public:
-	Tetrimino(PieceType type, std::vector<std::vector<int>>& matrix);
+	Tetrimino(PieceType type, GameMatrix& matrix);
 	~Tetrimino();
 
 	void printPreview(int line, bool hold = false) const;
@@ -40,7 +40,7 @@ private:
 	[[nodiscard]] int getLastRotationPoint() const { return _lastRotationPoint; }
 	[[nodiscard]] ROTATION getCurrentRotation() const { return _currentRotation; }
 
-	std::vector<std::vector<int>>& _matrix;
+	GameMatrix& _matrix;
 
 	int _color;
 	Vector2i _startingPosition;

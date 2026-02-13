@@ -42,9 +42,7 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     _bag.push_back(std::make_unique<Tetrimino>(PieceType::J, _matrix));
     _bag.push_back(std::make_unique<Tetrimino>(PieceType::S, _matrix));
     _bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
-    for (int i = 0; i < TETRIS_HEIGHT; i++) {
-        _matrix.emplace_back(TETRIS_WIDTH);
-    }
+    _matrix.resize(TETRIS_HEIGHT);
 
     if (ifstream highscoreFileRead(SCORE_FILE); highscoreFileRead.is_open()) {
         highscoreFileRead >> _highscore;
@@ -502,11 +500,7 @@ void Tetris::reset() {
     _isNewHold = false;
     _hasBetterHighscore = false;
 
-    for (int i = 0; i < TETRIS_HEIGHT; i++) {
-        for (int j = 0; j < TETRIS_WIDTH; j++) {
-            _matrix[i][j] = 0;
-        }
-    }
+    for (auto& row : _matrix) row.fill(0);
 
     _holdTetrimino = nullptr;
     _currentTetrimino = nullptr;
@@ -573,7 +567,7 @@ void Tetris::lock() {
     }
 
     for (int i = 0; i < linesCleared; i++)
-        _matrix.insert(_matrix.begin(), vector<int>(TETRIS_WIDTH));
+        _matrix.push_front(MatrixRow{});
 
     int awardedLines = linesCleared;
 
