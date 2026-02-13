@@ -1,5 +1,7 @@
 #include "ITetrimino.h"
 
+using namespace std;
+
 
 ITetrimino::ITetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "  ▄▄▄▄▄▄▄▄  ", "  ▀▀▀▀▀▀▀▀  ")
@@ -28,29 +30,29 @@ ITetrimino::ITetrimino(vector<vector<int>>& matrix)
 	west.emplace_back(1, 0);
 	west.emplace_back(2, 0);
 		
-	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(),	Vector2i()), 
+	std::array<RotationPoint, 5> rotationNorth = {{	RotationPoint(Vector2i(),	Vector2i()), 
 										RotationPoint(Vector2i(0, -1),	Vector2i(0, -2)),
 										RotationPoint(Vector2i(0, 2),	Vector2i(0, 1)), 
 										RotationPoint(Vector2i(-2, -1),	Vector2i(1, -2)), 
-										RotationPoint(Vector2i(1, 2),	Vector2i(-2, 1)) };
+										RotationPoint(Vector2i(1, 2),	Vector2i(-2, 1)) }};
 
-	RotationPoint rotationEast[5] = {	RotationPoint(Vector2i(),	Vector2i()),
+	std::array<RotationPoint, 5> rotationEast = {{	RotationPoint(Vector2i(),	Vector2i()),
 										RotationPoint(Vector2i(0, 2),	Vector2i(0, -1)),
 										RotationPoint(Vector2i(0, -1),	Vector2i(0, 2)),
 										RotationPoint(Vector2i(-1, 2),	Vector2i(-2, -1)),
-										RotationPoint(Vector2i(2, -1),	Vector2i(1, 2)) };
+										RotationPoint(Vector2i(2, -1),	Vector2i(1, 2)) }};
 
-	RotationPoint rotationSouth[5] = {	RotationPoint(Vector2i(),	Vector2i()),
+	std::array<RotationPoint, 5> rotationSouth = {{	RotationPoint(Vector2i(),	Vector2i()),
 										RotationPoint(Vector2i(0, 1),	Vector2i(0, 2)),
 										RotationPoint(Vector2i(0, -2),	Vector2i(0, -1)),
 										RotationPoint(Vector2i(2, 1),	Vector2i(-1, 2)),
-										RotationPoint(Vector2i(-1, -2),	Vector2i(2, -1)) };
+										RotationPoint(Vector2i(-1, -2),	Vector2i(2, -1)) }};
 
-	RotationPoint rotationWest[5] = {	RotationPoint(Vector2i(),	Vector2i()),
+	std::array<RotationPoint, 5> rotationWest = {{	RotationPoint(Vector2i(),	Vector2i()),
 										RotationPoint(Vector2i(0, -2),	Vector2i(0, 1)),
 										RotationPoint(Vector2i(0, 1),	Vector2i(0, -2)),
 										RotationPoint(Vector2i(1, -2),	Vector2i(2, 1)),
-										RotationPoint(Vector2i(-2, 1),	Vector2i(-1, -2)) };
+										RotationPoint(Vector2i(-2, 1),	Vector2i(-1, -2)) }};
 
 	setFacing(NORTH, Facing(NORTH, north, rotationNorth));
 	setFacing(EAST, Facing(EAST, east, rotationEast));

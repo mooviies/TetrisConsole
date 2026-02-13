@@ -1,5 +1,7 @@
 #include "OTetrimino.h"
 
+using namespace std;
+
 
 OTetrimino::OTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "    ████    ", "    ████    ")
@@ -10,7 +12,7 @@ OTetrimino::OTetrimino(vector<vector<int>>& matrix)
 	north.emplace_back(-1, 1);
 	north.emplace_back(0, 1);
 		
-	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(), Vector2i()) };
+	std::array<RotationPoint, 5> rotationNorth = {{	RotationPoint(Vector2i(), Vector2i()) }};
 
 	setFacing(NORTH, Facing(NORTH, north, rotationNorth));
 	setFacing(EAST, Facing(EAST, north, rotationNorth));

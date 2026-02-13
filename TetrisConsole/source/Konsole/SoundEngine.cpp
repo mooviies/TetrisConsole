@@ -3,6 +3,8 @@
 #include "media_data.h"
 #include <cstring>
 
+using namespace std;
+
 ma_engine SoundEngine::_engine;
 map<string, ma_sound*> SoundEngine::_sounds;
 ma_sound* SoundEngine::_musicPlaying = nullptr;
@@ -111,6 +113,7 @@ static ma_result embeddedVFS_onInfo(ma_vfs* pVFS, ma_vfs_file file, ma_file_info
 }
 
 static EmbeddedVFS g_embeddedVFS;
+static ma_resource_manager g_resourceManager;
 
 // --- End Embedded VFS ---
 
@@ -155,11 +158,10 @@ void SoundEngine::init()
 	ma_resource_manager_config rmConfig = ma_resource_manager_config_init();
 	rmConfig.pVFS = static_cast<ma_vfs *>(&g_embeddedVFS);
 
-	static ma_resource_manager resourceManager;
-	ma_result result = ma_resource_manager_init(&rmConfig, &resourceManager);
+	ma_result result = ma_resource_manager_init(&rmConfig, &g_resourceManager);
 	checkError(result, "resource manager init");
 
-	config.pResourceManager = &resourceManager;
+	config.pResourceManager = &g_resourceManager;
 	result = ma_engine_init(&config, &_engine);
 	checkError(result, "engine init");
 
@@ -180,9 +182,10 @@ void SoundEngine::init()
 
 void SoundEngine::playMusic(const string& name)
 {
-	ma_sound* sound = _sounds[name];
-	if (sound == nullptr)
+	auto it = _sounds.find(name);
+	if (it == _sounds.end() || it->second == nullptr)
 		return;
+	ma_sound* sound = it->second;
 
 	// Stop current music
 	if (_musicPlaying != nullptr)
@@ -198,9 +201,10 @@ void SoundEngine::playMusic(const string& name)
 
 void SoundEngine::playSound(const string& name)
 {
-	ma_sound* sound = _sounds[name];
-	if (sound == nullptr)
+	auto it = _sounds.find(name);
+	if (it == _sounds.end() || it->second == nullptr)
 		return;
+	ma_sound* sound = it->second;
 
 	ma_sound_seek_to_pcm_frame(sound, 0);
 	ma_sound_set_volume(sound, _effectVolume);
@@ -280,6 +284,7 @@ SoundEngine::~SoundEngine()
 		}
 	}
 	ma_engine_uninit(&_engine);
+	ma_resource_manager_uninit(&g_resourceManager);
 }
 
 void SoundEngine::checkError(const ma_result result, const char* description)

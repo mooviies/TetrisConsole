@@ -1,18 +1,16 @@
 #include "Facing.h"
 
+using namespace std;
+
 
 Facing::Facing()
 {
 	_direction = NORTH;
 }
 
-Facing::Facing(const ROTATION direction, const vector<Vector2i> &minos, RotationPoint rotationPoints[5])
+Facing::Facing(const ROTATION direction, const vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints)
+	: _minos(minos), _direction(direction), _rotationPoints(rotationPoints)
 {
-	_direction = direction;
-	_minos = minos;
-
-	for (int i = 0; i < 5; i++)
-		_rotationPoints[i] = rotationPoints[i];
 }
 
 Facing::~Facing()
@@ -30,13 +28,13 @@ int Facing::getMinoCount() const
 
 Vector2i Facing::getMino(const int mino) const
 {
-	return _minos[mino];
+	return _minos[static_cast<size_t>(mino)];
 }
 
 RotationPoint const & Facing::getRotationPoint(int point) const
 {
 	if (point < 0 || point > 4)
 		point = 0;
-	
-	return _rotationPoints[point];
+
+	return _rotationPoints[static_cast<size_t>(point)];
 }

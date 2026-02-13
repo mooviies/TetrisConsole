@@ -8,12 +8,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 make            # build → ./tetris (lowercase, avoids conflict with TetrisConsole/ dir)
 make clean      # remove build artifacts, binary, and media symlink
+make rebuild    # clean + build in one step
 ```
 The Makefile auto-detects the OS via `uname -s` and selects platform-specific source files.
+Header dependency tracking (`-MMD -MP`) is enabled — touching a `.h` file recompiles only affected `.o` files.
 
 **Windows:** Open `TetrisConsole.sln` in Visual Studio (v143 toolset, C++17).
 
 There are no tests or linting configured.
+
+## IDE Setup
+
+**Recommended: VS Code + clangd** — Generate `compile_commands.json` for full intellisense:
+```
+bear -- make clean && bear -- make
+```
+
+**Windows:** Visual Studio (the `.sln` and `.vcxproj` are already configured).
 
 ## Architecture
 
@@ -27,26 +38,28 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `
 - **Input.h** — Keyboard polling. Linux: non-blocking `select()` + `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
 - **SoundEngine** — Wraps miniaudio. Manages streamed music (A/B/C cycle) and decoded sound effects.
 - **Menu** — Self-contained hierarchical menu system using `Platform::getKey()` for blocking navigation input.
+- **Timer** — Meyers singleton named-timer using `clock()`. Drives fall speed, autorepeat, and lock-down delays.
+- **Random** — Static utility using `std::mt19937` with Meyers singleton pattern (static local generator).
 
 ### Game Logic (`source/Tetris/`)
 
 - **TetrisConsole.cpp** — Entry point. Sets up menus, initializes subsystems, runs the main loop: `pollKeys() → step() → SoundEngine::update()`.
-- **Tetris** — Core game class. Uses a function-pointer state machine (`_stepState`) for states: idle, moving left/right, hard dropping. Manages the 40x10 matrix (rows 0-19 are the invisible buffer zone above the playfield, 20-39 are visible).
-- **Tetrimino** — Base class for all 7 piece types (I/J/L/O/S/T/Z). Each has 4 `Facing` objects defining rotation states with SRS-style wall kick data.
-- **Overseer** — Global accessor singleton bridging menu callbacks to the active Tetris instance.
-- **Timer** — Named-timer singleton using `clock()`. Drives fall speed, autorepeat, and lock-down delays.
+- **Tetris** — Core game class. Uses a function-pointer state machine (`_stepState`) for states: idle, moving left/right, hard dropping. Manages the 40x10 matrix (rows 0-19 are the invisible buffer zone above the playfield, 20-39 are visible). Owns tetriminos via `std::unique_ptr`. Speed arrays are `constexpr std::array`. Score uses `int64_t`.
+- **Tetrimino** — Base class for all 7 piece types (I/J/L/O/S/T/Z). Each has 4 `Facing` objects (stored in `std::array<Facing, 4>`) defining rotation states with SRS-style wall kick data (`std::array<RotationPoint, 5>`).
+- **Overseer** — Global accessor singleton bridging menu callbacks to the active Tetris instance (asserts non-null).
 
 ### Dependencies (header-only, vendored in `include/`)
 
-- **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp.
+- **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp. Vendored headers use `-isystem` to suppress warnings.
 - **rlutil.h** — Console colors, cursor positioning, `getkey()`. Already cross-platform internally via `#ifdef _WIN32`. Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
 
 ### Key Quirks
 
-- `Tetris::_exit` is never set to true; the game exits via `exit(0)` in `quitGame()`.
-- Media files live in `TetrisConsole/media/`; the Makefile creates a `media/` symlink at the project root so relative paths work.
+- `Tetris::_shouldExit` is set via `Tetris::exit()`; the game exits from the main loop in `TetrisConsole.cpp`.
+- Media files are embedded at build time via `scripts/embed_media.py` into `build/media_data.{h,cpp}`.
 - The `Menu::save()` method body is empty — it previously used Windows-only `ReadConsoleOutput` and was dead code.
-- `score.bin` at the project root persists the high score between sessions.
-- Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8. The tetrimino preview strings in `[IJLOSTZ]Tetrimino.cpp` use UTF-8 block chars.
+- High score persists in `$XDG_DATA_HOME/TetrisConsole/score.bin` (Linux) or `%APPDATA%\TetrisConsole\score.bin` (Windows).
+- Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8.
 - `Tetris::refresh()` flushes stdout after drawing — necessary in termios raw mode where line-buffering is disabled.
-- The Makefile does not track header dependencies; changes to `.h` files require `make clean && make`.
+- No `using namespace std;` in headers — all headers use explicit `std::` prefixes. `.cpp` files may use `using namespace std;`.
+- Compiler warnings: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`. The build should be warning-free.

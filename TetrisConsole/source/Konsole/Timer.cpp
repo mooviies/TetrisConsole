@@ -1,13 +1,11 @@
 #include "Timer.h"
 
-Timer* Timer::_instance = nullptr;
+using namespace std;
 
 Timer & Timer::instance()
 {
-	if (_instance == nullptr)
-		_instance = new Timer();
-
-	return *_instance;
+	static Timer t;
+	return t;
 }
 
 void Timer::startTimer(const string& id)

@@ -1,5 +1,7 @@
 #include "TTetrimino.h"
 
+using namespace std;
+
 
 TTetrimino::TTetrimino(vector<vector<int>>& matrix)
 	: Tetrimino(matrix, "     ██     ", "   ██████   ")
@@ -27,31 +29,38 @@ TTetrimino::TTetrimino(vector<vector<int>>& matrix)
 	west.emplace_back(0, -1);
 	west.emplace_back(-1, 0);
 	west.emplace_back(1, 0);
-		
-	RotationPoint rotationNorth[5] = {	RotationPoint(Vector2i(),		Vector2i()), 
-										RotationPoint(Vector2i(0, 1),	Vector2i(0, -1)),
-										RotationPoint(Vector2i(-1, 1),	Vector2i(-1, -1)), 
-										RotationPoint(), 
-										RotationPoint(Vector2i(2, 1),		Vector2i(2, -1)) };
 
-	RotationPoint rotationEast[5] = {	RotationPoint(Vector2i(),		Vector2i()),
-										RotationPoint(Vector2i(0, 1),	Vector2i(0, 1)),
-										RotationPoint(Vector2i(1, 1),	Vector2i(1, 1)),
-										RotationPoint(Vector2i(-2, 0),	Vector2i(-2, 0)),
-										RotationPoint(Vector2i(-2, 1),		Vector2i(-2, 1)) };
+	std::array<RotationPoint, 5> rotationNorth = {{
+		RotationPoint(Vector2i(),      Vector2i()),
+		RotationPoint(Vector2i(0, 1),  Vector2i(0, -1)),
+		RotationPoint(Vector2i(-1, 1), Vector2i(-1, -1)),
+		RotationPoint(),
+		RotationPoint(Vector2i(2, 1),  Vector2i(2, -1))
+	}};
 
-	RotationPoint rotationSouth[5] = {	RotationPoint(Vector2i(),		Vector2i()),
-										RotationPoint(Vector2i(0, -1),	Vector2i(0, 1)),
-										RotationPoint(),
-										RotationPoint(Vector2i(2, 0),	Vector2i(2, 0)),
-										RotationPoint(Vector2i(2, -1),		Vector2i(2, 1)) };
+	std::array<RotationPoint, 5> rotationEast = {{
+		RotationPoint(Vector2i(),      Vector2i()),
+		RotationPoint(Vector2i(0, 1),  Vector2i(0, 1)),
+		RotationPoint(Vector2i(1, 1),  Vector2i(1, 1)),
+		RotationPoint(Vector2i(-2, 0), Vector2i(-2, 0)),
+		RotationPoint(Vector2i(-2, 1), Vector2i(-2, 1))
+	}};
 
-	RotationPoint rotationWest[5] = {	RotationPoint(Vector2i(),		Vector2i()),
-										RotationPoint(Vector2i(0, -1),	Vector2i(0, -1)),
-										RotationPoint(Vector2i(1, -1),	Vector2i(1, -1)),
-										RotationPoint(Vector2i(-2, 0),	Vector2i(-2, 0)),
-										RotationPoint(Vector2i(-2, -1),		Vector2i(-2, -1)) };
+	std::array<RotationPoint, 5> rotationSouth = {{
+		RotationPoint(Vector2i(),       Vector2i()),
+		RotationPoint(Vector2i(0, -1),  Vector2i(0, 1)),
+		RotationPoint(),
+		RotationPoint(Vector2i(2, 0),   Vector2i(2, 0)),
+		RotationPoint(Vector2i(2, -1),  Vector2i(2, 1))
+	}};
 
+	std::array<RotationPoint, 5> rotationWest = {{
+		RotationPoint(Vector2i(),       Vector2i()),
+		RotationPoint(Vector2i(0, -1),  Vector2i(0, -1)),
+		RotationPoint(Vector2i(1, -1),  Vector2i(1, -1)),
+		RotationPoint(Vector2i(-2, 0),  Vector2i(-2, 0)),
+		RotationPoint(Vector2i(-2, -1), Vector2i(-2, -1))
+	}};
 
 	_tSpinPositions[NORTH] = TSpinPositions(Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1));
 	_tSpinPositions[EAST] = TSpinPositions(Vector2i(-1, 1), Vector2i(1, 1), Vector2i(-1, -1), Vector2i(1, -1));
@@ -70,6 +79,15 @@ TTetrimino::TTetrimino(vector<vector<int>>& matrix)
 TTetrimino::~TTetrimino()
 = default;
 
+// T-spin detection uses the 3-corner rule:
+// For a T-spin, at least 3 of the 4 diagonal cells adjacent to the T-piece center
+// must be occupied. Positions A and B are the two corners "in front" of the T
+// (relative to the current facing), and C and D are the two "behind" it.
+//
+// Full T-spin: A and B both occupied, plus at least one of C or D.
+// The special case: if the 5th SRS kick was used, a mini T-spin is promoted to full.
+//
+// Mini T-spin: C and D both occupied, plus at least one of A or B.
 bool TTetrimino::checkTSpin()
 {
 	if (getLastRotationPoint() < 0)

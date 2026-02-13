@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+#include <cassert>
 
 #include "Tetris.h"
 
@@ -11,12 +13,15 @@
 #include "JTetrimino.h"
 #include "STetrimino.h"
 #include "ZTetrimino.h"
+
 #include "Random.h"
 #include "Input.h"
 #include "Utility.h"
 #include "SoundEngine.h"
 #include "Platform.h"
 #include "rlutil.h"
+
+using namespace std;
 
 #define FALL "fall"
 #define AUTOREPEAT_LEFT "autorepeatleft"
@@ -33,31 +38,17 @@
 
 Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     : _timer(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu), _mode(EXTENDED), _startingLevel(1),
-      _holdTetrimino(nullptr), _start(false), _newHold(false) {
-    _speedNormal = new double[16];
-    _speedFast = new double[16];
-    _exit = false;
+      _holdTetrimino(nullptr), _isStarted(false), _isNewHold(false) {
+    _shouldExit = false;
 
-    for (int i = 0; i < 16; i++) {
-        double speedFast[] = {
-            0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014,
-            0.0009, 0.00055, 0.00035
-        };
-        double speedNormal[] = {
-            0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007
-        };
-        _speedNormal[i] = speedNormal[i];
-        _speedFast[i] = speedFast[i];
-    }
-
-    _bag.push_back(new OTetrimino(_matrix));
-    _bag.push_back(new ITetrimino(_matrix));
-    _bag.push_back(new TTetrimino(_matrix));
-    _bag.push_back(new LTetrimino(_matrix));
-    _bag.push_back(new JTetrimino(_matrix));
-    _bag.push_back(new STetrimino(_matrix));
-    _bag.push_back(new ZTetrimino(_matrix));
-    _tspinTest = _bag[2];
+    _bag.push_back(std::make_unique<OTetrimino>(_matrix));
+    _bag.push_back(std::make_unique<ITetrimino>(_matrix));
+    _bag.push_back(std::make_unique<TTetrimino>(_matrix));
+    _bag.push_back(std::make_unique<LTetrimino>(_matrix));
+    _bag.push_back(std::make_unique<JTetrimino>(_matrix));
+    _bag.push_back(std::make_unique<STetrimino>(_matrix));
+    _bag.push_back(std::make_unique<ZTetrimino>(_matrix));
+    _tspinTest = _bag[2].get();
 
     for (int i = 0; i < TETRIS_HEIGHT; i++) {
         _matrix.emplace_back(TETRIS_WIDTH);
@@ -74,16 +65,11 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     }
 }
 
-Tetris::~Tetris() {
-    delete[] _speedNormal;
-    delete[] _speedFast;
-    for (const auto &i: _bag)
-        delete i;
-}
+Tetris::~Tetris() = default;
 
 void Tetris::start() {
     reset();
-    _start = true;
+    _isStarted = true;
 }
 
 void Tetris::display() {
@@ -144,7 +130,7 @@ void Tetris::step() {
     if (doExit())
         return;
 
-    if (!_start)
+    if (!_isStarted)
         return;
 
     (this->*_stepState)();
@@ -174,7 +160,7 @@ void Tetris::step() {
 }
 
 void Tetris::exit() {
-    _exit = true;
+    _shouldExit = true;
 }
 
 void Tetris::fall() {
@@ -185,19 +171,16 @@ void Tetris::fall() {
     if (speedIndex > 15)
         speedIndex = 15;
 
-    const double *speedArray = _speedNormal;
-    bool isSoftDropping = false;
-    isSoftDropping = Input::softDrop();
-    if (isSoftDropping)
-        speedArray = _speedFast;
+    const auto& speedArray = Input::softDrop() ? kSpeedFast : kSpeedNormal;
+    bool isSoftDropping = Input::softDrop();
 
-    if (_timer.getSeconds(FALL) >= speedArray[speedIndex]) {
+    if (_timer.getSeconds(FALL) >= speedArray[static_cast<size_t>(speedIndex)]) {
         _timer.resetTimer(FALL);
         if (moveDown()) {
             if (isSoftDropping)
                 _score++;
 
-            if (_lockDownMode) {
+            if (_isInLockDown) {
                 int currentLine = _currentTetrimino->getPosition().row;
                 if (currentLine > _lowestLine) {
                     _lowestLine = currentLine;
@@ -210,7 +193,7 @@ void Tetris::fall() {
 
     if (!_currentTetrimino->simulateMove(Vector2i(1, 0)) && !_timer.exist(LOCK_DOWN)) {
         _timer.startTimer(LOCK_DOWN);
-        _lockDownMode = true;
+        _isInLockDown = true;
     }
 
     if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY) {
@@ -220,12 +203,12 @@ void Tetris::fall() {
     if ((_mode == EXTENDED) && (_nbMoveAfterLockDown >= LOCK_DOWN_MOVE))
         lock();
 
-    if (Input::hardDrop() && !_ignoreHardDrop) {
+    if (Input::hardDrop() && !_shouldIgnoreHardDrop) {
         SoundEngine::playSound("HARD_DROP");
         _stepState = &Tetris::stepHardDrop;
-        _ignoreHardDrop = true;
-    } else if (!Input::hardDrop() && _ignoreHardDrop) {
-        _ignoreHardDrop = false;
+        _shouldIgnoreHardDrop = true;
+    } else if (!Input::hardDrop() && _shouldIgnoreHardDrop) {
+        _shouldIgnoreHardDrop = false;
     }
 }
 
@@ -245,7 +228,7 @@ void Tetris::stepIdle() {
     checkAutorepeat(Input::left(), AUTOREPEAT_LEFT, &Tetris::moveLeft, &Tetris::stepMoveLeft);
     checkAutorepeat(Input::right(), AUTOREPEAT_RIGHT, &Tetris::moveRight, &Tetris::stepMoveRight);
 
-    if (!_newHold && Input::hold()) {
+    if (!_isNewHold && Input::hold()) {
         Tetrimino *buffer = _holdTetrimino;;
         _holdTetrimino = _currentTetrimino;
         _currentTetrimino = buffer;
@@ -258,7 +241,7 @@ void Tetris::stepIdle() {
             _timer.startTimer(FALL);
             refresh();
         }
-        _newHold = true;
+        _isNewHold = true;
     }
 }
 
@@ -314,7 +297,7 @@ void Tetris::stepHardDrop() {
 
 void Tetris::incrementMove() {
     SoundEngine::playSound("CLICK");
-    if (_lockDownMode)
+    if (_isInLockDown)
         _nbMoveAfterLockDown++;
 }
 
@@ -419,11 +402,11 @@ void Tetris::checkAutorepeat(const bool input, const string &timer, void (Tetris
 }
 
 bool Tetris::doExit() const {
-    return _exit;
+    return _shouldExit;
 }
 
 void Tetris::setStartingLevel(int level) {
-    _startingLevel = level;
+    _startingLevel = std::clamp(level, 1, 15);
 }
 
 void Tetris::setMode(const MODE mode) {
@@ -452,10 +435,10 @@ void Tetris::printPreview() const {
 
 void Tetris::printScore() {
     if (_score > _highscore) {
-        _betterHighscore = true;
+        _hasBetterHighscore = true;
     }
 
-    if (_betterHighscore)
+    if (_hasBetterHighscore)
         _highscore = _score;
 
     rlutil::locate(9, 9);
@@ -514,13 +497,13 @@ void Tetris::reset() {
     _lines = 0;
     _goal = 0;
     _score = 0;
-    _ignoreHardDrop = false;
+    _shouldIgnoreHardDrop = false;
     _lastMoveIsTSpin = false;
     _lastMoveIsMiniTSpin = false;
     _backToBackBonus = false;
-    _lockDownMode = false;
-    _newHold = false;
-    _betterHighscore = false;
+    _isInLockDown = false;
+    _isNewHold = false;
+    _hasBetterHighscore = false;
 
     for (int i = 0; i < TETRIS_HEIGHT; i++) {
         for (int j = 0; j < TETRIS_WIDTH; j++) {
@@ -569,8 +552,8 @@ void Tetris::lock() {
 
     SoundEngine::playSound("LOCK");
 
-    _newHold = false;
-    _lockDownMode = false;
+    _isNewHold = false;
+    _isInLockDown = false;
     _nbMoveAfterLockDown = 0;
     _lowestLine = 0;
     _timer.stopTimer(LOCK_DOWN);
@@ -597,6 +580,12 @@ void Tetris::lock() {
 
     int awardedLines = linesCleared;
 
+    // Scoring per Tetris Guideline:
+    // Single=100, Double=300, Triple=500, Tetris=800 (base values, multiplied by level)
+    // T-spin Single=800 (400 rotation + 400 line), T-spin Double=1200, T-spin Triple=1600
+    // Mini T-spin Single=200 (100 rotation + 100 line)
+    // Back-to-back bonus: +50% score and +50% awarded lines for consecutive
+    // Tetris or T-spin line clears
     if (_lastMoveIsTSpin) {
         if (linesCleared >= 1) {
             int value = 0;
@@ -695,22 +684,21 @@ void Tetris::shuffle() {
         if (i == j)
             continue;
 
-        Tetrimino *buffer = _bag[i];
-        _bag[i] = _bag[j];
-        _bag[j] = buffer;
+        _bag[static_cast<size_t>(i)].swap(_bag[static_cast<size_t>(j)]);
     }
     _bagIndex = 0;
 }
 
 void Tetris::popTetrimino() {
-    _currentTetrimino = _bag[_bagIndex++];
+    _currentTetrimino = _bag[_bagIndex++].get();
     if (_bagIndex >= _bag.size()) {
         shuffle();
     }
 }
 
 Tetrimino *Tetris::peekTetrimino() const {
-    return _bag[_bagIndex];
+    assert(_bagIndex < _bag.size());
+    return _bag[_bagIndex].get();
 }
 
 void Tetris::gameOver() {
@@ -720,6 +708,6 @@ void Tetris::gameOver() {
     highscoreFile << _highscore;
     highscoreFile.close();
 
-    OptionChoice choice = _gameOverMenu.open(_betterHighscore);
+    OptionChoice choice = _gameOverMenu.open(_hasBetterHighscore);
     reset();
 }

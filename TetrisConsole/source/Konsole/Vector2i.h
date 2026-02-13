@@ -2,23 +2,10 @@
 
 struct Vector2i
 {
-	Vector2i()
-	{
-		row = 0;
-		column = 0;
-	}
-
-	Vector2i(const Vector2i& other)
-	{
-		row = other.row;
-		column = other.column;
-	}
-
-	Vector2i(int r, int c)
-	{
-		row = r;
-		column = c;
-	}
+	Vector2i() : row(0), column(0) {}
+	Vector2i(const Vector2i& other) = default;
+	Vector2i& operator=(const Vector2i& other) = default;
+	Vector2i(int r, int c) : row(r), column(c) {}
 
 	Vector2i& operator+=(const Vector2i& right)
 	{

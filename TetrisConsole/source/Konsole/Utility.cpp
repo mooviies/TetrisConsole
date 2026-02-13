@@ -1,6 +1,10 @@
 #include "Utility.h"
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+
+using namespace std;
 
 
 Utility::Utility()
@@ -12,57 +16,40 @@ Utility::~Utility()
 
 void Utility::showTitle(const string& sousTitre)
 {
-	// Initialisation d'une variable qui vaut la longueur du sous-titre
-	// Cette valeur est réutilisé plusieurs fois on évite donc de toujours
-	// repassé par la fonction length() qui est plus lente que la simple
-	// lecture d'un int
+	// Cache the subtitle length (reused multiple times below)
 	int longueur = static_cast<int>(sousTitre.length());
 
-	// Affichage du titre principale
+	// Display the main title frame
 	cout << "╔══════════════════════════════════════════════════════════════════════════════╗║"
 		<< "                                Tetris Console"
 		<< "                                ║╠══════════════════════════════════════════════════════════════════════════════╣"
 		<< "║";
 
-	// On affiche des espace avant le sous-titre et de façon à ce qu'il soit centré
+	// Print leading spaces to center the subtitle
 	for (int i = 0; i < 39 - (longueur / 2); i++)
 	{
 		cout << ' ';
 	}
 
-	// On affiche le sous-titre
+	// Print the subtitle
 	cout << sousTitre;
 
-	// On vérifie si le nombre de lettre du sous-titre est pair ou impaire pour évité un bug d'affichage
-	// Car s'il est impair alors le nombre d'espace avant et après le sous-titre sera différent
+	// If the subtitle length is odd, bump it up so trailing spaces are symmetric
 	if (longueur % 2 != 0)
 		longueur++;
 
-	// On affiche des espaces après le sous-titre
+	// Print trailing spaces after the subtitle
 	for (int i = 0; i < 39 - (longueur / 2); i++)
 	{
 		cout << ' ';
 	}
-	// Puis on affiche la fermeture du cadre
+	// Close the frame
 	cout << "║╚══════════════════════════════════════════════════════════════════════════════╝" << endl;
 }
 
-string Utility::valueToString(int value, int length)
+string Utility::valueToString(int64_t value, int length)
 {
-	string result;
-	int decimal = 1;
-	for (int i = 0; i < length; i++)
-	{
-		if (value < decimal)
-			result += "0";
-
-		decimal *= 10;
-	}
-
-	if (value > 0)
-	{
-		result += std::to_string(value);
-	}
-
-	return result;
+	std::ostringstream oss;
+	oss << std::setfill('0') << std::setw(length) << value;
+	return oss.str();
 }

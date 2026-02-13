@@ -57,8 +57,11 @@ int Platform::getKey()
 std::string Platform::getDataDir()
 {
 	char path[MAX_PATH];
-	SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path);
-	std::string dir = std::string(path) + "\\TetrisConsole";
+	std::string dir;
+	if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path)))
+		dir = std::string(path) + "\\TetrisConsole";
+	else
+		dir = ".\\TetrisConsole";
 	CreateDirectoryA(dir.c_str(), NULL);
 	return dir;
 }

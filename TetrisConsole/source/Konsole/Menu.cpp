@@ -7,12 +7,14 @@
 #include "rlutil.h"
 #include "Platform.h"
 
+using namespace std;
+
 #define MINIMUM_INTERIOR_WIDTH 13
 
 Menu::Menu(string title, string subtitle)
     : _title(std::move(title)), _subtitle(std::move(subtitle)), _showSubtitle(false), _choice(0), _longestOption(0),
-      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false) {
-}
+      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false) {}
+
 
 Menu::~Menu() = default;
 
@@ -54,21 +56,21 @@ void Menu::addOptionWithValues(const string& name, const vector<string> &values)
     _optionsValuesChoices[name] = 0;
 
     if (name.length() > _longestOptionWithChoice)
-        _longestOptionWithChoice = static_cast<int>(name.length());
+        _longestOptionWithChoice = name.length();
 
     for (const auto & value : values) {
         if (const size_t totalLength = name.length() + value.length() + 4; totalLength > _longestOption)
-            _longestOption = static_cast<int>(totalLength);
+            _longestOption = totalLength;
 
         if (value.length() > _longestOptionValue)
-            _longestOptionValue = static_cast<int>(value.length());
+            _longestOptionValue = value.length();
     }
 }
 
 void Menu::addOption(const string& name) {
     _options.push_back(name);
     if (name.length() > _longestOption)
-        _longestOption = static_cast<int>(name.length());
+        _longestOption = name.length();
 }
 
 OptionChoice Menu::open(const bool showSubtitle) {
@@ -86,7 +88,7 @@ OptionChoice Menu::open(const bool showSubtitle) {
                 break;
             case rlutil::KEY_DOWN:
                 _choice++;
-                if (_choice >= _options.size())
+                if (_choice >= static_cast<int>(_options.size()))
                     _choice = 0;
                 break;
             case rlutil::KEY_LEFT:
@@ -113,19 +115,19 @@ OptionChoice Menu::open(const bool showSubtitle) {
 void Menu::generate() {
     _dialog.clear();
 
-    int middleWidth = _longestOption + 4;;
+    size_t middleWidth = _longestOption + 4;
     if (_title.length() + 2 > middleWidth) {
-        middleWidth = static_cast<int>(_title.length()) + 2;
+        middleWidth = _title.length() + 2;
     }
 
     if (_subtitle.length() + 2 > middleWidth) {
-        middleWidth = static_cast<int>(_subtitle.length()) + 2;
+        middleWidth = _subtitle.length() + 2;
     }
 
     if (MINIMUM_INTERIOR_WIDTH > middleWidth)
         middleWidth = MINIMUM_INTERIOR_WIDTH;
 
-    const int width = middleWidth + 2;
+    const int width = static_cast<int>(middleWidth) + 2;
 
     _clearLine.clear();
     for (int i = 0; i < width; i++)
@@ -170,7 +172,7 @@ string Menu::generateOption(const string& name, const int width) {
     int nbSpaceEnd = interiorWidth - static_cast<int>(name.length()) - 3;
 
     if (_optionsValues.find(name) != _optionsValues.end()) {
-        const int nbSpaceBeforeSub = _longestOptionWithChoice - static_cast<int>(name.length());
+        const int nbSpaceBeforeSub = static_cast<int>(_longestOptionWithChoice) - static_cast<int>(name.length());
         for (int i = 0; i < nbSpaceBeforeSub; i++)
             builder << " ";
 
@@ -210,9 +212,9 @@ string Menu::generateNameCenter(const string& name, const int width) {
     return builder.str();
 }
 
-string Menu::generateBar(const char *start, const char *middle, const char *end, int nbMiddle) {
+string Menu::generateBar(const char *start, const char *middle, const char *end, size_t nbMiddle) {
     string result = start;
-    for (int i = 0; i < nbMiddle; i++) {
+    for (size_t i = 0; i < nbMiddle; i++) {
         result.append(middle);
     }
     result.append(end);
@@ -231,27 +233,27 @@ map<string, string> Menu::generateValues() {
 
 void Menu::draw() {
     rlutil::setColor(rlutil::WHITE);
-    for (int i = 0; i < _dialog.size(); i++) {
-        int option = i;
+    for (size_t i = 0; i < _dialog.size(); i++) {
+        int option = static_cast<int>(i);
         if (_showSubtitle)
             option -= 5;
         else
             option -= 3;
 
-        rlutil::locate(_x, _y + i);
+        rlutil::locate(_x, _y + static_cast<int>(i));
         cout << _dialog[i];
 
         if (option == _choice) {
-            rlutil::locate(_x + 2, _y + i);
+            rlutil::locate(_x + 2, _y + static_cast<int>(i));
             cout << ">";
         }
 
-        if (option >= 0 && option < _options.size()) {
+        if (option >= 0 && option < static_cast<int>(_options.size())) {
             if (string name = _options[option]; _optionsValues.find(name) != _optionsValues.end()) {
-                rlutil::locate(_x + _optionsValuesChoicesX[name], _y + i);
+                rlutil::locate(_x + _optionsValuesChoicesX[name], _y + static_cast<int>(i));
                 string value = _optionsValues[name][_optionsValuesChoices[name]];
                 cout << value;
-                const int nbSpace = _longestOptionValue - static_cast<int>(value.length());
+                const int nbSpace = static_cast<int>(_longestOptionValue) - static_cast<int>(value.length());
                 for (int j = 0; j < nbSpace; j++)
                     cout << " ";
             }
@@ -266,9 +268,9 @@ void Menu::save() {
 }
 
 void Menu::restore() const {
-    for (int i = 0; i < _background.size(); i++) {
-        rlutil::locate(_x, _y + i);
-        for (int j = 0; j < _background[i].size(); j++) {
+    for (size_t i = 0; i < _background.size(); i++) {
+        rlutil::locate(_x, _y + static_cast<int>(i));
+        for (size_t j = 0; j < _background[i].size(); j++) {
             cout << " ";
         }
     }
@@ -276,24 +278,24 @@ void Menu::restore() const {
 
 void Menu::clear() const {
     rlutil::setColor(rlutil::WHITE);
-    for (int i = 0; i < _dialog.size(); i++) {
-        rlutil::locate(_x, _y + i);
+    for (size_t i = 0; i < _dialog.size(); i++) {
+        rlutil::locate(_x, _y + static_cast<int>(i));
         cout << _clearLine;
     }
 }
 
 void Menu::select(int choice) {
     string name = _options[choice];
-    if (_menus[name] != nullptr) {
+    if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
         clear();
-        if (_menus[name]->open().exitAllMenus) {
+        if (it->second->open().exitAllMenus) {
             _close = true;
         } else
             draw();
     }
 
-    if (_callbacks[name] != nullptr) {
-        _callbacks[name](OptionChoice(_choice, _options, generateValues()));
+    if (auto it = _callbacks.find(name); it != _callbacks.end() && it->second != nullptr) {
+        it->second(OptionChoice(_choice, _options, generateValues()));
     }
 
     if (_closeOptions.find(name) != _closeOptions.end()) {
@@ -315,7 +317,7 @@ void Menu::switchOptions(const int choice, const int key) {
                 valueChoice = static_cast<int>(_optionsValues[name].size() - 1);
         } else if (key == rlutil::KEY_RIGHT) {
             valueChoice++;
-            if (valueChoice >= _optionsValues[name].size())
+            if (valueChoice >= static_cast<int>(_optionsValues[name].size()))
                 valueChoice = 0;
         }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include "Vector2i.h"
 
 enum ROTATION {
@@ -15,6 +16,8 @@ enum DIRECTION {
 	RIGHT
 };
 
+// SRS wall kick data: each RotationPoint holds two translations (one per direction).
+// Point 0 is basic rotation, points 1-4 are SRS wall kick offsets tested in order.
 struct RotationPoint
 {
 	RotationPoint()
@@ -40,17 +43,15 @@ struct RotationPoint
 	}
 
 private:
-	Vector2i _translations[2];
+	std::array<Vector2i, 2> _translations;
 	bool _exist;
 };
-
-using namespace std;
 
 class Facing
 {
 public:
 	Facing();
-	Facing(ROTATION direction, const vector<Vector2i> &minos, RotationPoint rotationPoints[5]);
+	Facing(ROTATION direction, const std::vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints);
 	~Facing();
 
 	[[nodiscard]] ROTATION getDirection() const;
@@ -59,8 +60,7 @@ public:
 	[[nodiscard]] RotationPoint const & getRotationPoint(int point) const;
 
 private:
-	vector<Vector2i> _minos;
+	std::vector<Vector2i> _minos;
 	ROTATION _direction;
-	RotationPoint _rotationPoints[5];
+	std::array<RotationPoint, 5> _rotationPoints;
 };
-

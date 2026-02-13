@@ -1,9 +1,9 @@
 CXX      = g++
-CXXFLAGS = -Wall -std=c++17
+CXXFLAGS = -Wall -Wextra -Wpedantic -Wshadow -Wconversion -MMD -MP -std=c++17
 INCLUDES = -ITetrisConsole/source/Tetris \
            -ITetrisConsole/source/Konsole \
-           -ITetrisConsole/include \
-           -Ibuild
+           -isystem TetrisConsole/include \
+           -isystem build
 LDFLAGS  =
 
 SRCDIR   = TetrisConsole/source
@@ -41,15 +41,18 @@ ALL_SRCS = $(wildcard $(SRCDIR)/Konsole/*.cpp) \
 SRCS = $(filter-out $(PLATFORM_EXCLUDE),$(ALL_SRCS))
 
 OBJS = $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SRCS))
+DEPS = $(OBJS:.o=.d)
 
 MEDIA_SRC = $(wildcard TetrisConsole/media/*)
 MEDIA_CPP = $(BUILDDIR)/media_data.cpp
 MEDIA_H   = $(BUILDDIR)/media_data.h
 MEDIA_OBJ = $(BUILDDIR)/media_data.o
 
-.PHONY: all clean
+.PHONY: all clean rebuild
 
 all: $(TARGET)
+
+rebuild: clean all
 
 $(TARGET): $(OBJS) $(MEDIA_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
@@ -78,3 +81,5 @@ else
 	@if exist "$(subst /,\,$(BUILDDIR))" rmdir /s /q "$(subst /,\,$(BUILDDIR))"
 	@if exist $(TARGET) del $(TARGET)
 endif
+
+-include $(DEPS)

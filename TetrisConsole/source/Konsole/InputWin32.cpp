@@ -70,7 +70,7 @@ bool Input::pause()
 
 bool Input::select()
 {
-	return GetKeyState(VK_RETURN) & 0x80000;
+	return GetKeyState(VK_RETURN) & 0x8000;
 }
 
 Input::Input()

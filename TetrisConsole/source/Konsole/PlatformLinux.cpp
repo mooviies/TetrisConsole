@@ -123,8 +123,10 @@ std::string Platform::getDataDir()
 	const char* xdg = std::getenv("XDG_DATA_HOME");
 	if (xdg && xdg[0] != '\0')
 		dir = std::string(xdg) + "/TetrisConsole";
-	else
-		dir = std::string(std::getenv("HOME")) + "/.local/share/TetrisConsole";
+	else {
+		const char* home = std::getenv("HOME");
+		dir = std::string(home ? home : "/tmp") + "/.local/share/TetrisConsole";
+	}
 	mkdir(dir.c_str(), 0755);
 	return dir;
 }

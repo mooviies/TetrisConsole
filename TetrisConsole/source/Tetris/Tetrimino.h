@@ -1,11 +1,10 @@
 #pragma once
 
 #include <string>
+#include <array>
 
 #include "Facing.h"
 #include "rlutil.h"
-
-using namespace std;
 
 class Tetrimino
 {
@@ -13,11 +12,11 @@ public:
 	virtual ~Tetrimino();
 
 	void printPreview(int line, bool hold = false) const;
-	bool setPosition(const Vector2i &position);
-	bool move(const Vector2i &distance);
-	bool simulateMove(const Vector2i &distance);
-	bool rotate(DIRECTION direction);
-	bool lock();
+	[[nodiscard]] bool setPosition(const Vector2i &position);
+	[[nodiscard]] bool move(const Vector2i &distance);
+	[[nodiscard]] bool simulateMove(const Vector2i &distance);
+	[[nodiscard]] bool rotate(DIRECTION direction);
+	[[nodiscard]] bool lock();
 	void resetRotation();
 
 	[[nodiscard]] bool isMino(int row, int column) const;
@@ -30,7 +29,7 @@ public:
 	virtual bool checkMiniTSpin() { return false; }
 
 protected:
-	Tetrimino(vector<vector<int>>& matrix, const string &previewLine1, const string &previewLine2);
+	Tetrimino(std::vector<std::vector<int>>& matrix, const std::string &previewLine1, const std::string &previewLine2);
 
 	virtual void onLock() {}
 	void setFacing(ROTATION direction, const Facing &facing);
@@ -43,15 +42,14 @@ protected:
 	[[nodiscard]] ROTATION getCurrentRotation() const { return _currentRotation; }
 
 private:
-	vector<vector<int>>& _matrix;
+	std::vector<std::vector<int>>& _matrix;
 
-	Facing _facings[4];
+	std::array<Facing, 4> _facings;
 	int _lastRotationPoint;
 
-	string _previewLine1;
-	string _previewLine2;
+	std::string _previewLine1;
+	std::string _previewLine2;
 
 	ROTATION _currentRotation;
 	Vector2i _currentPosition;
 };
-

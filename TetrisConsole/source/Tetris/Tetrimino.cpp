@@ -3,6 +3,8 @@
 #include "Constants.h"
 #include "rlutil.h"
 
+using namespace std;
+
 
 Tetrimino::Tetrimino(vector<vector<int>>& matrix, const string &previewLine1, const string &previewLine2)
 	: _matrix(matrix)

@@ -1,13 +1,6 @@
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <cstdlib>
-#include <ctime>
-#include <limits>
-#include <queue>
 
 #include "Tetris.h"
-#include "Random.h"
 #include "Input.h"
 #include "SoundEngine.h"
 #include "Utility.h"
@@ -18,18 +11,12 @@
 using namespace std;
 
 void setGameSettings(OptionChoice optionChoice);
-
 void quitGame(OptionChoice optionChoice);
-
-void incrementLevel(OptionChoice optionChoice);
-
-void decrementLevel(OptionChoice optionChoice);
 
 int main() {
     Platform::initConsole();
     Input::init();
 
-    Random::init();
     SoundEngine::init();
 
     Utility::showTitle("A classic in console!");
@@ -92,7 +79,6 @@ int main() {
 
     Input::cleanup();
     Platform::cleanupConsole();
-    Random::cleanup();
 
     return 0;
 }
@@ -101,7 +87,8 @@ void setGameSettings(OptionChoice optionChoice) {
     const string levelName = optionChoice.values["Level"];
     const string modeName = optionChoice.values["Mode"];
 
-    const int level = stoi(levelName);
+    int level = 1;
+    try { level = stoi(levelName); } catch (...) {}
     MODE mode = CLASSIC;
     if (modeName == "Extended") {
         mode = EXTENDED;
@@ -115,12 +102,6 @@ void setGameSettings(OptionChoice optionChoice) {
     Overseer::getTetris().setMode(mode);
 }
 
-void quitGame(OptionChoice optionChoice) {
+void quitGame([[maybe_unused]] OptionChoice optionChoice) {
     Overseer::getTetris().exit();
-}
-
-void incrementLevel(OptionChoice optionChoice) {
-}
-
-void decrementLevel(OptionChoice optionChoice) {
 }

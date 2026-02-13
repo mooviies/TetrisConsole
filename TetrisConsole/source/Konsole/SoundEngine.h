@@ -5,15 +5,13 @@
 
 #include "miniaudio.h"
 
-using namespace std;
-
 class SoundEngine
 {
 public:
 	static void init();
-	static void playMusic(const string &name);
+	static void playMusic(const std::string &name);
 	static void stopMusic();
-	static void playSound(const string &name);
+	static void playSound(const std::string &name);
 	static void pauseMusic();
 	static void unpauseMusic();
 
@@ -33,9 +31,9 @@ private:
 	~SoundEngine();
 
 	static ma_engine _engine;
-	static map<string, ma_sound*> _sounds;
+	static std::map<std::string, ma_sound*> _sounds;
 	static ma_sound* _musicPlaying;
-	static string _musicPlayingName;
+	static std::string _musicPlayingName;
 
 	static float _musicVolume;
 	static float _effectVolume;

@@ -1,14 +1,13 @@
 #pragma once
 
 #include <string>
-
-using namespace std;
+#include <cstdint>
 
 class Utility
 {
 public:
-	static void showTitle(const string& sousTitre);
-	static string valueToString(int value, int length);
+	static void showTitle(const std::string& sousTitre);
+	static std::string valueToString(int64_t value, int length);
 private:
 	Utility();
 	~Utility();
