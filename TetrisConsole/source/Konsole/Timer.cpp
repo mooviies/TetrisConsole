@@ -10,12 +10,13 @@ Timer & Timer::instance()
 
 void Timer::startTimer(const string& id)
 {
-	_timers[id] = clock();
+	_timers[id] = chrono::steady_clock::now();
 }
 
 void Timer::resetTimer(const string& id, const double seconds)
 {
-	_timers[id] = static_cast<clock_t>(static_cast<double>(clock()) - seconds * static_cast<double>(CLOCKS_PER_SEC));
+	auto now = chrono::steady_clock::now();
+	_timers[id] = now - chrono::duration_cast<chrono::steady_clock::duration>(chrono::duration<double>(seconds));
 }
 
 void Timer::stopTimer(const string& id)
@@ -28,8 +29,8 @@ double Timer::getSeconds(const string& id)
 {
 	if (_timers.count(id) > 0)
 	{
-		const auto elapsed = static_cast<double>(clock() - _timers[id]);
-		return elapsed / static_cast<double>(CLOCKS_PER_SEC);
+		auto now = chrono::steady_clock::now();
+		return chrono::duration<double>(now - _timers[id]).count();
 	}
 
 	return 0;

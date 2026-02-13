@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-#include <ctime>
+#include <chrono>
 
 class Timer
 {
@@ -22,5 +22,5 @@ private:
 	Timer();
 	~Timer();
 
-	std::map<std::string, clock_t> _timers;
+	std::map<std::string, std::chrono::steady_clock::time_point> _timers;
 };
