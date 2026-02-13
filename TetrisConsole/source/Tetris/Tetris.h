@@ -4,8 +4,6 @@
 #include "GameRenderer.h"
 #include "GameController.h"
 #include "Utility.h"
-#include "Timer.h"
-#include "Menu.h"
 
 class Tetris
 {
@@ -18,8 +16,8 @@ public:
 	void redraw() { GameRenderer::display(); Utility::showTitle("A classic in console!"); _renderer.refresh(_state); }
 	void exit()   { _state._shouldExit = true; }
 	[[nodiscard]] bool doExit() const { return _state._shouldExit; }
-	void setStartingLevel(int level) { _controller.setStartingLevel(_state, level); }
-	void setMode(MODE mode) { _state._mode = mode; }
+	void setStartingLevel(const int level) { _controller.setStartingLevel(_state, level); }
+	void setMode(const MODE mode) { _state._mode = mode; }
 
 private:
 	GameState _state;

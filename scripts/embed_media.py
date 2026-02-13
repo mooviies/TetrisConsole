@@ -5,7 +5,7 @@ import os
 import sys
 
 MEDIA_DIR = os.path.join(os.path.dirname(__file__), "..", "TetrisConsole", "media")
-BUILD_DIR = os.path.join(os.path.dirname(__file__), "..", "build")
+DEFAULT_BUILD_DIR = os.path.join(os.path.dirname(__file__), "..", "build")
 
 
 def sanitize_name(filename):
@@ -15,7 +15,7 @@ def sanitize_name(filename):
 
 def main():
     media_dir = os.path.abspath(MEDIA_DIR)
-    build_dir = os.path.abspath(BUILD_DIR)
+    build_dir = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_BUILD_DIR)
     os.makedirs(build_dir, exist_ok=True)
 
     files = sorted(f for f in os.listdir(media_dir) if os.path.isfile(os.path.join(media_dir, f)))

@@ -4,27 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
-**Linux/macOS:**
+**All platforms (Linux/macOS/Windows):**
 ```
-make            # build → ./tetris (lowercase, avoids conflict with TetrisConsole/ dir)
-make clean      # remove build artifacts, binary, and media symlink
-make rebuild    # clean + build in one step
+cmake -B build
+cmake --build build
 ```
-The Makefile auto-detects the OS via `uname -s` and selects platform-specific source files.
-Header dependency tracking (`-MMD -MP`) is enabled — touching a `.h` file recompiles only affected `.o` files.
-
-**Windows:** Open `TetrisConsole.sln` in Visual Studio (v143 toolset, C++17).
+The binary is `build/tetris` on Linux/macOS, `build/TetrisConsole.exe` on Windows.
 
 There are no tests or linting configured.
 
 ## IDE Setup
 
-**Recommended: VS Code + clangd** — Generate `compile_commands.json` for full intellisense:
+**CLion:** Open `CMakeLists.txt` directly — CLion handles CMake natively.
+
+**VS Code + clangd:** CMake generates `build/compile_commands.json` automatically (`CMAKE_EXPORT_COMPILE_COMMANDS` is enabled). Point clangd at it or symlink:
 ```
-bear -- make clean && bear -- make
+ln -s build/compile_commands.json .
 ```
 
-**Windows:** Visual Studio (the `.sln` and `.vcxproj` are already configured).
+**Windows / Visual Studio:** `cmake -B build` generates a `.sln` in `build/` — open it directly.
 
 ## Architecture
 
@@ -32,7 +30,7 @@ The project is a cross-platform console Tetris built in C++17, split into two la
 
 ### Platform Abstraction (`source/Konsole/`)
 
-OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `filter-out` to exclude the wrong platform's files at compile time — no `#ifdef` in game logic.
+OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FILTER ... EXCLUDE)` to exclude the wrong platform's files at configure time — no `#ifdef` in game logic.
 
 - **Platform.h** — Console init/cleanup/flush/getKey. Linux uses termios raw mode (VMIN=1, OPOST|ONLCR), terminal resize via ANSI `\033[8;rows;colst`, and a custom `getKey()` that does blocking reads with `select()`-based ANSI escape sequence parsing. Windows uses Console API and delegates `getKey()` to `rlutil::getkey()`.
 - **Input.h** — Keyboard polling. Linux: non-blocking `select()` + `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
@@ -56,7 +54,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. The Makefile uses `
 ### Key Quirks
 
 - `Tetris::_shouldExit` is set via `Tetris::exit()`; the game exits from the main loop in `TetrisConsole.cpp`.
-- Media files are embedded at build time via `scripts/embed_media.py` into `build/media_data.{h,cpp}`.
+- Media files are embedded at build time via `scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
 - The `Menu::save()` method body is empty — it previously used Windows-only `ReadConsoleOutput` and was dead code.
 - High score persists in `$XDG_DATA_HOME/TetrisConsole/score.bin` (Linux) or `%APPDATA%\TetrisConsole\score.bin` (Windows).
 - Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8.
