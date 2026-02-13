@@ -27,6 +27,9 @@
     <ClCompile Include="source\Konsole\Utility.cpp" />
     <ClCompile Include="source\Konsole\Vector2i.cpp" />
     <ClCompile Include="source\Tetris\Facing.cpp" />
+    <ClCompile Include="source\Tetris\GameController.cpp" />
+    <ClCompile Include="source\Tetris\GameRenderer.cpp" />
+    <ClCompile Include="source\Tetris\GameState.cpp" />
     <ClCompile Include="source\Tetris\PieceData.cpp" />
     <ClCompile Include="source\Tetris\Tetrimino.cpp" />
     <ClCompile Include="source\Tetris\Tetris.cpp" />
@@ -42,6 +45,9 @@
     <ClInclude Include="source\Konsole\Vector2i.h" />
     <ClInclude Include="source\Tetris\Constants.h" />
     <ClInclude Include="source\Tetris\Facing.h" />
+    <ClInclude Include="source\Tetris\GameController.h" />
+    <ClInclude Include="source\Tetris\GameRenderer.h" />
+    <ClInclude Include="source\Tetris\GameState.h" />
     <ClInclude Include="source\Tetris\PieceData.h" />
     <ClInclude Include="source\Tetris\Tetrimino.h" />
     <ClInclude Include="source\Tetris\Tetris.h" />

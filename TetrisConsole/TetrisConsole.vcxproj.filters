@@ -63,6 +63,15 @@
     <ClCompile Include="source\Tetris\PieceData.cpp">
       <Filter>Fichiers sources\Tetris</Filter>
     </ClCompile>
+    <ClCompile Include="source\Tetris\GameController.cpp">
+      <Filter>Fichiers sources\Tetris</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tetris\GameRenderer.cpp">
+      <Filter>Fichiers sources\Tetris</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tetris\GameState.cpp">
+      <Filter>Fichiers sources\Tetris</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Tetris\Constants.h">
@@ -100,6 +109,15 @@
     </ClInclude>
     <ClInclude Include="source\Konsole\Utility.h">
       <Filter>Fichiers d%27en-tête\Konsole</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Tetris\GameController.h">
+      <Filter>Fichiers d%27en-tête\Tetris</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Tetris\GameRenderer.h">
+      <Filter>Fichiers d%27en-tête\Tetris</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Tetris\GameState.h">
+      <Filter>Fichiers d%27en-tête\Tetris</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
