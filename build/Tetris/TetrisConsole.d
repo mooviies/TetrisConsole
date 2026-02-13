@@ -8,7 +8,6 @@ build/Tetris/TetrisConsole.o: \
  TetrisConsole/source/Konsole/Input.h \
  TetrisConsole/source/Konsole/SoundEngine.h \
  TetrisConsole/source/Konsole/Utility.h \
- TetrisConsole/source/Tetris/Overseer.h \
  TetrisConsole/source/Konsole/Platform.h
 TetrisConsole/source/Tetris/Tetris.h:
 TetrisConsole/source/Tetris/Tetrimino.h:
@@ -19,5 +18,4 @@ TetrisConsole/source/Konsole/Menu.h:
 TetrisConsole/source/Konsole/Input.h:
 TetrisConsole/source/Konsole/SoundEngine.h:
 TetrisConsole/source/Konsole/Utility.h:
-TetrisConsole/source/Tetris/Overseer.h:
 TetrisConsole/source/Konsole/Platform.h:

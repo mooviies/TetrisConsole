@@ -5,13 +5,9 @@
 #include "SoundEngine.h"
 #include "Utility.h"
 #include "Menu.h"
-#include "Overseer.h"
 #include "Platform.h"
 
 using namespace std;
-
-void setGameSettings(OptionChoice optionChoice);
-void quitGame(OptionChoice optionChoice);
 
 int main() {
     Platform::initConsole();
@@ -38,12 +34,24 @@ int main() {
     Menu quit("Are you sure?");
     Menu gameOver("GAME OVER", "New High Score!");
 
+    Tetris tetris(pause, gameOver);
+
+    Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
+
     main.addOption("New Game", &newGame);
     //main.addOption("Settings", &options);
     //main.addOption("Help", &help);
     main.addOption("Exit", &quit);
 
-    newGame.addOptionCloseAllMenu("Start", &setGameSettings);
+    newGame.addOptionCloseAllMenu("Start", [&tetris](OptionChoice oc) {
+        int level = 1;
+        try { level = stoi(oc.values["Level"]); } catch (...) {}
+        MODE mode = CLASSIC;
+        if (oc.values["Mode"] == "Extended") mode = EXTENDED;
+        else if (oc.values["Mode"] == "Infinite") mode = EXTENDED_INFINITY;
+        tetris.setStartingLevel(level);
+        tetris.setMode(mode);
+    });
     newGame.addOptionWithValues("Level", levels);
     newGame.addOptionWithValues("Mode", modes);
 
@@ -51,22 +59,27 @@ int main() {
 
     options.addOptionWithValues("Level", levels);
     options.addOptionWithValues("Mode", modes);
-    options.addOptionCloseAllMenu("Accept", &setGameSettings);
+    options.addOptionCloseAllMenu("Accept", [&tetris](OptionChoice oc) {
+        int level = 1;
+        try { level = stoi(oc.values["Level"]); } catch (...) {}
+        MODE mode = CLASSIC;
+        if (oc.values["Mode"] == "Extended") mode = EXTENDED;
+        else if (oc.values["Mode"] == "Infinite") mode = EXTENDED_INFINITY;
+        tetris.setStartingLevel(level);
+        tetris.setMode(mode);
+    });
     options.addOptionClose("Cancel");
 
     pause.addOptionClose("Resume");
     pause.addOptionClose("Restart");
     pause.addOption("Exit Game", &quit);
 
-    quit.addOption("Yes", &quitGame);
+    quit.addOption("Yes", [&tetris](OptionChoice) { tetris.exit(); });
     quit.addOptionClose("No");
 
     gameOver.addOptionClose("Retry");
     gameOver.addOption("Settings", &options);
     gameOver.addOption("Exit Game", &quit);
-
-    Tetris tetris(pause, gameOver);
-    Overseer::setTetris(&tetris);
 
     main.open();
     tetris.start();
@@ -81,27 +94,4 @@ int main() {
     Platform::cleanupConsole();
 
     return 0;
-}
-
-void setGameSettings(OptionChoice optionChoice) {
-    const string levelName = optionChoice.values["Level"];
-    const string modeName = optionChoice.values["Mode"];
-
-    int level = 1;
-    try { level = stoi(levelName); } catch (...) {}
-    MODE mode = CLASSIC;
-    if (modeName == "Extended") {
-        mode = EXTENDED;
-    } else if (modeName == "Infinite") {
-        mode = EXTENDED_INFINITY;
-    } else if (modeName == "Classic") {
-        mode = CLASSIC;
-    }
-
-    Overseer::getTetris().setStartingLevel(level);
-    Overseer::getTetris().setMode(mode);
-}
-
-void quitGame([[maybe_unused]] OptionChoice optionChoice) {
-    Overseer::getTetris().exit();
 }

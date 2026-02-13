@@ -31,7 +31,6 @@
     <ClCompile Include="source\Tetris\JTetrimino.cpp" />
     <ClCompile Include="source\Tetris\LTetrimino.cpp" />
     <ClCompile Include="source\Tetris\OTetrimino.cpp" />
-    <ClCompile Include="source\Tetris\Overseer.cpp" />
     <ClCompile Include="source\Tetris\STetrimino.cpp" />
     <ClCompile Include="source\Tetris\Tetrimino.cpp" />
     <ClCompile Include="source\Tetris\Tetris.cpp" />
@@ -53,7 +52,6 @@
     <ClInclude Include="source\Tetris\JTetrimino.h" />
     <ClInclude Include="source\Tetris\LTetrimino.h" />
     <ClInclude Include="source\Tetris\OTetrimino.h" />
-    <ClInclude Include="source\Tetris\Overseer.h" />
     <ClInclude Include="source\Tetris\STetrimino.h" />
     <ClInclude Include="source\Tetris\Tetrimino.h" />
     <ClInclude Include="source\Tetris\Tetris.h" />

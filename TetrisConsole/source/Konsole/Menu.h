@@ -42,6 +42,8 @@ public:
 	void addOptionCloseAllMenu(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
 
+	static std::function<bool()> shouldExitGame;
+
 	OptionChoice open(bool showSubtitle = false);
 
 protected:

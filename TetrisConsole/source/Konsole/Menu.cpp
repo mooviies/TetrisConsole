@@ -3,11 +3,12 @@
 #include <sstream>
 #include <utility>
 
-#include "Overseer.h"
 #include "rlutil.h"
 #include "Platform.h"
 
 using namespace std;
+
+std::function<bool()> Menu::shouldExitGame;
 
 #define MINIMUM_INTERIOR_WIDTH 13
 
@@ -103,7 +104,7 @@ OptionChoice Menu::open(const bool showSubtitle) {
             default: ;
         }
 
-        if (_close || Overseer::getTetris().doExit())
+        if (_close || (shouldExitGame && shouldExitGame()))
             break;
     }
     clear();
