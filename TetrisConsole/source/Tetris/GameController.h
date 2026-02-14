@@ -39,4 +39,5 @@ private:
 	void checkAutorepeat(GameState& state, bool input, const std::string& timer, MoveFunc move, GameStep nextState);
 
 	Timer& _timer;
+	bool _wasMutePressed{};
 };

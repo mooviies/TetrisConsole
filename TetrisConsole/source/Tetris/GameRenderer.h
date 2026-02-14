@@ -17,6 +17,7 @@ public:
 
 	void invalidate();
 	void render(const GameState& state, bool playfieldVisible = true);
+	static void renderTitle(const std::string& subtitle);
 
 private:
 	void updatePositions();

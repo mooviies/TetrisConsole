@@ -49,6 +49,18 @@ void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     Platform::flushOutput();
 }
 
+void GameRenderer::renderTitle(const std::string& subtitle) {
+    const int ox = Platform::offsetX();
+    const int oy = Platform::offsetY();
+
+    Panel title(78);
+    title.addRow("Tetris Console", Align::CENTER);
+    title.addSeparator();
+    title.addRow(subtitle, Align::CENTER);
+    title.setPosition(1 + ox, 1 + oy);
+    title.render();
+}
+
 void GameRenderer::drawMuteIndicator() {
     switch (SoundEngine::getMuteState()) {
         case MuteState::UNMUTED:      _muteIcon.setColor(Color::WHITE);  break;

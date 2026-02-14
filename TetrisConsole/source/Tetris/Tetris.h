@@ -24,6 +24,7 @@ public:
 private:
 	void handlePause();
 	void handleGameOver();
+	void playPendingSounds();
 
 	GameState _state;
 	GameRenderer _renderer;

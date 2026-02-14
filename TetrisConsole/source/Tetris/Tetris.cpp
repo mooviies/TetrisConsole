@@ -2,12 +2,13 @@
 
 #include "Timer.h"
 #include "Menu.h"
-#include "Input.h"
 #include "SoundEngine.h"
-#include "Utility.h"
 
 Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
-    : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu) {}
+    : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu)
+{
+    _state.loadHighscore();
+}
 
 Tetris::~Tetris() = default;
 
@@ -21,13 +22,18 @@ void Tetris::start() {
 void Tetris::step() {
     const StepResult result = _controller.step(_state);
 
-    // Mute toggle (UI concern, not game logic)
-    {
-        static bool wasMutePressed = false;
-        const bool mutePressed = Input::mute();
-        if (mutePressed && !wasMutePressed)
-            SoundEngine::cycleMute();
-        wasMutePressed = mutePressed;
+    playPendingSounds();
+
+    if (_state.muteRequested()) {
+        SoundEngine::cycleMute();
+        _state.clearMuteRequested();
+    }
+
+    if (SoundEngine::musicEnded()) {
+        const auto& name = SoundEngine::currentMusicName();
+        if (name == "A") SoundEngine::playMusic("B");
+        else if (name == "B") SoundEngine::playMusic("C");
+        else if (name == "C") SoundEngine::playMusic("A");
     }
 
     switch (result) {
@@ -45,22 +51,19 @@ void Tetris::step() {
 void Tetris::render() {
     if (!_state.isDirty())
         return;
-    _state.updateHighscore();
     _renderer.render(_state);
     _state.clearDirty();
 }
 
 void Tetris::redraw() {
-    Utility::showTitle("A classic in console!");
+    GameRenderer::renderTitle("A classic in console!");
     _renderer.invalidate();
-    _state.updateHighscore();
     _renderer.render(_state);
     _state.clearDirty();
 }
 
 void Tetris::handlePause() {
     SoundEngine::pauseMusic();
-    _state.updateHighscore();
     _renderer.render(_state, false);
     _state.clearDirty();
 
@@ -76,7 +79,6 @@ void Tetris::handlePause() {
     }
 
     _renderer.invalidate();
-    _state.updateHighscore();
     _renderer.render(_state);
     _state.clearDirty();
     SoundEngine::unpauseMusic();
@@ -84,7 +86,6 @@ void Tetris::handlePause() {
 
 void Tetris::handleGameOver() {
     SoundEngine::stopMusic();
-    _state.updateHighscore();
     _state.saveHighscore();
 
     _gameOverMenu.open(_state.hasBetterHighscore());
@@ -94,4 +95,17 @@ void Tetris::handleGameOver() {
     _renderer.render(_state);
     _state.clearDirty();
     SoundEngine::playMusic("A");
+}
+
+void Tetris::playPendingSounds() {
+    for (const auto sound : _state.pendingSounds()) {
+        switch (sound) {
+            case GameSound::Click:     SoundEngine::playSound("CLICK"); break;
+            case GameSound::Lock:      SoundEngine::playSound("LOCK"); break;
+            case GameSound::HardDrop:  SoundEngine::playSound("HARD_DROP"); break;
+            case GameSound::LineClear: SoundEngine::playSound("LINE_CLEAR"); break;
+            case GameSound::Tetris:    SoundEngine::playSound("TETRIS"); break;
+        }
+    }
+    _state.clearPendingSounds();
 }

@@ -26,7 +26,8 @@ public:
 	static void cycleMute();
 	static MuteState getMuteState();
 
-	static void update();
+	static bool musicEnded();
+	static const std::string& currentMusicName();
 
 protected:
 	static void checkError(ma_result result, const char* description);

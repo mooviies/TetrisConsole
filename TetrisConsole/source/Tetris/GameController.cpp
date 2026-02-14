@@ -5,7 +5,6 @@
 #include "Constants.h"
 #include "Random.h"
 #include "Input.h"
-#include "SoundEngine.h"
 
 using namespace std;
 
@@ -44,23 +43,35 @@ StepResult GameController::step(GameState& state) {
         case GameStep::HardDrop:  stepHardDrop(state); break;
     }
 
-    if (state._isGameOver)
-        return StepResult::GameOver;
+    StepResult result = StepResult::Continue;
 
-    if (Input::pause())
-        return StepResult::PauseRequested;
-
-    if (!state._didRotate) {
-        if (Input::rotateClockwise())
-            rotate(state, RIGHT);
-        else if (Input::rotateCounterClockwise())
-            rotate(state, LEFT);
+    if (state._isGameOver) {
+        result = StepResult::GameOver;
+    } else if (Input::pause()) {
+        result = StepResult::PauseRequested;
     } else {
-        if (!Input::rotateClockwise() && !Input::rotateCounterClockwise())
-            state._didRotate = false;
+        if (!state._didRotate) {
+            if (Input::rotateClockwise())
+                rotate(state, RIGHT);
+            else if (Input::rotateCounterClockwise())
+                rotate(state, LEFT);
+        } else {
+            if (!Input::rotateClockwise() && !Input::rotateCounterClockwise())
+                state._didRotate = false;
+        }
     }
 
-    return StepResult::Continue;
+    // Detect mute toggle (input concern, flag for facade to handle)
+    {
+        const bool mutePressed = Input::mute();
+        if (mutePressed && !_wasMutePressed)
+            state._muteRequested = true;
+        _wasMutePressed = mutePressed;
+    }
+
+    state.updateHighscore();
+
+    return result;
 }
 
 void GameController::fall(GameState& state) {
@@ -107,7 +118,7 @@ void GameController::fall(GameState& state) {
     }
 
     if (Input::hardDrop() && !state._shouldIgnoreHardDrop) {
-        SoundEngine::playSound("HARD_DROP");
+        state.queueSound(GameSound::HardDrop);
         state._stepState = GameStep::HardDrop;
         state._shouldIgnoreHardDrop = true;
     } else if (!Input::hardDrop() && state._shouldIgnoreHardDrop) {
@@ -202,7 +213,7 @@ void GameController::stepHardDrop(GameState& state) {
 }
 
 void GameController::incrementMove(GameState& state) {
-    SoundEngine::playSound("CLICK");
+    state.queueSound(GameSound::Click);
     if (state._isInLockDown)
         state._nbMoveAfterLockDown++;
 }
@@ -349,7 +360,7 @@ void GameController::lock(GameState& state) {
         return;
     }
 
-    SoundEngine::playSound("LOCK");
+    state.queueSound(GameSound::Lock);
 
     state._isNewHold = false;
     state._isInLockDown = false;
@@ -464,9 +475,9 @@ void GameController::lock(GameState& state) {
     }
 
     if (linesCleared == 4)
-        SoundEngine::playSound("TETRIS");
+        state.queueSound(GameSound::Tetris);
     else if (linesCleared >= 1)
-        SoundEngine::playSound("LINE_CLEAR");
+        state.queueSound(GameSound::LineClear);
 
     state._stepState = GameStep::Idle;
     state.markDirty();

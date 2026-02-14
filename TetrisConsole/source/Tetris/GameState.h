@@ -11,6 +11,7 @@
 
 enum class GameStep { Idle, MoveLeft, MoveRight, HardDrop };
 enum class StepResult { Continue, PauseRequested, GameOver };
+enum class GameSound { Click, Lock, HardDrop, LineClear, Tetris };
 
 enum MODE {
 	EXTENDED,
@@ -28,7 +29,6 @@ public:
 	void saveHighscore() const;
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
 
-	void updateHighscore();
 	void setShouldExit(bool v) { _shouldExit = v; }
 	void setMode(MODE m) { _mode = m; }
 	void setStartingLevel(int level);
@@ -48,6 +48,11 @@ public:
 	[[nodiscard]] bool isDirty() const { return _isDirty; }
 	void clearDirty() { _isDirty = false; }
 
+	[[nodiscard]] const std::vector<GameSound>& pendingSounds() const { return _pendingSounds; }
+	void clearPendingSounds() { _pendingSounds.clear(); }
+	[[nodiscard]] bool muteRequested() const { return _muteRequested; }
+	void clearMuteRequested() { _muteRequested = false; }
+
 	// Tetris Guideline gravity values for levels 1-15 (index 0 unused).
 	static constexpr std::array<double, 16> kSpeedNormal = {
 		0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007
@@ -59,6 +64,9 @@ public:
 
 private:
 	friend class GameController;
+
+	void updateHighscore();
+	void queueSound(GameSound s) { _pendingSounds.push_back(s); }
 
 	GameMatrix _matrix;
 
@@ -89,6 +97,8 @@ private:
 	bool _isNewHold{};
 	bool _hasBetterHighscore{};
 	bool _isDirty{};
+	bool _muteRequested{};
 
+	std::vector<GameSound> _pendingSounds;
 	GameStep _stepState = GameStep::Idle;
 };

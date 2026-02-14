@@ -262,20 +262,14 @@ void SoundEngine::setEffectVolume(const float volume)
 	_effectVolume = volume;
 }
 
-void SoundEngine::update()
+bool SoundEngine::musicEnded()
 {
-	if (_musicPlaying != nullptr)
-	{
-		if (ma_sound_at_end(_musicPlaying))
-		{
-			if (_musicPlayingName == "A")
-				playMusic("B");
-			else if (_musicPlayingName == "B")
-				playMusic("C");
-			else if (_musicPlayingName == "C")
-				playMusic("A");
-		}
-	}
+	return _musicPlaying != nullptr && ma_sound_at_end(_musicPlaying);
+}
+
+const string& SoundEngine::currentMusicName()
+{
+	return _musicPlayingName;
 }
 
 void SoundEngine::cycleMute()

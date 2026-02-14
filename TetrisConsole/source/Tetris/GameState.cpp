@@ -22,8 +22,6 @@ GameState::GameState()
 	_bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
 
 	_matrix.resize(TETRIS_HEIGHT);
-
-	loadHighscore();
 }
 
 GameState::~GameState() = default;

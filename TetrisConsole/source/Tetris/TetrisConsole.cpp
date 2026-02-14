@@ -7,6 +7,7 @@
 #include "Input.h"
 #include "SoundEngine.h"
 #include "Utility.h"
+#include "GameRenderer.h"
 #include "Menu.h"
 #include "Platform.h"
 
@@ -23,7 +24,7 @@ int main() {
         this_thread::sleep_for(chrono::milliseconds(100));
     }
 
-    Utility::showTitle("A classic in console!");
+    GameRenderer::renderTitle("A classic in console!");
 
     vector<string> levels;
     for (int i = 1; i <= 15; i++)
@@ -45,7 +46,7 @@ int main() {
     Tetris tetris(pause, gameOver);
 
     Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
-    Menu::onResize = []() { Utility::showTitle("A classic in console!"); };
+    Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };
 
     main.addOption("New Game", &newGame);
     //main.addOption("Settings", &options);
@@ -103,7 +104,6 @@ int main() {
         }
         tetris.step();
         tetris.render();
-        SoundEngine::update();
     }
 
     Input::cleanup();
