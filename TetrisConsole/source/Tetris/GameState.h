@@ -71,6 +71,7 @@ public:
 	[[nodiscard]] int tSpins() const { return _tSpins; }
 	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
 	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
+	[[nodiscard]] const std::map<HighScoreKey, HighScoreRecord>& highscoreMap() const { return _highscoreMap; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
 	[[nodiscard]] int startingLevel() const { return _startingLevel; }
 	[[nodiscard]] MODE mode() const { return _mode; }

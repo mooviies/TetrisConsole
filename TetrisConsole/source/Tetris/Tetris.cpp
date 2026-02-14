@@ -70,14 +70,23 @@ void Tetris::handlePause() {
     _renderer.render(_state, false);
     _state.clearDirty();
 
-    if (const OptionChoice choices = _pauseMenu.open(false, true);
-        choices.options[choices.selected] == "Restart") {
+    const OptionChoice choices = _pauseMenu.open(false, true);
+    const auto& selected = choices.options[choices.selected];
+
+    if (selected == "Restart") {
         SoundEngine::stopMusic();
         _controller.reset(_state);
         _renderer.invalidate();
         _renderer.render(_state);
         _state.clearDirty();
         SoundEngine::playMusic("A");
+        return;
+    }
+
+    if (selected == "Main Menu") {
+        _state.saveHighscore();
+        SoundEngine::stopMusic();
+        _backToMenu = true;
         return;
     }
 
@@ -93,7 +102,13 @@ void Tetris::handleGameOver() {
     SoundEngine::stopMusic();
     _state.saveHighscore();
 
-    _gameOverMenu.open(_state.hasBetterHighscore());
+    const OptionChoice choices = _gameOverMenu.open(_state.hasBetterHighscore());
+    const auto& selected = choices.options[choices.selected];
+
+    if (selected == "Main Menu") {
+        _backToMenu = true;
+        return;
+    }
 
     _controller.reset(_state);
     _renderer.invalidate();

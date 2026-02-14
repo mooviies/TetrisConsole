@@ -33,6 +33,11 @@ void Menu::addOption(const string &name, std::function<void(OptionChoice)> callb
     _callbacks[name] = std::move(callback);
 }
 
+void Menu::addOptionAction(const string& name, std::function<void()> action) {
+    addOption(name);
+    _actions[name] = std::move(action);
+}
+
 void Menu::addOptionClose(const string& name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeOptions.insert(name);
@@ -212,6 +217,16 @@ void Menu::setValueChoice(const string& name, const string& value) {
 
 void Menu::select(int choice) {
     string name = _options[choice];
+
+    if (auto it = _actions.find(name); it != _actions.end() && it->second) {
+        clear();
+        it->second();
+        if (onResize)
+            onResize();
+        _panel.invalidate();
+        return;
+    }
+
     if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
         if (auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second)
             cb->second();

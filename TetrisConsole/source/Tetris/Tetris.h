@@ -20,10 +20,13 @@ public:
 	void resumeGameTimer() { _state.resumeGameTimer(); }
 	void exit()   { _state.setShouldExit(true); }
 	[[nodiscard]] bool doExit() const { return _state.shouldExit(); }
+	[[nodiscard]] bool backToMenu() const { return _backToMenu; }
+	void clearBackToMenu() { _backToMenu = false; }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
 	void setMode(const MODE mode) { _state.setMode(mode); }
 	[[nodiscard]] int startingLevel() const { return _state.startingLevel(); }
 	[[nodiscard]] MODE mode() const { return _state.mode(); }
+	[[nodiscard]] const std::map<HighScoreKey, HighScoreRecord>& highscoreMap() const { return _state.highscoreMap(); }
 
 private:
 	void handlePause();
@@ -35,4 +38,5 @@ private:
 	GameController _controller;
 	Menu& _pauseMenu;
 	Menu& _gameOverMenu;
+	bool _backToMenu{};
 };
