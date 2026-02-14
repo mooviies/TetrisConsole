@@ -7,16 +7,15 @@
 
 namespace {
 namespace Layout {
-    constexpr int kScoreX = 5,      kScoreY = 14;
+    constexpr int kScoreX = 4,      kScoreY = 12;
     constexpr int kPlayfieldX = 30, kPlayfieldY = 6;
     constexpr int kNextX = 59,      kNextY = 6;
-    constexpr int kHighScoreX = 5,  kHighScoreY = 23;
     constexpr int kHoldX = 7,       kHoldY = 6;
     constexpr int kMuteX = 78,      kMuteY = 2;
 }}
 
 GameRenderer::GameRenderer()
-    : _next("Next", NEXT_PIECE_QUEUE_SIZE), _hold("Hold"), _muteIcon("♪")
+    : _next(NEXT_PIECE_QUEUE_SIZE), _muteIcon("♪")
 {
 }
 
@@ -29,7 +28,6 @@ void GameRenderer::updatePositions() {
     _score.setPosition(Layout::kScoreX + ox, Layout::kScoreY + oy);
     _playfield.setPosition(Layout::kPlayfieldX + ox, Layout::kPlayfieldY + oy);
     _next.setPosition(Layout::kNextX + ox, Layout::kNextY + oy);
-    _highScore.setPosition(Layout::kHighScoreX + ox, Layout::kHighScoreY + oy);
     _hold.setPosition(Layout::kHoldX + ox, Layout::kHoldY + oy);
     _muteIcon.setPosition(Layout::kMuteX + ox, Layout::kMuteY + oy);
 }
@@ -39,7 +37,6 @@ void GameRenderer::invalidate() {
     _score.invalidate();
     _playfield.invalidate();
     _next.invalidate();
-    _highScore.invalidate();
     _hold.invalidate();
 }
 
@@ -48,12 +45,10 @@ void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _next.update(state.peekTetriminos(NEXT_PIECE_QUEUE_SIZE));
     _hold.update({state.holdTetrimino()});
     _score.update(state);
-    _highScore.update(state.highscore());
     drawMuteIndicator();
 
     _score.render();
     _playfield.render();
-    _highScore.render();
     _next.render();
     _hold.render();
     Platform::flushOutput();

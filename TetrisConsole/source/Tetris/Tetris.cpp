@@ -63,6 +63,7 @@ void Tetris::redraw() {
 }
 
 void Tetris::handlePause() {
+    _state.pauseGameTimer();
     SoundEngine::pauseMusic();
     _renderer.render(_state, false);
     _state.clearDirty();
@@ -82,9 +83,11 @@ void Tetris::handlePause() {
     _renderer.render(_state);
     _state.clearDirty();
     SoundEngine::unpauseMusic();
+    _state.resumeGameTimer();
 }
 
 void Tetris::handleGameOver() {
+    _state.pauseGameTimer();
     SoundEngine::stopMusic();
     _state.saveHighscore();
 

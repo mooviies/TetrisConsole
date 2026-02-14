@@ -16,6 +16,8 @@ public:
 	void step();
 	void render();
 	void redraw();
+	void pauseGameTimer() { _state.pauseGameTimer(); }
+	void resumeGameTimer() { _state.resumeGameTimer(); }
 	void exit()   { _state.setShouldExit(true); }
 	[[nodiscard]] bool doExit() const { return _state.shouldExit(); }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }

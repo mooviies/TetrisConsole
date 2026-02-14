@@ -2,6 +2,7 @@
 
 #include <string>
 #include <array>
+#include <chrono>
 #include <memory>
 #include <vector>
 #include <cstdint>
@@ -40,7 +41,12 @@ public:
 	[[nodiscard]] int64_t score() const { return _score; }
 	[[nodiscard]] int64_t highscore() const { return _highscore; }
 	[[nodiscard]] int level() const { return _level; }
+	[[nodiscard]] int tpm() const { return _tpm; }
+	[[nodiscard]] int lpm() const { return _lpm; }
 	[[nodiscard]] int lines() const { return _lines; }
+	[[nodiscard]] int tetris() const { return _tetris; }
+	[[nodiscard]] int combos() const { return _combos; }
+	[[nodiscard]] int tSpins() const { return _tSpins; }
 	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
 	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
@@ -53,6 +59,12 @@ public:
 	void clearPendingSounds() { _pendingSounds.clear(); }
 	[[nodiscard]] bool muteRequested() const { return _muteRequested; }
 	void clearMuteRequested() { _muteRequested = false; }
+
+	void startGameTimer();
+	void pauseGameTimer();
+	void resumeGameTimer();
+	[[nodiscard]] double gameElapsed() const;
+	[[nodiscard]] int minutesElapsed() const { return static_cast<int>(_gameElapsedAccum / 60); }
 
 	// Tetris Guideline gravity values for levels 1-15 (index 0 unused).
 	static constexpr std::array<double, 16> kSpeedNormal = {
@@ -76,7 +88,13 @@ private:
 
 	int _startingLevel = 1;
 	int _level{};
+	int _tpm{};
+	int _lpm{};
 	int _lines{};
+	int _tetris{};
+	int _combos{};
+	int _tSpins{};
+	int _nbMinos{};
 	int _goal{};
 	int64_t _score{};
 	int64_t _highscore{};
@@ -104,4 +122,8 @@ private:
 
 	std::vector<GameSound> _pendingSounds;
 	GameStep _stepState = GameStep::Idle;
+
+	std::chrono::steady_clock::time_point _gameTimerStart{};
+	double _gameElapsedAccum{};
+	bool _gameTimerRunning{};
 };

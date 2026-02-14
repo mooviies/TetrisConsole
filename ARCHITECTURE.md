@@ -251,7 +251,7 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ## 5. Scoring, Leveling & Lock-Down
 
-**File:** `GameController.cpp` (primarily the `lock()` and `fall()` methods)
+**File:** `GameController.cpp` (primarily `lock()`, `clearLines()`, `awardScore()`, and `fall()`)
 
 ### Lock-Down Mechanics
 
@@ -269,35 +269,85 @@ In Classic mode, `resetLockDown()` returns immediately — the 0.5s timer runs u
 
 In all modes, if the piece reaches a new lowest row during gravity fall while in lock-down, the move counter resets to 0 and the timer restarts (this is separate from `resetLockDown` — it happens inside `fall()`).
 
-When the timer expires or (in Extended mode only) the move limit is reached, the piece locks: its mino colors are written into the matrix.
+When the timer expires or (in Extended mode only) the move limit is reached, `lock()` is called.
+
+### The `lock()` Method
+
+`lock()` orchestrates the transition from an active piece to a committed piece in the matrix. It delegates the heavy work to `clearLines()` and `awardScore()`:
+
+```
+lock()
+│
+├─ Guard: no piece or game already over → return
+│
+├─ False alarm check: can piece still move down?
+│  YES → Piece was nudged off its resting surface
+│         (e.g. slid over a gap). Cancel the lock:
+│         stop timer, reset move counter, update
+│         lowestLine → return
+│
+├─ Commit: Tetrimino::lock() writes minos into matrix
+│  FAILED → Lock-out (piece in buffer zone)
+│           → isGameOver = true → return
+│
+├─ Reset lock-down state
+│  (clear flags, stop timer, null out currentTetrimino)
+│
+├─ clearLines(state) → linesCleared
+│
+├─ awardScore(state, linesCleared)
+│
+└─ stepState = Idle, markDirty
+```
+
+### `clearLines()`
+
+Scans visible rows from bottom (`MATRIX_END = 39`) to top (`MATRIX_START = 20`). Each full row is erased from the deque, then that many empty rows are pushed at the front to maintain the 40-row matrix height. Returns the number of lines cleared.
 
 ### Hard Drop
 
-Moves the piece down until collision, scoring 2 points per cell dropped, then locks immediately. Soft drop scores 1 point per cell.
+Moves the piece down until collision, scoring 2 points per cell dropped, then calls `lock()` immediately. Soft drop scores 1 point per cell.
 
-### Line Clearing & Scoring
+### `awardScore()`
 
-After locking, full rows are detected and removed. Scoring follows the Tetris Guideline:
+Handles all scoring, stats, leveling, and sound queuing after a lock. Three branches based on the last move:
 
-| Clear Type | Base Score | Awarded Lines |
-|------------|-----------|---------------|
-| Single | 100 | 1 |
-| Double | 300 | 3 |
-| Triple | 500 | 5 |
-| Tetris (4 lines) | 800 | 8 |
-| T-Spin Single | 400 | 8 |
-| T-Spin Double | 800 | 12 |
-| T-Spin Triple | 1200 | 16 |
-| Mini T-Spin Single | 100 | 2 |
+**T-Spin clears** (`_lastMoveIsTSpin`):
 
-All base scores are multiplied by the current level. **Back-to-back bonus**: consecutive Tetrises or T-spin line clears get a 1.5x multiplier.
+| Lines | Base Score | Awarded Lines |
+|-------|-----------|---------------|
+| 1 | 400 | 8 |
+| 2 | 800 | 12 |
+| 3 | 1200 | 16 |
+| 0 (no clear) | 0 | 4 |
 
-### Leveling
+**Mini T-Spin clears** (`_lastMoveIsMiniTSpin`):
 
-- `_goal` accumulates awarded lines
-- When `_goal >= level * 5`, level increments and goal resets
-- Gravity speed is looked up from `kSpeedNormal[level]` (or `kSpeedFast` during soft drop)
-- Speeds are capped at level 15
+| Lines | Base Score | Awarded Lines |
+|-------|-----------|---------------|
+| 1 | 100 | 2 |
+| 0 (no clear) | 0 | 1 |
+
+**Normal clears**:
+
+| Lines | Base Score | Awarded Lines | Back-to-Back |
+|-------|-----------|---------------|--------------|
+| 1 (Single) | 100 | 1 | Breaks streak |
+| 2 (Double) | 300 | 3 | Breaks streak |
+| 3 (Triple) | 500 | 5 | Breaks streak |
+| 4 (Tetris) | 800 | 8 | Enables streak |
+
+All base scores are multiplied by the current level. **Back-to-back bonus**: consecutive Tetrises or T-spin line clears get a 1.5x score multiplier. Singles, Doubles, and Triples break the streak.
+
+After scoring, `awardScore()` advances leveling and queues sounds:
+
+- `_lines += awardedLines`, `_goal += awardedLines`
+- When `_goal >= level * 5` → level up, goal resets
+- 4 lines → Tetris sound; 1-3 lines → LineClear sound
+
+### Gravity
+
+Gravity speed is looked up from `kSpeedNormal[level]` (or `kSpeedFast` during soft drop). Speeds are capped at level 15.
 
 ### Autorepeat (DAS)
 

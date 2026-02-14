@@ -16,7 +16,7 @@ std::function<void()> Menu::onResize;
 
 Menu::Menu(string title, string subtitle)
     : _title(std::move(title)), _subtitle(std::move(subtitle)), _showSubtitle(false), _choice(0), _longestOption(0),
-      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false) {}
+      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false), _escaped(false) {}
 
 
 Menu::~Menu() = default;
@@ -99,6 +99,7 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
                 if (escapeCloses) {
                     _choice = 0;
                     _close = true;
+                    _escaped = true;
                 }
                 break;
             default: ;
@@ -118,7 +119,7 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
     }
     clear();
 
-    const bool exitAllMenu = _closeAllMenusOptions.find(_options[_choice]) != _closeAllMenusOptions.end();
+    const bool exitAllMenu = !_escaped && _closeAllMenusOptions.find(_options[_choice]) != _closeAllMenusOptions.end();
     return {_choice, _options, generateValues(), exitAllMenu};
 }
 
@@ -153,6 +154,7 @@ void Menu::generate() {
     _panel.setPosition(_x, _y);
     _choice = 0;
     _close = false;
+    _escaped = false;
 }
 
 map<string, string> Menu::generateValues() {
@@ -197,10 +199,12 @@ void Menu::select(int choice) {
     string name = _options[choice];
     if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
         clear();
-        if (it->second->open().exitAllMenus) {
+        if (it->second->open(false, true).exitAllMenus) {
             _close = true;
-        } else
+        } else {
+            _panel.invalidate();
             draw();
+        }
     }
 
     if (auto it = _callbacks.find(name); it != _callbacks.end() && it->second) {

@@ -43,7 +43,8 @@ int main() {
     Menu options("SETTINGS");
     Menu newGame("NEW GAME");
     Menu pause("PAUSE");
-    Menu quit("Are you sure?");
+    Menu restartConfirm("Restart game?");
+    Menu quit("Quit game?");
     Menu gameOver("GAME OVER", "New High Score!");
 
     Tetris tetris(pause, gameOver);
@@ -80,8 +81,11 @@ int main() {
     options.addOptionClose("Cancel");
 
     pause.addOptionClose("Resume");
-    pause.addOptionClose("Restart");
+    pause.addOption("Restart", &restartConfirm);
     pause.addOption("Exit Game", &quit);
+
+    restartConfirm.addOptionCloseAllMenu("Yes");
+    restartConfirm.addOptionClose("No");
 
     quit.addOption("Yes", [&tetris](OptionChoice) { tetris.exit(); });
     quit.addOptionClose("No");
@@ -93,13 +97,22 @@ int main() {
     main.open();
     tetris.start();
 
+    bool wasTooSmall = false;
     while (!tetris.doExit()) {
         Input::pollKeys();
         if (Platform::wasResized())
             tetris.redraw();
         if (Platform::isTerminalTooSmall()) {
+            if (!wasTooSmall) {
+                tetris.pauseGameTimer();
+                wasTooSmall = true;
+            }
             this_thread::sleep_for(chrono::milliseconds(50));
             continue;
+        }
+        if (wasTooSmall) {
+            tetris.resumeGameTimer();
+            wasTooSmall = false;
         }
         tetris.step();
         tetris.render();

@@ -80,4 +80,5 @@ private:
 	int _height;
 
 	bool _close;
+	bool _escaped;
 };

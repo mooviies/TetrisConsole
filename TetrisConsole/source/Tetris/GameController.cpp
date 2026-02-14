@@ -24,7 +24,7 @@ GameController::GameController(Timer& timer)
 
 GameController::~GameController() = default;
 
-void GameController::start(GameState& state) {
+void GameController::start(GameState& state) const {
     reset(state);
     state._isStarted = true;
 }
@@ -43,7 +43,7 @@ StepResult GameController::step(GameState& state) {
         case GameStep::HardDrop:  stepHardDrop(state); break;
     }
 
-    StepResult result = StepResult::Continue;
+    auto result = StepResult::Continue;
 
     if (state._isGameOver) {
         result = StepResult::GameOver;
@@ -61,13 +61,10 @@ StepResult GameController::step(GameState& state) {
         }
     }
 
-    // Detect mute toggle (input concern, flag for facade to handle)
-    {
-        const bool mutePressed = Input::mute();
-        if (mutePressed && !_wasMutePressed)
-            state._muteRequested = true;
-        _wasMutePressed = mutePressed;
-    }
+    const bool mutePressed = Input::mute();
+    if (mutePressed && !_wasMutePressed)
+        state._muteRequested = true;
+    _wasMutePressed = mutePressed;
 
     state.updateHighscore();
 
@@ -277,9 +274,11 @@ void GameController::rotate(GameState& state, const DIRECTION direction) const {
 
         if (state._currentTetrimino->canTSpin()) {
             if (state._currentTetrimino->checkTSpin()) {
+                state._tSpins++;
                 state._score += 400 * state._level;
                 state._lastMoveIsTSpin = true;
             } else if (state._currentTetrimino->checkMiniTSpin()) {
+                state._tSpins++;
                 state._score += 100 * state._level;
                 state._lastMoveIsMiniTSpin = true;
             }
@@ -309,6 +308,12 @@ void GameController::reset(GameState& state) const {
     state._lines = 0;
     state._goal = 0;
     state._score = 0;
+    state._tSpins = 0;
+    state._combos = 0;
+    state._tetris = 0;
+    state._nbMinos = 0;
+    state._lpm = 0;
+    state._tpm = 0;
     state._shouldIgnoreHardDrop = false;
     state._lastMoveIsTSpin = false;
     state._lastMoveIsMiniTSpin = false;
@@ -330,6 +335,7 @@ void GameController::reset(GameState& state) const {
     state._didRotate = false;
     state._nbMoveAfterLockDown = 0;
     state._lowestLine = 0;
+    state.startGameTimer();
 
     _timer.stopTimer(LOCK_DOWN);
     _timer.stopTimer(FALL);
@@ -341,6 +347,7 @@ void GameController::lock(GameState& state) const {
     if (state._currentTetrimino == nullptr || state._isGameOver)
         return;
 
+    // False alarm: piece was nudged off its resting surface (e.g. slid over a gap)
     if (state._currentTetrimino->simulateMove(Vector2i(1, 0))) {
         _timer.stopTimer(LOCK_DOWN);
         state._nbMoveAfterLockDown = 0;
@@ -349,6 +356,7 @@ void GameController::lock(GameState& state) const {
         return;
     }
 
+    // Lock-out: piece overlaps the buffer zone
     if (!state._currentTetrimino->lock()) {
         state._isGameOver = true;
         return;
@@ -360,9 +368,22 @@ void GameController::lock(GameState& state) const {
     state._isInLockDown = false;
     state._nbMoveAfterLockDown = 0;
     state._lowestLine = 0;
-    _timer.stopTimer(LOCK_DOWN);
     state._currentTetrimino = nullptr;
+    state._nbMinos++;
 
+    _timer.stopTimer(LOCK_DOWN);
+
+    const int linesCleared = clearLines(state);
+    awardScore(state, linesCleared);
+
+    const int minutesElapsed = state.minutesElapsed() == 0 ? 1 : state.minutesElapsed();
+    state._lpm = state._lines / minutesElapsed;
+    state._tpm = state._nbMinos / minutesElapsed;
+    state._stepState = GameStep::Idle;
+    state.markDirty();
+}
+
+int GameController::clearLines(GameState& state) {
     int linesCleared = 0;
     for (int i = MATRIX_END; i >= MATRIX_START; i--) {
         bool fullLine = true;
@@ -382,25 +403,23 @@ void GameController::lock(GameState& state) const {
     for (int i = 0; i < linesCleared; i++)
         state._matrix.push_front(MatrixRow{});
 
+    return linesCleared;
+}
+
+void GameController::awardScore(GameState& state, const int linesCleared) {
     int awardedLines = linesCleared;
 
-    // Scoring per Tetris Guideline
+    if (linesCleared == 4)
+        state._tetris++;
+
     if (state._lastMoveIsTSpin) {
         if (linesCleared >= 1) {
+            state._combos++;
             int value = 0;
             switch (linesCleared) {
-                case 1:
-                    value = 400;
-                    awardedLines = 8;
-                    break;
-                case 2:
-                    value = 800;
-                    awardedLines = 12;
-                    break;
-                case 3:
-                    value = 1200;
-                    awardedLines = 16;
-                    break;
+                case 1:  value = 400;  awardedLines = 8;  break;
+                case 2:  value = 800;  awardedLines = 12; break;
+                case 3:  value = 1200; awardedLines = 16; break;
                 default: ;
             }
 
@@ -410,10 +429,12 @@ void GameController::lock(GameState& state) const {
             }
 
             state._score += value * state._level;
-        } else
+        } else {
             awardedLines = 4;
+        }
     } else if (state._lastMoveIsMiniTSpin) {
         if (linesCleared == 1) {
+            state._combos++;
             int value = 100;
             awardedLines = 2;
             if (state._backToBackBonus) {
@@ -422,8 +443,9 @@ void GameController::lock(GameState& state) const {
             }
 
             state._score += value * state._level;
-        } else
+        } else {
             awardedLines = 1;
+        }
     } else {
         int value = 0;
         switch (linesCleared) {
@@ -445,10 +467,10 @@ void GameController::lock(GameState& state) const {
                 value = 800;
                 awardedLines = 8;
                 if (state._backToBackBonus) {
+                    state._combos++;
                     value += value / 2;
                     awardedLines += linesCleared / 2;
                 }
-
                 state._backToBackBonus = true;
                 break;
             default: ;
@@ -472,9 +494,6 @@ void GameController::lock(GameState& state) const {
         state.queueSound(GameSound::Tetris);
     else if (linesCleared >= 1)
         state.queueSound(GameSound::LineClear);
-
-    state._stepState = GameStep::Idle;
-    state.markDirty();
 }
 
 void GameController::shuffle(GameState& state, size_t start) {

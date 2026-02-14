@@ -13,12 +13,14 @@ public:
 	explicit GameController(Timer& timer);
 	~GameController();
 
-	void start(GameState& state);
+	void start(GameState& state) const;
 	StepResult step(GameState& state);
 	void reset(GameState& state) const;
 
 private:
 	void lock(GameState& state) const;
+	static int clearLines(GameState& state);
+	static void awardScore(GameState& state, int linesCleared);
 	static void shuffle(GameState& state, size_t start);
 	static void popTetrimino(GameState& state);
 

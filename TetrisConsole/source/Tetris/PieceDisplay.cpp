@@ -3,13 +3,10 @@
 #include "PiecePreview.h"
 #include "Tetrimino.h"
 
-PieceDisplay::PieceDisplay(const std::string& title, const size_t size)
+PieceDisplay::PieceDisplay(const size_t size)
     : _size(size), _panel(12)
 {
     if (_size == 0) _size = 1;
-
-    _panel.addRow(title, Align::CENTER);
-    _panel.addSeparator();
 
     _panel.addRow("");
     _pieces.push_back(std::make_shared<PiecePreview>());
@@ -17,13 +14,12 @@ PieceDisplay::PieceDisplay(const std::string& title, const size_t size)
     _panel.addRow("");
 
     if (size > 1) {
-        _panel.addSeparator();
-        _panel.addRow("");
         for (size_t i = 1; i < _size; i++) {
             _pieces.push_back(std::make_shared<PiecePreview>());
             _panel.addElement(_pieces.back());
             _panel.addRow("");
         }
+        _panel.addRow("");
     }
 }
 

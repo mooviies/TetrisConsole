@@ -25,7 +25,6 @@ private:
 	void drawMuteIndicator();
 
 	ScoreDisplay _score;
-	HighScoreDisplay _highScore;
 	PieceDisplay _next;
 	PieceDisplay _hold;
 	PlayfieldDisplay _playfield;

@@ -72,3 +72,32 @@ void GameState::updateHighscore() {
 void GameState::setStartingLevel(int level) {
 	_startingLevel = std::clamp(level, 1, 15);
 }
+
+void GameState::startGameTimer() {
+	_gameElapsedAccum = 0;
+	_gameTimerStart = chrono::steady_clock::now();
+	_gameTimerRunning = true;
+}
+
+void GameState::pauseGameTimer() {
+	if (_gameTimerRunning) {
+		_gameElapsedAccum += chrono::duration<double>(
+			chrono::steady_clock::now() - _gameTimerStart).count();
+		_gameTimerRunning = false;
+	}
+}
+
+void GameState::resumeGameTimer() {
+	if (!_gameTimerRunning) {
+		_gameTimerStart = chrono::steady_clock::now();
+		_gameTimerRunning = true;
+	}
+}
+
+double GameState::gameElapsed() const {
+	double total = _gameElapsedAccum;
+	if (_gameTimerRunning)
+		total += chrono::duration<double>(
+			chrono::steady_clock::now() - _gameTimerStart).count();
+	return total;
+}

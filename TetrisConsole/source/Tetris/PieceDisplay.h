@@ -11,7 +11,7 @@ class PiecePreview;
 
 class PieceDisplay {
 public:
-	explicit PieceDisplay(const std::string& title, size_t size = 1);
+	explicit PieceDisplay(size_t size = 1);
 	~PieceDisplay();
 
 	void update(const std::vector<const Tetrimino*>& pieces) const;
