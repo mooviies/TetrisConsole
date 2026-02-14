@@ -99,6 +99,8 @@ int main() {
 
     bool wasTooSmall = false;
     while (!tetris.doExit()) {
+        const auto frameStart = chrono::steady_clock::now();
+
         Input::pollKeys();
         if (Platform::wasResized())
             tetris.redraw();
@@ -116,6 +118,11 @@ int main() {
         }
         tetris.step();
         tetris.render();
+
+        const auto elapsed = chrono::steady_clock::now() - frameStart;
+        if (const auto sleepTime = chrono::milliseconds(16) - elapsed;
+            sleepTime > chrono::milliseconds(0))
+            this_thread::sleep_for(sleepTime);
     }
 
     SoundEngine::cleanup();

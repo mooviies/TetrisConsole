@@ -54,6 +54,12 @@ void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     Platform::flushOutput();
 }
 
+void GameRenderer::renderTimer(const GameState& state) {
+    _score.updateTimer(state);
+    _score.render();
+    Platform::flushOutput();
+}
+
 void GameRenderer::renderTitle(const std::string& subtitle) {
     const int ox = Platform::offsetX();
     const int oy = Platform::offsetY();

@@ -11,7 +11,7 @@ ScoreDisplay::ScoreDisplay()
     _panel.addSeparator();
     _scoreValueRow = _panel.addRow("0000000000", Align::CENTER);
     _panel.addSeparator();
-    _timeValueRow = _panel.addRow("00:00:00", Align::CENTER);
+    _timeValueRow = _panel.addRow("00:00.00", Align::CENTER);
     _panel.addSeparator();
     _levelRow = _panel.addRow({Cell("Level", Align::LEFT, 17, 9),
                                 Cell("01", Align::CENTER)});
@@ -48,6 +48,10 @@ void ScoreDisplay::update(const GameState& state) {
     _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.tetris(), 6));
     _panel.setCell(_combosRow, 1, Utility::valueToString(state.combos(), 6));
     _panel.setCell(_tSpinsRow, 1, Utility::valueToString(state.tSpins(), 6));
+}
+
+void ScoreDisplay::updateTimer(const GameState& state) {
+    _panel.setCell(_timeValueRow, 0, Utility::timeToString(state.gameElapsed()));
 }
 
 void ScoreDisplay::setPosition(int x, int y) { _panel.setPosition(x, y); }

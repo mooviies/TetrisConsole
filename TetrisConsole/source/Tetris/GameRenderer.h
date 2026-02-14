@@ -18,6 +18,7 @@ public:
 
 	void invalidate();
 	void render(const GameState& state, bool playfieldVisible = true);
+	void renderTimer(const GameState& state);
 	static void renderTitle(const std::string& subtitle);
 
 private:

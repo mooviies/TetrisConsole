@@ -11,6 +11,7 @@ public:
 	ScoreDisplay();
 
 	void update(const GameState& state);
+	void updateTimer(const GameState& state);
 	void setPosition(int x, int y);
 	void invalidate();
 	void render();

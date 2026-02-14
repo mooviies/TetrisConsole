@@ -415,6 +415,7 @@ void Panel::clear() const {
 
 void Panel::setCell(size_t row, size_t col, const string& text) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
+        if (_rows[row].cells[col].text == text) return;
         _rows[row].cells[col].text = text;
         if (row < _dirtyRows.size())
             _dirtyRows[row] = true;
@@ -423,6 +424,7 @@ void Panel::setCell(size_t row, size_t col, const string& text) {
 
 void Panel::setCellColor(size_t row, size_t col, int color) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
+        if (_rows[row].cells[col].color == color) return;
         _rows[row].cells[col].color = color;
         if (row < _dirtyRows.size())
             _dirtyRows[row] = true;

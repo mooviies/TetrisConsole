@@ -12,9 +12,12 @@ string Utility::valueToString(int64_t value, int length){
 }
 
 string Utility::timeToString(double seconds) {
+	const int totalCentis = static_cast<int>(seconds * 100.0);
+	const int minutes = totalCentis / 6000;
+	const int secs = (totalCentis % 6000) / 100;
+	const int centis = totalCentis % 100;
 	ostringstream oss;
-	const int minutes = static_cast<int>(seconds / 60.0);
-	seconds -= minutes * 60.0;
-	oss << setfill('0') << setw(2) << minutes << ":" << setw(2) << static_cast<int>(seconds);
+	oss << setfill('0') << setw(2) << minutes << ":"
+	    << setw(2) << secs << "." << setw(2) << centis;
 	return oss.str();
 }

@@ -49,10 +49,12 @@ void Tetris::step() {
 }
 
 void Tetris::render() {
-    if (!_state.isDirty())
-        return;
-    _renderer.render(_state);
-    _state.clearDirty();
+    if (_state.isDirty()) {
+        _renderer.render(_state);
+        _state.clearDirty();
+    } else {
+        _renderer.renderTimer(_state);
+    }
 }
 
 void Tetris::redraw() {
