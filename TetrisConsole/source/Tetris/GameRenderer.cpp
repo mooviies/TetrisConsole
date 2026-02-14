@@ -6,10 +6,8 @@
 #include "Color.h"
 
 GameRenderer::GameRenderer()
-    : _next("Next"), _hold("Hold"), _nextQueuePanel(12), _muteIcon("♪")
+    : _next("Next"), _hold("Hold"), _muteIcon("♪")
 {
-    for (int i = 0; i < 12; i++)
-        _nextQueuePanel.addRow("");
 }
 
 GameRenderer::~GameRenderer() = default;
@@ -21,7 +19,6 @@ void GameRenderer::updatePositions() {
     _score.setPosition(5 + ox, 14 + oy);
     _playfield.setPosition(30 + ox, 6 + oy);
     _next.setPosition(59 + ox, 6 + oy);
-    _nextQueuePanel.setPosition(59 + ox, 14 + oy);
     _highScore.setPosition(5 + ox, 23 + oy);
     _hold.setPosition(7 + ox, 6 + oy);
     _muteIcon.setPosition(78 + ox, 2 + oy);
@@ -32,7 +29,6 @@ void GameRenderer::invalidate() {
     _score.invalidate();
     _playfield.invalidate();
     _next.invalidate();
-    _nextQueuePanel.invalidate();
     _highScore.invalidate();
     _hold.invalidate();
 }
@@ -55,7 +51,6 @@ void GameRenderer::render(GameState& state, const bool playfieldVisible) {
     _playfield.render();
     _highScore.render();
     _next.render();
-    _nextQueuePanel.render();
     _hold.render();
     Platform::flushOutput();
 }

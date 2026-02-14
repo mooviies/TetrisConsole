@@ -3,13 +3,15 @@
 #include <string>
 
 #include "Panel.h"
+#include "Tetrimino.h"
 
 class PiecePreview : public PanelElement {
 public:
     [[nodiscard]] int height() const override { return 2; }
     void drawRow(int rowIndex, RowDrawContext& ctx) const override;
 
-    void setPiece(const std::string& line1, const std::string& line2, int color);
+    void setPiece(const PiecePreview* piecePreview);
+    void setPiece(const Tetrimino* piece);
     void clearPiece();
 
 private:

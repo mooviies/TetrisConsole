@@ -27,6 +27,5 @@ private:
 	PieceDisplay _next;
 	PieceDisplay _hold;
 	PlayfieldDisplay _playfield;
-	Panel _nextQueuePanel;
 	Icon _muteIcon;
 };

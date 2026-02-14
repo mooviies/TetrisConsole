@@ -13,10 +13,28 @@ void PiecePreview::drawRow(int rowIndex, RowDrawContext& ctx) const {
     }
 }
 
-void PiecePreview::setPiece(const string& line1, const string& line2, int color) {
-    _line1 = line1;
-    _line2 = line2;
-    _color = color;
+void PiecePreview::setPiece(const PiecePreview* piecePreview) {
+    if (piecePreview == nullptr) {
+        clearPiece();
+        return;
+    }
+
+    _line1 = piecePreview->_line1;
+    _line2 = piecePreview->_line2;
+    _color = piecePreview->_color;
+    _hasPiece = true;
+    markDirty();
+}
+
+void PiecePreview::setPiece(const Tetrimino* piece) {
+    if (piece == nullptr) {
+        clearPiece();
+        return;
+    }
+
+    _line1 = piece->getPreviewLine1();
+    _line2 = piece->getPreviewLine2();
+    _color = piece->getColor();
     _hasPiece = true;
     markDirty();
 }
