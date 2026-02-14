@@ -3,7 +3,8 @@
 #include "GameState.h"
 #include "GameRenderer.h"
 #include "GameController.h"
-#include "Utility.h"
+
+class Menu;
 
 class Tetris
 {
@@ -11,16 +12,22 @@ public:
 	Tetris(Menu& pauseMenu, Menu& gameOverMenu);
 	~Tetris();
 
-	void start()  { _controller.start(_state); }
-	void step()   { _controller.step(_state); }
-	void redraw() { _renderer.invalidate(); Utility::showTitle("A classic in console!"); _renderer.render(_state); }
+	void start();
+	void step();
+	void render();
+	void redraw();
 	void exit()   { _state.setShouldExit(true); }
 	[[nodiscard]] bool doExit() const { return _state.shouldExit(); }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
 	void setMode(const MODE mode) { _state.setMode(mode); }
 
 private:
+	void handlePause();
+	void handleGameOver();
+
 	GameState _state;
 	GameRenderer _renderer;
 	GameController _controller;
+	Menu& _pauseMenu;
+	Menu& _gameOverMenu;
 };

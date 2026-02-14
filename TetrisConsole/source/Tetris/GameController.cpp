@@ -1,9 +1,7 @@
 #include "GameController.h"
 
 #include "GameState.h"
-#include "GameRenderer.h"
 #include "Timer.h"
-#include "Menu.h"
 #include "Constants.h"
 #include "Random.h"
 #include "Input.h"
@@ -22,8 +20,8 @@ using namespace std;
 #define LOCK_DOWN_SMALL_DELAY 0.2
 #define LOCK_DOWN_MOVE 15
 
-GameController::GameController(Timer& timer, Menu& pauseMenu, Menu& gameOverMenu, GameRenderer& renderer)
-    : _timer(timer), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu), _renderer(renderer) {}
+GameController::GameController(Timer& timer)
+    : _timer(timer) {}
 
 GameController::~GameController() = default;
 
@@ -32,12 +30,12 @@ void GameController::start(GameState& state) {
     state._isStarted = true;
 }
 
-void GameController::step(GameState& state) {
+StepResult GameController::step(GameState& state) {
     if (state._shouldExit)
-        return;
+        return StepResult::Continue;
 
     if (!state._isStarted)
-        return;
+        return StepResult::Continue;
 
     switch (state._stepState) {
         case GameStep::Idle:      stepIdle(state); break;
@@ -46,26 +44,11 @@ void GameController::step(GameState& state) {
         case GameStep::HardDrop:  stepHardDrop(state); break;
     }
 
-    if (Input::pause()) {
-        SoundEngine::pauseMusic();
-        _renderer.render(state, false);
-        if (const OptionChoice choices = _pauseMenu.open(false, true); choices.options[choices.selected] == "Restart") {
-            SoundEngine::stopMusic();
-            reset(state);
-            return;
-        }
-        _renderer.invalidate();
-        _renderer.render(state);
-        SoundEngine::unpauseMusic();
-    }
+    if (state._isGameOver)
+        return StepResult::GameOver;
 
-    {
-        static bool wasMutePressed = false;
-        bool mutePressed = Input::mute();
-        if (mutePressed && !wasMutePressed)
-            SoundEngine::cycleMute();
-        wasMutePressed = mutePressed;
-    }
+    if (Input::pause())
+        return StepResult::PauseRequested;
 
     if (!state._didRotate) {
         if (Input::rotateClockwise())
@@ -76,6 +59,8 @@ void GameController::step(GameState& state) {
         if (!Input::rotateClockwise() && !Input::rotateCounterClockwise())
             state._didRotate = false;
     }
+
+    return StepResult::Continue;
 }
 
 void GameController::fall(GameState& state) {
@@ -113,10 +98,13 @@ void GameController::fall(GameState& state) {
 
     if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY) {
         lock(state);
+        if (state._isGameOver) return;
     }
 
-    if ((state._mode == EXTENDED) && (state._nbMoveAfterLockDown >= LOCK_DOWN_MOVE))
+    if ((state._mode == EXTENDED) && (state._nbMoveAfterLockDown >= LOCK_DOWN_MOVE)) {
         lock(state);
+        if (state._isGameOver) return;
+    }
 
     if (Input::hardDrop() && !state._shouldIgnoreHardDrop) {
         SoundEngine::playSound("HARD_DROP");
@@ -131,14 +119,15 @@ void GameController::stepIdle(GameState& state) {
     if (state._currentTetrimino == nullptr) {
         popTetrimino(state);
         if (!state._currentTetrimino->setPosition(state._currentTetrimino->getStartingPosition())) {
-            gameOver(state);
+            state._isGameOver = true;
             return;
         }
         _timer.startTimer(FALL);
-        _renderer.render(state);
+        state.markDirty();
     }
 
     fall(state);
+    if (state._isGameOver) return;
 
     checkAutorepeat(state, Input::left(), AUTOREPEAT_LEFT, &GameController::moveLeft, GameStep::MoveLeft);
     checkAutorepeat(state, Input::right(), AUTOREPEAT_RIGHT, &GameController::moveRight, GameStep::MoveRight);
@@ -150,11 +139,11 @@ void GameController::stepIdle(GameState& state) {
         if (state._currentTetrimino != nullptr) {
             state._currentTetrimino->resetRotation();
             if (!state._currentTetrimino->setPosition(state._currentTetrimino->getStartingPosition())) {
-                gameOver(state);
+                state._isGameOver = true;
                 return;
             }
             _timer.startTimer(FALL);
-            _renderer.render(state);
+            state.markDirty();
         }
         state._isNewHold = true;
     }
@@ -167,6 +156,7 @@ void GameController::stepMoveLeft(GameState& state) {
     }
 
     fall(state);
+    if (state._isGameOver) return;
 
     if (!Input::left()) {
         state._stepState = GameStep::Idle;
@@ -186,6 +176,7 @@ void GameController::stepMoveRight(GameState& state) {
     }
 
     fall(state);
+    if (state._isGameOver) return;
 
     if (!Input::right()) {
         state._stepState = GameStep::Idle;
@@ -236,7 +227,7 @@ void GameController::moveLeft(GameState& state) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.render(state);
+        state.markDirty();
     }
 }
 
@@ -249,7 +240,7 @@ void GameController::moveRight(GameState& state) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.render(state);
+        state.markDirty();
     }
 }
 
@@ -260,7 +251,7 @@ bool GameController::moveDown(GameState& state) {
     if (state._currentTetrimino->move(Vector2i(1, 0))) {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
-        _renderer.render(state);
+        state.markDirty();
         return true;
     }
 
@@ -277,7 +268,7 @@ void GameController::rotate(GameState& state, const DIRECTION direction) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.render(state);
+        state.markDirty();
 
         if (state._currentTetrimino->canTSpin()) {
             if (state._currentTetrimino->checkTSpin()) {
@@ -320,6 +311,7 @@ void GameController::reset(GameState& state) {
     state._isInLockDown = false;
     state._isNewHold = false;
     state._hasBetterHighscore = false;
+    state._isGameOver = false;
 
     for (auto& row : state._matrix) row.fill(0);
 
@@ -337,15 +329,10 @@ void GameController::reset(GameState& state) {
     _timer.stopTimer(FALL);
     _timer.stopTimer(AUTOREPEAT_LEFT);
     _timer.stopTimer(AUTOREPEAT_RIGHT);
-
-    _renderer.invalidate();
-    _renderer.render(state);
-
-    SoundEngine::playMusic("A");
 }
 
 void GameController::lock(GameState& state) {
-    if (state._currentTetrimino == nullptr)
+    if (state._currentTetrimino == nullptr || state._isGameOver)
         return;
 
     if (state._currentTetrimino->simulateMove(Vector2i(1, 0))) {
@@ -358,7 +345,7 @@ void GameController::lock(GameState& state) {
     }
 
     if (!state._currentTetrimino->lock()) {
-        gameOver(state);
+        state._isGameOver = true;
         return;
     }
 
@@ -482,7 +469,7 @@ void GameController::lock(GameState& state) {
         SoundEngine::playSound("LINE_CLEAR");
 
     state._stepState = GameStep::Idle;
-    _renderer.render(state);
+    state.markDirty();
 }
 
 void GameController::shuffle(GameState& state) {
@@ -501,13 +488,4 @@ void GameController::popTetrimino(GameState& state) {
     if (state._bagIndex >= state._bag.size()) {
         shuffle(state);
     }
-}
-
-void GameController::gameOver(GameState& state) {
-    SoundEngine::stopMusic();
-
-    state.saveHighscore();
-
-    _gameOverMenu.open(state._hasBetterHighscore);
-    reset(state);
 }

@@ -16,7 +16,7 @@ public:
 	~GameRenderer();
 
 	void invalidate();
-	void render(GameState& state, bool playfieldVisible = true);
+	void render(const GameState& state, bool playfieldVisible = true);
 
 private:
 	void updatePositions();

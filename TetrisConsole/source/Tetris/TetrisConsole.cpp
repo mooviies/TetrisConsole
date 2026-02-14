@@ -102,6 +102,7 @@ int main() {
             continue;
         }
         tetris.step();
+        tetris.render();
         SoundEngine::update();
     }
 

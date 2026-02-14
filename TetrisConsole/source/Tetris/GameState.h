@@ -10,6 +10,7 @@
 #include "Tetrimino.h"
 
 enum class GameStep { Idle, MoveLeft, MoveRight, HardDrop };
+enum class StepResult { Continue, PauseRequested, GameOver };
 
 enum MODE {
 	EXTENDED,
@@ -42,6 +43,10 @@ public:
 	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
 	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
+
+	void markDirty() { _isDirty = true; }
+	[[nodiscard]] bool isDirty() const { return _isDirty; }
+	void clearDirty() { _isDirty = false; }
 
 	// Tetris Guideline gravity values for levels 1-15 (index 0 unused).
 	static constexpr std::array<double, 16> kSpeedNormal = {
@@ -83,6 +88,7 @@ private:
 	bool _isInLockDown{};
 	bool _isNewHold{};
 	bool _hasBetterHighscore{};
+	bool _isDirty{};
 
 	GameStep _stepState = GameStep::Idle;
 };

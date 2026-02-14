@@ -6,26 +6,23 @@
 #include "GameState.h"
 
 class Timer;
-class Menu;
-class GameRenderer;
 
 class GameController
 {
 public:
-	GameController(Timer& timer, Menu& pauseMenu, Menu& gameOverMenu, GameRenderer& renderer);
+	explicit GameController(Timer& timer);
 	~GameController();
 
 	void start(GameState& state);
-	void step(GameState& state);
+	StepResult step(GameState& state);
+	void reset(GameState& state);
 
 private:
-	void reset(GameState& state);
 	void lock(GameState& state);
 	void shuffle(GameState& state);
 	void popTetrimino(GameState& state);
-	void gameOver(GameState& state);
-	void fall(GameState& state);
 
+	void fall(GameState& state);
 	void stepIdle(GameState& state);
 	void stepMoveLeft(GameState& state);
 	void stepMoveRight(GameState& state);
@@ -42,7 +39,4 @@ private:
 	void checkAutorepeat(GameState& state, bool input, const std::string& timer, MoveFunc move, GameStep nextState);
 
 	Timer& _timer;
-	Menu& _pauseMenu;
-	Menu& _gameOverMenu;
-	GameRenderer& _renderer;
 };

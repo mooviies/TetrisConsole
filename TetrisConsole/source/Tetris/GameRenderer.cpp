@@ -33,9 +33,7 @@ void GameRenderer::invalidate() {
     _hold.invalidate();
 }
 
-void GameRenderer::render(GameState& state, const bool playfieldVisible) {
-    state.updateHighscore();
-
+void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _playfield.update(state, playfieldVisible);
     _next.update(state.peekTetrimino());
     _hold.update(state.holdTetrimino());
