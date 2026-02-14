@@ -40,6 +40,7 @@ struct HighScoreRecord {
 	int combos{};
 	int tSpins{};
 	double gameElapsed{}; // seconds
+	std::string name;
 };
 
 class GameState
@@ -56,6 +57,7 @@ public:
 	void setShouldExit(bool v) { _shouldExit = v; }
 	void setMode(MODE m) { _mode = m; }
 	void setStartingLevel(int level);
+	void setPlayerName(const std::string& n) { _playerName = n; }
 
 	[[nodiscard]] const GameMatrix& matrix() const { return _matrix; }
 	[[nodiscard]] const Tetrimino* currentTetrimino() const { return _currentTetrimino; }
@@ -146,6 +148,7 @@ private:
 	bool _hasBetterHighscore{};
 	bool _isDirty{};
 	bool _muteRequested{};
+	std::string _playerName;
 
 	std::vector<GameSound> _pendingSounds;
 	GameStep _stepState = GameStep::Idle;

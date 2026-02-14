@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Constants.h"
-#include "Panel.h"
 #include "Icon.h"
 #include "ScoreDisplay.h"
-#include "HighScoreDisplay.h"
 #include "PieceDisplay.h"
 #include "PlayfieldDisplay.h"
 

@@ -322,6 +322,7 @@ void GameController::reset(GameState& state) const {
     state._isNewHold = false;
     state._hasBetterHighscore = false;
     state._isGameOver = false;
+    state._playerName.clear();
 
     for (auto& row : state._matrix) row.fill(0);
 

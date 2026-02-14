@@ -27,11 +27,13 @@ public:
 	[[nodiscard]] int startingLevel() const { return _state.startingLevel(); }
 	[[nodiscard]] MODE mode() const { return _state.mode(); }
 	[[nodiscard]] const std::map<HighScoreKey, HighScoreRecord>& highscoreMap() const { return _state.highscoreMap(); }
+	void setPlayerName(const std::string& n) { _state.setPlayerName(n); }
 
 private:
 	void handlePause();
 	void handleGameOver();
 	void playPendingSounds();
+	std::string promptPlayerName();
 
 	GameState _state;
 	GameRenderer _renderer;

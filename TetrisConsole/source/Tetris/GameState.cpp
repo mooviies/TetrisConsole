@@ -11,8 +11,9 @@
 using namespace std;
 
 static constexpr uint32_t kMagic   = 0x53484354; // "TCHS" little-endian
-static constexpr uint32_t kVersion = 1;
-static constexpr size_t   kRecordSize = 52;
+static constexpr uint32_t kVersion = 2;
+static constexpr size_t   kRecordSize = 68;
+static constexpr size_t   kRecordSizeV1 = 52;
 
 #define SCORE_FILE (Platform::getDataDir() + "/score.bin")
 
@@ -47,15 +48,17 @@ void GameState::loadHighscore()
 	in.read(reinterpret_cast<char*>(&magic), 4);
 
 	if (magic == kMagic) {
-		// New binary format
+		// Binary format
 		uint32_t version = 0;
 		uint32_t count   = 0;
 		in.read(reinterpret_cast<char*>(&version), 4);
 		in.read(reinterpret_cast<char*>(&count), 4);
 
+		const size_t recSize = (version >= 2) ? kRecordSize : kRecordSizeV1;
+
 		for (uint32_t i = 0; i < count; i++) {
-			char buf[kRecordSize];
-			in.read(buf, static_cast<streamsize>(kRecordSize));
+			char buf[kRecordSize]{};
+			in.read(buf, static_cast<streamsize>(recSize));
 			if (!in) break;
 
 			HighScoreKey key{};
@@ -74,6 +77,12 @@ void GameState::loadHighscore()
 			memcpy(&tmp,           buf + 36, 4); rec.combos  = tmp;
 			memcpy(&tmp,           buf + 40, 4); rec.tSpins  = tmp;
 			memcpy(&rec.gameElapsed, buf + 44, 8);
+
+			if (version >= 2) {
+				char nameBuf[17]{};
+				memcpy(nameBuf, buf + 52, 16);
+				rec.name = nameBuf;
+			}
 
 			key.startingLevel = lvl;
 			key.mode          = static_cast<MODE>(md);
@@ -113,6 +122,7 @@ void GameState::saveHighscore() {
 		rec.combos      = _combos;
 		rec.tSpins      = _tSpins;
 		rec.gameElapsed = gameElapsed();
+		rec.name        = _playerName;
 	}
 
 	ofstream out(SCORE_FILE, ios::binary);
@@ -143,6 +153,10 @@ void GameState::saveHighscore() {
 		tmp = static_cast<int32_t>(rec.combos);  memcpy(buf + 36, &tmp, 4);
 		tmp = static_cast<int32_t>(rec.tSpins);  memcpy(buf + 40, &tmp, 4);
 		memcpy(buf + 44, &rec.gameElapsed, 8);
+
+		// Name field (16 bytes, null-padded; buf is zero-initialized)
+		memcpy(buf + 52, rec.name.c_str(),
+		       min(rec.name.size(), static_cast<size_t>(16)));
 
 		out.write(buf, static_cast<streamsize>(kRecordSize));
 	}

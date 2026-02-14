@@ -1,8 +1,12 @@
 #include "Tetris.h"
 
+#include <iostream>
+
 #include "Timer.h"
 #include "Menu.h"
+#include "Platform.h"
 #include "SoundEngine.h"
+#include "rlutil.h"
 
 Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu)
@@ -100,6 +104,8 @@ void Tetris::handlePause() {
 void Tetris::handleGameOver() {
     _state.pauseGameTimer();
     SoundEngine::stopMusic();
+    if (_state.hasBetterHighscore())
+        _state.setPlayerName(promptPlayerName());
     _state.saveHighscore();
 
     const OptionChoice choices = _gameOverMenu.open(_state.hasBetterHighscore());
@@ -128,4 +134,72 @@ void Tetris::playPendingSounds() {
         }
     }
     _state.clearPendingSounds();
+}
+
+std::string Tetris::promptPlayerName() {
+    constexpr int kMaxName = 10;
+    constexpr int kInterior = 20;
+
+    Panel panel(kInterior);
+    panel.addRow("NEW HIGH SCORE!", Align::CENTER);
+    panel.addSeparator();
+    panel.addRow("Enter your name:", Align::CENTER);
+    size_t nameRow = panel.addRow("__________", Align::CENTER);
+
+    constexpr int windowWidth = 80;
+    constexpr int windowHeight = 28;
+    int w = panel.width();
+    int h = panel.height();
+    int px = Platform::offsetX() + (windowWidth / 2) - (w / 2);
+    int py = Platform::offsetY() + (windowHeight / 2) - (h / 2);
+    panel.setPosition(px, py);
+
+    std::string name;
+    Platform::flushInput();
+
+    while (true) {
+        // Build display: typed chars + underscores for remaining slots
+        std::string display = name;
+        for (int i = static_cast<int>(name.size()); i < kMaxName; i++)
+            display += '_';
+        panel.setCell(nameRow, 0, display);
+
+        if (!Platform::isTerminalTooSmall()) {
+            panel.render();
+            std::cout << std::flush;
+        }
+
+        int key = Platform::getKey();
+
+        if (key == rlutil::KEY_ENTER) {
+            break;
+        } else if (key == rlutil::KEY_ESCAPE) {
+            name.clear();
+            break;
+        } else if (key == 8 || key == 127) {
+            // Backspace or DEL
+            if (!name.empty())
+                name.pop_back();
+        } else if (key >= 32 && key <= 126 && static_cast<int>(name.size()) < kMaxName) {
+            name += static_cast<char>(key);
+        }
+
+        if (Platform::wasResized()) {
+            if (!Platform::isTerminalTooSmall()) {
+                if (Menu::onResize)
+                    Menu::onResize();
+                px = Platform::offsetX() + (windowWidth / 2) - (w / 2);
+                py = Platform::offsetY() + (windowHeight / 2) - (h / 2);
+                panel.setPosition(px, py);
+                panel.invalidate();
+            }
+            continue;
+        }
+
+        if (Menu::shouldExitGame && Menu::shouldExitGame())
+            break;
+    }
+
+    panel.clear();
+    return name;
 }
