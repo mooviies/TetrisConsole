@@ -13,15 +13,15 @@ static PieceData buildI()
 	data.previewLine2 = "  ▀▀▀▀▀▀▀▀  ";
 	data.startingPosition = {19, 4};
 
-	auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {0,2}};
-	auto east  = vector<Vector2i>{{0,1}, {-1,1}, {1,1}, {2,1}};
-	auto south = vector<Vector2i>{{1,0}, {1,-1}, {1,1}, {1,2}};
-	auto west  = vector<Vector2i>{{-1,0}, {0,0}, {1,0}, {2,0}};
+	const auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {0,2}};
+	const auto east  = vector<Vector2i>{{0,1}, {-1,1}, {1,1}, {2,1}};
+	const auto south = vector<Vector2i>{{1,0}, {1,-1}, {1,1}, {1,2}};
+	const auto west  = vector<Vector2i>{{-1,0}, {0,0}, {1,0}, {2,0}};
 
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-2}), RotationPoint({0,2},{0,1}), RotationPoint({-2,-1},{1,-2}), RotationPoint({1,2},{-2,1}) }};
-	array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,2},{0,-1}), RotationPoint({0,-1},{0,2}), RotationPoint({-1,2},{-2,-1}), RotationPoint({2,-1},{1,2}) }};
-	array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,2}), RotationPoint({0,-2},{0,-1}), RotationPoint({2,1},{-1,2}), RotationPoint({-1,-2},{2,-1}) }};
-	array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-2},{0,1}), RotationPoint({0,1},{0,-2}), RotationPoint({1,-2},{2,1}), RotationPoint({-2,1},{-1,-2}) }};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-2}), RotationPoint({0,2},{0,1}), RotationPoint({-2,-1},{1,-2}), RotationPoint({1,2},{-2,1}) }};
+	const array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,2},{0,-1}), RotationPoint({0,-1},{0,2}), RotationPoint({-1,2},{-2,-1}), RotationPoint({2,-1},{1,2}) }};
+	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,2}), RotationPoint({0,-2},{0,-1}), RotationPoint({2,1},{-1,2}), RotationPoint({-1,-2},{2,-1}) }};
+	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-2},{0,1}), RotationPoint({0,1},{0,-2}), RotationPoint({1,-2},{2,1}), RotationPoint({-2,1},{-1,-2}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, east, rotE);
@@ -38,15 +38,15 @@ static PieceData buildJ()
 	data.previewLine1 = "   ██       ";
 	data.previewLine2 = "   ██████   ";
 
-	auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,-1}};
-	auto east  = vector<Vector2i>{{0,0}, {-1,0}, {1,0}, {-1,1}};
-	auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,1}};
-	auto west  = vector<Vector2i>{{0,0}, {1,0}, {-1,0}, {1,-1}};
+	const auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,-1}};
+	const auto east  = vector<Vector2i>{{0,0}, {-1,0}, {1,0}, {-1,1}};
+	const auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,1}};
+	const auto west  = vector<Vector2i>{{0,0}, {1,0}, {-1,0}, {1,-1}};
 
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
-	array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
-	array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
-	array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
+	const array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
+	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
+	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, east, rotE);
@@ -63,15 +63,15 @@ static PieceData buildL()
 	data.previewLine1 = "       ██   ";
 	data.previewLine2 = "   ██████   ";
 
-	auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,1}};
-	auto east  = vector<Vector2i>{{0,0}, {-1,0}, {1,0}, {1,1}};
-	auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,-1}};
-	auto west  = vector<Vector2i>{{0,0}, {1,0}, {-1,0}, {-1,-1}};
+	const auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,1}};
+	const auto east  = vector<Vector2i>{{0,0}, {-1,0}, {1,0}, {1,1}};
+	const auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,-1}};
+	const auto west  = vector<Vector2i>{{0,0}, {1,0}, {-1,0}, {-1,-1}};
 
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{5,-1}) }};
-	array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
-	array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
-	array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{5,-1}) }};
+	const array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
+	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
+	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, east, rotE);
@@ -88,8 +88,8 @@ static PieceData buildO()
 	data.previewLine1 = "    ████    ";
 	data.previewLine2 = "    ████    ";
 
-	auto north = vector<Vector2i>{{0,0}, {-1,0}, {-1,1}, {0,1}};
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}) }};
+	const auto north = vector<Vector2i>{{0,0}, {-1,0}, {-1,1}, {0,1}};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, north, rotN);
@@ -106,15 +106,15 @@ static PieceData buildS()
 	data.previewLine1 = "     ████   ";
 	data.previewLine2 = "   ████     ";
 
-	auto north = vector<Vector2i>{{0,0}, {0,-1}, {-1,0}, {-1,1}};
-	auto east  = vector<Vector2i>{{0,0}, {-1,0}, {0,1}, {1,1}};
-	auto south = vector<Vector2i>{{0,0}, {0,1}, {1,0}, {1,-1}};
-	auto west  = vector<Vector2i>{{0,0}, {1,0}, {0,-1}, {-1,-1}};
+	const auto north = vector<Vector2i>{{0,0}, {0,-1}, {-1,0}, {-1,1}};
+	const auto east  = vector<Vector2i>{{0,0}, {-1,0}, {0,1}, {1,1}};
+	const auto south = vector<Vector2i>{{0,0}, {0,1}, {1,0}, {1,-1}};
+	const auto west  = vector<Vector2i>{{0,0}, {1,0}, {0,-1}, {-1,-1}};
 
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
-	array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
-	array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
-	array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
+	const array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
+	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
+	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, east, rotE);
@@ -131,33 +131,33 @@ static PieceData buildT()
 	data.previewLine1 = "     ██     ";
 	data.previewLine2 = "   ██████   ";
 
-	auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,0}};
-	auto east  = vector<Vector2i>{{0,0}, {0,1}, {-1,0}, {1,0}};
-	auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,0}};
-	auto west  = vector<Vector2i>{{0,0}, {0,-1}, {-1,0}, {1,0}};
+	const auto north = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {-1,0}};
+	const auto east  = vector<Vector2i>{{0,0}, {0,1}, {-1,0}, {1,0}};
+	const auto south = vector<Vector2i>{{0,0}, {0,-1}, {0,1}, {1,0}};
+	const auto west  = vector<Vector2i>{{0,0}, {0,-1}, {-1,0}, {1,0}};
 
-	array<RotationPoint, 5> rotN = {{
+	const array<RotationPoint, 5> rotN = {{
 		RotationPoint({0,0},{0,0}),
 		RotationPoint({0,1},{0,-1}),
 		RotationPoint({-1,1},{-1,-1}),
 		RotationPoint(),
 		RotationPoint({2,1},{2,-1})
 	}};
-	array<RotationPoint, 5> rotE = {{
+	const array<RotationPoint, 5> rotE = {{
 		RotationPoint({0,0},{0,0}),
 		RotationPoint({0,1},{0,1}),
 		RotationPoint({1,1},{1,1}),
 		RotationPoint({-2,0},{-2,0}),
 		RotationPoint({-2,1},{-2,1})
 	}};
-	array<RotationPoint, 5> rotS = {{
+	const array<RotationPoint, 5> rotS = {{
 		RotationPoint({0,0},{0,0}),
 		RotationPoint({0,-1},{0,1}),
 		RotationPoint(),
 		RotationPoint({2,0},{2,0}),
 		RotationPoint({2,-1},{2,1})
 	}};
-	array<RotationPoint, 5> rotW = {{
+	const array<RotationPoint, 5> rotW = {{
 		RotationPoint({0,0},{0,0}),
 		RotationPoint({0,-1},{0,-1}),
 		RotationPoint({1,-1},{1,-1}),
@@ -186,15 +186,15 @@ static PieceData buildZ()
 	data.previewLine1 = "   ████     ";
 	data.previewLine2 = "     ████   ";
 
-	auto north = vector<Vector2i>{{0,0}, {0,1}, {-1,0}, {-1,-1}};
-	auto east  = vector<Vector2i>{{0,0}, {1,0}, {0,1}, {-1,1}};
-	auto south = vector<Vector2i>{{0,0}, {0,-1}, {1,0}, {1,1}};
-	auto west  = vector<Vector2i>{{0,0}, {-1,0}, {0,-1}, {1,-1}};
+	const auto north = vector<Vector2i>{{0,0}, {0,1}, {-1,0}, {-1,-1}};
+	const auto east  = vector<Vector2i>{{0,0}, {1,0}, {0,1}, {-1,1}};
+	const auto south = vector<Vector2i>{{0,0}, {0,-1}, {1,0}, {1,1}};
+	const auto west  = vector<Vector2i>{{0,0}, {-1,0}, {0,-1}, {1,-1}};
 
-	array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
-	array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
-	array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
-	array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
+	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,-1}), RotationPoint({-1,1},{-1,-1}), RotationPoint({2,0},{2,0}), RotationPoint({2,1},{2,-1}) }};
+	const array<RotationPoint, 5> rotE = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,1}), RotationPoint({1,1},{1,1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,1},{-2,1}) }};
+	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
+	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
 	data.facings[NORTH] = Facing(NORTH, north, rotN);
 	data.facings[EAST]  = Facing(EAST, east, rotE);

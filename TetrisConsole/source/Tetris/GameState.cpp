@@ -13,13 +13,15 @@ using namespace std;
 
 GameState::GameState()
 {
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::O, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::I, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::T, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::L, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::J, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::S, _matrix));
-	_bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
+	for (int batch = 0; batch < 2; batch++) {
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::O, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::I, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::T, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::L, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::J, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::S, _matrix));
+		_bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
+	}
 
 	_matrix.resize(TETRIS_HEIGHT);
 }
@@ -49,6 +51,15 @@ Tetrimino* GameState::peekTetrimino() const
 {
 	assert(_bagIndex < _bag.size());
 	return _bag[_bagIndex].get();
+}
+
+vector<const Tetrimino*> GameState::peekTetriminos(size_t count) const
+{
+	vector<const Tetrimino*> result;
+	result.reserve(count);
+	for (size_t i = 0; i < count && _bagIndex + i < _bag.size(); i++)
+		result.push_back(_bag[_bagIndex + i].get());
+	return result;
 }
 
 void GameState::updateHighscore() {

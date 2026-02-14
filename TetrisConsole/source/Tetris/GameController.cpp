@@ -74,7 +74,7 @@ StepResult GameController::step(GameState& state) {
     return result;
 }
 
-void GameController::fall(GameState& state) {
+void GameController::fall(GameState& state) const {
     if (state._currentTetrimino == nullptr)
         return;
 
@@ -112,7 +112,7 @@ void GameController::fall(GameState& state) {
         if (state._isGameOver) return;
     }
 
-    if ((state._mode == EXTENDED) && (state._nbMoveAfterLockDown >= LOCK_DOWN_MOVE)) {
+    if (state._mode == EXTENDED && state._nbMoveAfterLockDown >= LOCK_DOWN_MOVE) {
         lock(state);
         if (state._isGameOver) return;
     }
@@ -229,7 +229,7 @@ void GameController::smallResetLockDown(const GameState& state) const {
     }
 }
 
-void GameController::moveLeft(GameState& state) {
+void GameController::moveLeft(GameState& state) const {
     if (state._currentTetrimino == nullptr)
         return;
 
@@ -242,7 +242,7 @@ void GameController::moveLeft(GameState& state) {
     }
 }
 
-void GameController::moveRight(GameState& state) {
+void GameController::moveRight(GameState& state) const {
     if (state._currentTetrimino == nullptr)
         return;
 
@@ -256,9 +256,6 @@ void GameController::moveRight(GameState& state) {
 }
 
 bool GameController::moveDown(GameState& state) {
-    if (state._currentTetrimino == nullptr)
-        return false;
-
     if (state._currentTetrimino->move(Vector2i(1, 0))) {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
@@ -269,7 +266,7 @@ bool GameController::moveDown(GameState& state) {
     return false;
 }
 
-void GameController::rotate(GameState& state, const DIRECTION direction) {
+void GameController::rotate(GameState& state, const DIRECTION direction) const {
     if (state._currentTetrimino == nullptr)
         return;
 
@@ -329,7 +326,8 @@ void GameController::reset(GameState& state) {
     state._holdTetrimino = nullptr;
     state._currentTetrimino = nullptr;
     state._bagIndex = 0;
-    shuffle(state);
+    shuffle(state, 0);
+    shuffle(state, 7);
 
     state._stepState = GameStep::Idle;
     state._didRotate = false;
@@ -342,7 +340,7 @@ void GameController::reset(GameState& state) {
     _timer.stopTimer(AUTOREPEAT_RIGHT);
 }
 
-void GameController::lock(GameState& state) {
+void GameController::lock(GameState& state) const {
     if (state._currentTetrimino == nullptr || state._isGameOver)
         return;
 
@@ -483,20 +481,20 @@ void GameController::lock(GameState& state) {
     state.markDirty();
 }
 
-void GameController::shuffle(GameState& state) {
-    for (int i = static_cast<int>(state._bag.size()) - 1; i >= 0; i--) {
+void GameController::shuffle(GameState& state, size_t start) {
+    for (int i = 6; i >= 0; i--) {
         int j = Random::getInteger(0, i);
-        if (i == j)
-            continue;
-
-        state._bag[static_cast<size_t>(i)].swap(state._bag[static_cast<size_t>(j)]);
+        if (i != j)
+            state._bag[start + static_cast<size_t>(i)].swap(state._bag[start + static_cast<size_t>(j)]);
     }
-    state._bagIndex = 0;
 }
 
 void GameController::popTetrimino(GameState& state) {
     state._currentTetrimino = state._bag[state._bagIndex++].get();
-    if (state._bagIndex >= state._bag.size()) {
-        shuffle(state);
+    if (state._bagIndex >= 7) {
+        std::swap_ranges(state._bag.begin(), state._bag.begin() + 7,
+                         state._bag.begin() + 7);
+        shuffle(state, 7);
+        state._bagIndex = 0;
     }
 }

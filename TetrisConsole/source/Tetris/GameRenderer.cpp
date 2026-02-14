@@ -16,7 +16,7 @@ namespace Layout {
 }}
 
 GameRenderer::GameRenderer()
-    : _next("Next"), _hold("Hold"), _muteIcon("♪")
+    : _next("Next", NEXT_PIECE_QUEUE_SIZE), _hold("Hold"), _muteIcon("♪")
 {
 }
 
@@ -45,8 +45,8 @@ void GameRenderer::invalidate() {
 
 void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _playfield.update(state, playfieldVisible);
-    _next.update(state.peekTetrimino());
-    _hold.update(state.holdTetrimino());
+    _next.update(state.peekTetriminos(NEXT_PIECE_QUEUE_SIZE));
+    _hold.update({state.holdTetrimino()});
     _score.update(state);
     _highScore.update(state.highscore());
     drawMuteIndicator();

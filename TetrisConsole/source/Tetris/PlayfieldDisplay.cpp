@@ -28,7 +28,7 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
     if (_state == nullptr)
         return;
 
-    int line = MATRIX_START + rowIndex;
+    const int line = MATRIX_START + rowIndex;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;
         if (_state->currentTetrimino() != nullptr)
@@ -64,7 +64,7 @@ PlayfieldDisplay::PlayfieldDisplay()
 
 PlayfieldDisplay::~PlayfieldDisplay() = default;
 
-void PlayfieldDisplay::update(const GameState& state, bool visible) {
+void PlayfieldDisplay::update(const GameState& state, const bool visible) const {
     _element->update(state, visible);
 }
 

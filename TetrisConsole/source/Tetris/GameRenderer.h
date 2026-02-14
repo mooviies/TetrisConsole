@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Constants.h"
 #include "Panel.h"
 #include "Icon.h"
 #include "ScoreDisplay.h"

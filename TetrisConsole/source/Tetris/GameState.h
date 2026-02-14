@@ -28,6 +28,7 @@ public:
 	void loadHighscore();
 	void saveHighscore() const;
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
+	[[nodiscard]] std::vector<const Tetrimino*> peekTetriminos(size_t count) const;
 
 	void setShouldExit(bool v) { _shouldExit = v; }
 	void setMode(MODE m) { _mode = m; }
@@ -71,6 +72,8 @@ private:
 	GameMatrix _matrix;
 
 	MODE _mode = EXTENDED;
+	size_t _previewSize = 1;
+
 	int _startingLevel = 1;
 	int _level{};
 	int _lines{};

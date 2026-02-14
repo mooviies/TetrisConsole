@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "Panel.h"
 
@@ -13,7 +14,7 @@ public:
 	explicit PieceDisplay(const std::string& title, size_t size = 1);
 	~PieceDisplay();
 
-	void update(const Tetrimino* piece) const;
+	void update(const std::vector<const Tetrimino*>& pieces) const;
 	void setPosition(int x, int y);
 	void invalidate();
 	void render();

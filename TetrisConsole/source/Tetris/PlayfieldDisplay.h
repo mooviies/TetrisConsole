@@ -12,7 +12,7 @@ public:
 	PlayfieldDisplay();
 	~PlayfieldDisplay();
 
-	void update(const GameState& state, bool visible = true);
+	void update(const GameState& state, bool visible = true) const;
 	void setPosition(int x, int y);
 	void invalidate();
 	void render();
