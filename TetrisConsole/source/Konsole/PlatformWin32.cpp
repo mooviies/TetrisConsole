@@ -63,6 +63,9 @@ int Platform::getKey()
 	return rlutil::getkey();
 }
 
+// Intentional no-ops: Windows console window is fixed-size, so resize
+// handling and offset computation are not needed.
+
 bool Platform::wasResized()
 {
 	return false;

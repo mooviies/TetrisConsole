@@ -67,7 +67,7 @@ private:
         int elementRowIndex = 0;
     };
 
-    void ensureWidth();
+    void ensureWidth() const;
     std::vector<int> computeColumnWidths(const std::vector<Cell>& cells) const;
     std::string renderTextRow(const RowData& row) const;
     std::string renderSeparator(size_t rowIndex) const;
@@ -79,7 +79,7 @@ private:
     std::vector<RowData> _rows;
     std::vector<bool> _dirtyRows;
     bool _needsFullDraw = true;
-    int _interiorWidth;
+    mutable int _interiorWidth;
     mutable bool _widthComputed;
     int _x = 0;
     int _y = 0;

@@ -1,21 +1,40 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "SoundEngine.h"
+#include "miniaudio.h"
 #include "media_data.h"
 #include <cstring>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
 
 using namespace std;
 
-ma_engine SoundEngine::_engine;
-map<string, ma_sound*> SoundEngine::_sounds;
-ma_sound* SoundEngine::_musicPlaying = nullptr;
-string SoundEngine::_musicPlayingName;
+// --- RAII wrapper for ma_sound pointers ---
 
-float SoundEngine::_musicVolume = 0.1f;
-float SoundEngine::_effectVolume = 0.5f;
+struct MaSoundDeleter {
+	void operator()(ma_sound* s) const {
+		if (s) {
+			ma_sound_uninit(s);
+			delete s;
+		}
+	}
+};
+using MaSoundPtr = unique_ptr<ma_sound, MaSoundDeleter>;
 
-MuteState SoundEngine::_muteState = MuteState::UNMUTED;
-float SoundEngine::_savedMusicVolume = 0.1f;
-float SoundEngine::_savedEffectVolume = 0.5f;
+// --- File-scope state (replaces former private static members) ---
+
+static ma_engine s_engine;
+static map<string, MaSoundPtr> s_sounds;
+static ma_sound* s_musicPlaying = nullptr;  // non-owning; points into s_sounds
+static string s_musicPlayingName;
+
+static float s_musicVolume = 0.1f;
+static float s_effectVolume = 0.5f;
+
+static MuteState s_muteState = MuteState::UNMUTED;
+static float s_savedMusicVolume = 0.1f;
+static float s_savedEffectVolume = 0.5f;
 
 // --- Embedded VFS for serving media from compiled-in data ---
 
@@ -121,33 +140,33 @@ static ma_resource_manager g_resourceManager;
 
 // --- End Embedded VFS ---
 
-static ma_sound* createStreamSound(ma_engine* engine, const char* file, bool looping)
+static MaSoundPtr createStreamSound(ma_engine* engine, const char* file, bool looping)
 {
-	const auto sound = new ma_sound();
-	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, sound); result != MA_SUCCESS)
+	auto* raw = new ma_sound();
+	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, raw); result != MA_SUCCESS)
 	{
-		printf("miniaudio error loading %s (%d)\n", file, result);
-		delete sound;
+		cerr << "miniaudio error loading " << file << " (" << result << ")" << endl;
+		delete raw;
 		return nullptr;
 	}
 	if (looping)
-		ma_sound_set_looping(sound, MA_TRUE);
-	return sound;
+		ma_sound_set_looping(raw, MA_TRUE);
+	return MaSoundPtr(raw);
 }
 
-static ma_sound* createEffectSound(ma_engine* engine, const char* file)
+static MaSoundPtr createEffectSound(ma_engine* engine, const char* file)
 {
-	const auto sound = new ma_sound();
-	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_DECODE, nullptr, nullptr, sound); result != MA_SUCCESS)
+	auto* raw = new ma_sound();
+	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_DECODE, nullptr, nullptr, raw); result != MA_SUCCESS)
 	{
-		printf("miniaudio error loading %s (%d)\n", file, result);
-		delete sound;
+		cerr << "miniaudio error loading " << file << " (" << result << ")" << endl;
+		delete raw;
 		return nullptr;
 	}
-	return sound;
+	return MaSoundPtr(raw);
 }
 
-void SoundEngine::init()
+bool SoundEngine::init()
 {
 	g_embeddedVFS.cb.onOpen  = embeddedVFS_onOpen;
 	g_embeddedVFS.cb.onOpenW = embeddedVFS_onOpenW;
@@ -163,162 +182,154 @@ void SoundEngine::init()
 	rmConfig.pVFS = static_cast<ma_vfs *>(&g_embeddedVFS);
 
 	ma_result result = ma_resource_manager_init(&rmConfig, &g_resourceManager);
-	checkError(result, "resource manager init");
+	if (result != MA_SUCCESS) {
+		cerr << "miniaudio error: resource manager init (" << result << ")" << endl;
+		return false;
+	}
 
 	config.pResourceManager = &g_resourceManager;
-	result = ma_engine_init(&config, &_engine);
-	checkError(result, "engine init");
+	result = ma_engine_init(&config, &s_engine);
+	if (result != MA_SUCCESS) {
+		cerr << "miniaudio error: engine init (" << result << ")" << endl;
+		ma_resource_manager_uninit(&g_resourceManager);
+		return false;
+	}
 
 	// Music streams
-	_sounds["A"] = createStreamSound(&_engine, "media/A.mp3", false);
-	_sounds["B"] = createStreamSound(&_engine, "media/B.mp3", false);
-	_sounds["C"] = createStreamSound(&_engine, "media/C.mp3", false);
-	_sounds["TITLE"] = createStreamSound(&_engine, "media/title.mp3", true);
-	_sounds["SCORE"] = createStreamSound(&_engine, "media/score.mp3", true);
+	s_sounds["A"] = createStreamSound(&s_engine, "media/A.mp3", false);
+	s_sounds["B"] = createStreamSound(&s_engine, "media/B.mp3", false);
+	s_sounds["C"] = createStreamSound(&s_engine, "media/C.mp3", false);
+	s_sounds["TITLE"] = createStreamSound(&s_engine, "media/title.mp3", true);
+	s_sounds["SCORE"] = createStreamSound(&s_engine, "media/score.mp3", true);
 
 	// Sound effects
-	_sounds["LOCK"] = createEffectSound(&_engine, "media/lock.wav");
-	_sounds["HARD_DROP"] = createEffectSound(&_engine, "media/harddrop.wav");
-	_sounds["CLICK"] = createEffectSound(&_engine, "media/click.wav");
-	_sounds["LINE_CLEAR"] = createEffectSound(&_engine, "media/lineclear.wav");
-	_sounds["TETRIS"] = createEffectSound(&_engine, "media/tetris.wav");
+	s_sounds["LOCK"] = createEffectSound(&s_engine, "media/lock.wav");
+	s_sounds["HARD_DROP"] = createEffectSound(&s_engine, "media/harddrop.wav");
+	s_sounds["CLICK"] = createEffectSound(&s_engine, "media/click.wav");
+	s_sounds["LINE_CLEAR"] = createEffectSound(&s_engine, "media/lineclear.wav");
+	s_sounds["TETRIS"] = createEffectSound(&s_engine, "media/tetris.wav");
+
+	return true;
+}
+
+void SoundEngine::cleanup()
+{
+	s_musicPlaying = nullptr;
+	s_sounds.clear();
+	ma_engine_uninit(&s_engine);
+	ma_resource_manager_uninit(&g_resourceManager);
 }
 
 void SoundEngine::playMusic(const string& name)
 {
-	auto it = _sounds.find(name);
-	if (it == _sounds.end() || it->second == nullptr)
+	auto it = s_sounds.find(name);
+	if (it == s_sounds.end() || it->second == nullptr)
 		return;
-	ma_sound* sound = it->second;
+	ma_sound* sound = it->second.get();
 
 	// Stop current music
-	if (_musicPlaying != nullptr)
-		ma_sound_stop(_musicPlaying);
+	if (s_musicPlaying != nullptr)
+		ma_sound_stop(s_musicPlaying);
 
-	_musicPlayingName = name;
-	_musicPlaying = sound;
+	s_musicPlayingName = name;
+	s_musicPlaying = sound;
 
 	ma_sound_seek_to_pcm_frame(sound, 0);
-	ma_sound_set_volume(sound, _musicVolume);
+	ma_sound_set_volume(sound, s_musicVolume);
 	ma_sound_start(sound);
 }
 
 void SoundEngine::playSound(const string& name)
 {
-	if (_muteState == MuteState::ALL_MUTED)
+	if (s_muteState == MuteState::ALL_MUTED)
 		return;
 
-	auto it = _sounds.find(name);
-	if (it == _sounds.end() || it->second == nullptr)
+	auto it = s_sounds.find(name);
+	if (it == s_sounds.end() || it->second == nullptr)
 		return;
-	ma_sound* sound = it->second;
+	ma_sound* sound = it->second.get();
 
 	ma_sound_seek_to_pcm_frame(sound, 0);
-	ma_sound_set_volume(sound, _effectVolume);
+	ma_sound_set_volume(sound, s_effectVolume);
 	ma_sound_start(sound);
 }
 
 void SoundEngine::stopMusic()
 {
-	if (_musicPlaying != nullptr)
+	if (s_musicPlaying != nullptr)
 	{
-		ma_sound_stop(_musicPlaying);
-		_musicPlaying = nullptr;
-		_musicPlayingName = "";
+		ma_sound_stop(s_musicPlaying);
+		s_musicPlaying = nullptr;
+		s_musicPlayingName = "";
 	}
 }
 
 void SoundEngine::pauseMusic()
 {
-	if (_musicPlaying != nullptr)
-		ma_sound_stop(_musicPlaying);
+	if (s_musicPlaying != nullptr)
+		ma_sound_stop(s_musicPlaying);
 }
 
 void SoundEngine::unpauseMusic()
 {
-	if (_musicPlaying != nullptr)
-		ma_sound_start(_musicPlaying);
+	if (s_musicPlaying != nullptr)
+		ma_sound_start(s_musicPlaying);
 }
 
 float SoundEngine::getMusicVolume()
 {
-	return _musicVolume;
+	return s_musicVolume;
 }
 
 void SoundEngine::setMusicVolume(const float volume)
 {
-	_musicVolume = volume;
-	if (_musicPlaying != nullptr)
-		ma_sound_set_volume(_musicPlaying, volume);
+	s_musicVolume = volume;
+	if (s_musicPlaying != nullptr)
+		ma_sound_set_volume(s_musicPlaying, volume);
 }
 
 float SoundEngine::getEffectVolume()
 {
-	return _effectVolume;
+	return s_effectVolume;
 }
 
 void SoundEngine::setEffectVolume(const float volume)
 {
-	_effectVolume = volume;
+	s_effectVolume = volume;
 }
 
 bool SoundEngine::musicEnded()
 {
-	return _musicPlaying != nullptr && ma_sound_at_end(_musicPlaying);
+	return s_musicPlaying != nullptr && ma_sound_at_end(s_musicPlaying);
 }
 
 const string& SoundEngine::currentMusicName()
 {
-	return _musicPlayingName;
+	return s_musicPlayingName;
 }
 
 void SoundEngine::cycleMute()
 {
-	switch (_muteState) {
+	switch (s_muteState) {
 		case MuteState::UNMUTED:
-			_savedMusicVolume = _musicVolume;
+			s_savedMusicVolume = s_musicVolume;
 			setMusicVolume(0.0f);
-			_muteState = MuteState::MUSIC_MUTED;
+			s_muteState = MuteState::MUSIC_MUTED;
 			break;
 		case MuteState::MUSIC_MUTED:
-			_savedEffectVolume = _effectVolume;
-			_effectVolume = 0.0f;
-			_muteState = MuteState::ALL_MUTED;
+			s_savedEffectVolume = s_effectVolume;
+			s_effectVolume = 0.0f;
+			s_muteState = MuteState::ALL_MUTED;
 			break;
 		case MuteState::ALL_MUTED:
-			setMusicVolume(_savedMusicVolume);
-			_effectVolume = _savedEffectVolume;
-			_muteState = MuteState::UNMUTED;
+			setMusicVolume(s_savedMusicVolume);
+			s_effectVolume = s_savedEffectVolume;
+			s_muteState = MuteState::UNMUTED;
 			break;
 	}
 }
 
 MuteState SoundEngine::getMuteState()
 {
-	return _muteState;
-}
-
-SoundEngine::SoundEngine() = default;
-
-SoundEngine::~SoundEngine()
-{
-	for (auto&[fst, snd] : _sounds)
-	{
-		if (snd != nullptr)
-		{
-			ma_sound_uninit(snd);
-			delete snd;
-		}
-	}
-	ma_engine_uninit(&_engine);
-	ma_resource_manager_uninit(&g_resourceManager);
-}
-
-void SoundEngine::checkError(const ma_result result, const char* description)
-{
-	if (result != MA_SUCCESS)
-	{
-		printf("miniaudio error: %s (%d)\n", description, result);
-		exit(-1);
-	}
+	return s_muteState;
 }

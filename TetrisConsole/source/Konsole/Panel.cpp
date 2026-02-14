@@ -49,7 +49,7 @@ size_t Panel::addElement(shared_ptr<PanelElement> element) {
     return firstRow;
 }
 
-void Panel::ensureWidth() {
+void Panel::ensureWidth() const {
     if (_widthComputed)
         return;
 
@@ -446,7 +446,7 @@ void Panel::setCellColor(size_t row, size_t col, int color) {
 }
 
 int Panel::width() const {
-    const_cast<Panel*>(this)->ensureWidth();
+    ensureWidth();
     return _interiorWidth + 2;
 }
 

@@ -81,8 +81,8 @@ private:
 	int _lowestLine{};
 
 	unsigned int _bagIndex{};
-	Tetrimino* _currentTetrimino{};
-	Tetrimino* _holdTetrimino{};
+	Tetrimino* _currentTetrimino{};  // non-owning; points into _bag
+	Tetrimino* _holdTetrimino{};     // non-owning; points into _bag
 	std::vector<std::unique_ptr<Tetrimino>> _bag;
 
 	bool _isStarted{};

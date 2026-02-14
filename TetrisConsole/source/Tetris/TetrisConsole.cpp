@@ -17,7 +17,11 @@ int main() {
     Platform::initConsole();
     Input::init();
 
-    SoundEngine::init();
+    if (!SoundEngine::init()) {
+        Input::cleanup();
+        Platform::cleanupConsole();
+        return 1;
+    }
 
     while (Platform::isTerminalTooSmall()) {
         Platform::showResizePrompt();
@@ -39,7 +43,6 @@ int main() {
     Menu options("SETTINGS");
     Menu newGame("NEW GAME");
     Menu pause("PAUSE");
-    Menu help("HELP");
     Menu quit("Are you sure?");
     Menu gameOver("GAME OVER", "New High Score!");
 
@@ -49,8 +52,6 @@ int main() {
     Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };
 
     main.addOption("New Game", &newGame);
-    //main.addOption("Settings", &options);
-    //main.addOption("Help", &help);
     main.addOption("Exit", &quit);
 
     newGame.addOptionCloseAllMenu("Start", [&tetris](OptionChoice oc) {
@@ -64,8 +65,6 @@ int main() {
     });
     newGame.addOptionWithValues("Level", levels);
     newGame.addOptionWithValues("Mode", modes);
-
-    //help.addOptionClose("Back");
 
     options.addOptionWithValues("Level", levels);
     options.addOptionWithValues("Mode", modes);
@@ -106,6 +105,7 @@ int main() {
         tetris.render();
     }
 
+    SoundEngine::cleanup();
     Input::cleanup();
     Platform::cleanupConsole();
 

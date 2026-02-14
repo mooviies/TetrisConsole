@@ -31,15 +31,6 @@ void Menu::addOption(const string &name, std::function<void(OptionChoice)> callb
     _callbacks[name] = std::move(callback);
 }
 
-void Menu::addOptionArrow(const string& name, std::function<void(OptionChoice)> leftCallback, std::function<void(OptionChoice)> rightCallback) {
-    addOption(name);
-
-    ArrowOption arrowOption;
-    arrowOption.left = std::move(leftCallback);
-    arrowOption.right = std::move(rightCallback);
-    _arrowOptions[name] = std::move(arrowOption);
-}
-
 void Menu::addOptionClose(const string& name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeOptions.insert(name);
@@ -222,12 +213,7 @@ void Menu::select(int choice) {
 }
 
 void Menu::switchOptions(const int choice, const int key) {
-    if (const string name = _options[choice]; _arrowOptions.find(name) != _arrowOptions.end()) {
-        if (key == rlutil::KEY_LEFT)
-            _arrowOptions[name].left(OptionChoice(_choice, _options, generateValues()));
-        else if (key == rlutil::KEY_RIGHT)
-            _arrowOptions[name].right(OptionChoice(_choice, _options, generateValues()));
-    } else if (_optionsValues.find(name) != _optionsValues.end()) {
+    if (const string name = _options[choice]; _optionsValues.find(name) != _optionsValues.end()) {
         int valueChoice = _optionsValuesChoices[name];
         if (key == rlutil::KEY_LEFT) {
             valueChoice--;

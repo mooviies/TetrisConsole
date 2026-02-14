@@ -5,6 +5,16 @@
 #include "SoundEngine.h"
 #include "Color.h"
 
+namespace {
+namespace Layout {
+    constexpr int kScoreX = 5,      kScoreY = 14;
+    constexpr int kPlayfieldX = 30, kPlayfieldY = 6;
+    constexpr int kNextX = 59,      kNextY = 6;
+    constexpr int kHighScoreX = 5,  kHighScoreY = 23;
+    constexpr int kHoldX = 7,       kHoldY = 6;
+    constexpr int kMuteX = 78,      kMuteY = 2;
+}}
+
 GameRenderer::GameRenderer()
     : _next("Next"), _hold("Hold"), _muteIcon("♪")
 {
@@ -16,12 +26,12 @@ void GameRenderer::updatePositions() {
     const int ox = Platform::offsetX();
     const int oy = Platform::offsetY();
 
-    _score.setPosition(5 + ox, 14 + oy);
-    _playfield.setPosition(30 + ox, 6 + oy);
-    _next.setPosition(59 + ox, 6 + oy);
-    _highScore.setPosition(5 + ox, 23 + oy);
-    _hold.setPosition(7 + ox, 6 + oy);
-    _muteIcon.setPosition(78 + ox, 2 + oy);
+    _score.setPosition(Layout::kScoreX + ox, Layout::kScoreY + oy);
+    _playfield.setPosition(Layout::kPlayfieldX + ox, Layout::kPlayfieldY + oy);
+    _next.setPosition(Layout::kNextX + ox, Layout::kNextY + oy);
+    _highScore.setPosition(Layout::kHighScoreX + ox, Layout::kHighScoreY + oy);
+    _hold.setPosition(Layout::kHoldX + ox, Layout::kHoldY + oy);
+    _muteIcon.setPosition(Layout::kMuteX + ox, Layout::kMuteY + oy);
 }
 
 void GameRenderer::invalidate() {

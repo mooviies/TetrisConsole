@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+// Empty stubs: Windows uses direct GetKeyState() polling in each
+// key query method, so no init/cleanup/polling infrastructure is needed.
+
 void Input::init()
 {
 }

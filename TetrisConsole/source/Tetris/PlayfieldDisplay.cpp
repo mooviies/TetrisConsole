@@ -14,7 +14,7 @@ public:
     void update(const GameState& state, bool visible);
 
 private:
-    const GameState* _state = nullptr;
+    const GameState* _state = nullptr;  // non-owning; lifetime guaranteed by game loop
     bool _visible = true;
 };
 

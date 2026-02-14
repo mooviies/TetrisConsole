@@ -25,12 +25,6 @@ struct OptionChoice
 	std::map<std::string, std::string> values;
 };
 
-struct ArrowOption
-{
-	std::function<void(OptionChoice)> left;
-	std::function<void(OptionChoice)> right;
-};
-
 class Menu
 {
 public:
@@ -39,11 +33,11 @@ public:
 
 	void addOption(const std::string& name, Menu* menu);
 	void addOption(const std::string& name, std::function<void(OptionChoice)> callback);
-	void addOptionArrow(const std::string& name, std::function<void(OptionChoice)> leftCallback, std::function<void(OptionChoice)> rightCallback);
 	void addOptionClose(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionCloseAllMenu(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
 
+	// Global DI hooks, set once at startup before any menu is opened.
 	static std::function<bool()> shouldExitGame;
 	static std::function<void()> onResize;
 
@@ -68,7 +62,6 @@ private:
 	std::vector<std::string> _options;
 	std::map<std::string, Menu*> _menus;
 	std::map<std::string, std::function<void(OptionChoice)>> _callbacks;
-	std::map<std::string, ArrowOption> _arrowOptions;
 	std::map<std::string, std::vector<std::string>> _optionsValues;
 	std::map<std::string, int> _optionsValuesChoices;
 	std::set<std::string> _closeOptions;
