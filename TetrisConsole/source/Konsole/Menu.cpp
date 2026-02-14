@@ -1,6 +1,7 @@
 #include "Menu.h"
 
-#include <sstream>
+#include <iostream>
+#include <algorithm>
 #include <utility>
 
 #include "rlutil.h"
@@ -131,112 +132,35 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
 }
 
 void Menu::generate() {
-    _dialog.clear();
-
     size_t middleWidth = _longestOption + 4;
-    if (_title.length() + 2 > middleWidth) {
-        middleWidth = _title.length() + 2;
-    }
+    middleWidth = max(middleWidth, _title.length() + 2);
+    if (_showSubtitle)
+        middleWidth = max(middleWidth, _subtitle.length() + 2);
+    middleWidth = max(middleWidth, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
 
-    if (_subtitle.length() + 2 > middleWidth) {
-        middleWidth = _subtitle.length() + 2;
-    }
+    _panel = Panel(static_cast<int>(middleWidth));
 
-    if (MINIMUM_INTERIOR_WIDTH > middleWidth)
-        middleWidth = MINIMUM_INTERIOR_WIDTH;
-
-    const int width = static_cast<int>(middleWidth) + 2;
-
-    _clearLine.clear();
-    for (int i = 0; i < width; i++)
-        _clearLine.append(" ");
-
-    _dialog.push_back(generateBar("╔", "═", "╗", middleWidth));
-    _dialog.push_back(generateNameCenter(_title, width));
-
+    _panel.addRow(_title, Align::CENTER);
     if (_showSubtitle) {
-        _dialog.push_back(generateBar("╠", "═", "╣", middleWidth));
-        _dialog.push_back(generateNameCenter(_subtitle, width));
+        _panel.addSeparator();
+        _panel.addRow(_subtitle, Align::CENTER);
+    }
+    _panel.addSeparator();
+
+    _optionRows.clear();
+    for (const auto& option : _options) {
+        _optionRows.push_back(_panel.addRow("  " + option, Align::LEFT));
     }
 
-    _dialog.push_back(generateBar("╠", "═", "╣", middleWidth));
-
-    for (const auto & _option : _options) {
-        _dialog.push_back(generateOption(_option, width));
-    }
-
-    _dialog.push_back(generateBar("╚", "═", "╝", middleWidth));
+    _width = _panel.width();
+    _height = _panel.height();
 
     constexpr int windowWidth = 80;
     constexpr int windowHeight = 28;
-
-    _width = width;
-    _height = static_cast<int>(_dialog.size());
     _x = Platform::offsetX() + (windowWidth / 2) - (_width / 2);
     _y = Platform::offsetY() + (windowHeight / 2) - (_height / 2);
     _choice = 0;
     _close = false;
-}
-
-string Menu::generateOption(const string& name, const int width) {
-    const int interiorWidth = width - 2;
-    std::ostringstream builder;
-    builder << "║";
-    for (int i = 0; i < 3; i++) {
-        builder <<  " ";
-    }
-    builder << name;
-
-    int nbSpaceEnd = interiorWidth - static_cast<int>(name.length()) - 3;
-
-    if (_optionsValues.find(name) != _optionsValues.end()) {
-        const int nbSpaceBeforeSub = static_cast<int>(_longestOptionWithChoice) - static_cast<int>(name.length());
-        for (int i = 0; i < nbSpaceBeforeSub; i++)
-            builder << " ";
-
-        builder << " : ";
-
-        _optionsValuesChoicesX[name] = 1 + 3 + static_cast<int>(name.length()) + nbSpaceBeforeSub + 3;
-
-        nbSpaceEnd -= nbSpaceBeforeSub + 3;
-    }
-
-    for (int i = 0; i < nbSpaceEnd; i++) {
-        builder << " ";
-    }
-    builder << "║";
-
-    return builder.str();
-}
-
-string Menu::generateNameCenter(const string& name, const int width) {
-    const int interiorWidth = width - 2;
-    std::ostringstream builder;
-    builder << "║";
-
-    const int nbSpaceBegin = interiorWidth / 2 - static_cast<int>(name.length() / 2);
-    const int nbSpaceEnd = interiorWidth - (nbSpaceBegin + static_cast<int>(name.length()));
-
-    for (int i = 0; i < nbSpaceBegin; i++)
-        builder << " ";
-
-    builder << name;
-
-    for (int i = 0; i < nbSpaceEnd; i++)
-        builder << " ";
-
-    builder << "║";
-
-    return builder.str();
-}
-
-string Menu::generateBar(const char *start, const char *middle, const char *end, size_t nbMiddle) {
-    string result = start;
-    for (size_t i = 0; i < nbMiddle; i++) {
-        result.append(middle);
-    }
-    result.append(end);
-    return result;
 }
 
 map<string, string> Menu::generateValues() {
@@ -250,56 +174,33 @@ map<string, string> Menu::generateValues() {
 }
 
 void Menu::draw() {
-    rlutil::setColor(rlutil::WHITE);
-    for (size_t i = 0; i < _dialog.size(); i++) {
-        int option = static_cast<int>(i);
-        if (_showSubtitle)
-            option -= 5;
+    // Update option cells with current marker and values
+    for (size_t i = 0; i < _options.size(); i++) {
+        string text;
+        if (static_cast<int>(i) == _choice)
+            text = "> ";
         else
-            option -= 3;
+            text = "  ";
 
-        rlutil::locate(_x, _y + static_cast<int>(i));
-        cout << _dialog[i];
+        text += _options[i];
 
-        if (option == _choice) {
-            rlutil::locate(_x + 2, _y + static_cast<int>(i));
-            cout << ">";
+        if (_optionsValues.find(_options[i]) != _optionsValues.end()) {
+            // Pad name to align " : " across all value options
+            size_t namePad = _longestOptionWithChoice - _options[i].length();
+            text.append(namePad, ' ');
+            text += " : ";
+            text += _optionsValues[_options[i]][_optionsValuesChoices[_options[i]]];
         }
 
-        if (option >= 0 && option < static_cast<int>(_options.size())) {
-            if (string name = _options[option]; _optionsValues.find(name) != _optionsValues.end()) {
-                rlutil::locate(_x + _optionsValuesChoicesX[name], _y + static_cast<int>(i));
-                string value = _optionsValues[name][_optionsValuesChoices[name]];
-                cout << value;
-                const int nbSpace = static_cast<int>(_longestOptionValue) - static_cast<int>(value.length());
-                for (int j = 0; j < nbSpace; j++)
-                    cout << " ";
-            }
-        }
+        _panel.setCell(_optionRows[i], 0, text);
     }
+
+    _panel.draw(_x, _y);
     cout << flush;
 }
 
-void Menu::save() {
-    _background.clear();
-    _backgroundColor.clear();
-}
-
-void Menu::restore() const {
-    for (size_t i = 0; i < _background.size(); i++) {
-        rlutil::locate(_x, _y + static_cast<int>(i));
-        for (size_t j = 0; j < _background[i].size(); j++) {
-            cout << " ";
-        }
-    }
-}
-
 void Menu::clear() const {
-    rlutil::setColor(rlutil::WHITE);
-    for (size_t i = 0; i < _dialog.size(); i++) {
-        rlutil::locate(_x, _y + static_cast<int>(i));
-        cout << _clearLine;
-    }
+    _panel.clear(_x, _y);
 }
 
 void Menu::select(int choice) {

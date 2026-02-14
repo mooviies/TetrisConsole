@@ -11,70 +11,59 @@
 
 using namespace std;
 
-GameRenderer::GameRenderer() = default;
+GameRenderer::GameRenderer()
+    : _scorePanel(16), _playfieldPanel(20), _nextPanel(12),
+      _holdPanel(12), _highScorePanel(16),
+      _scoreValueRow(0), _levelRow(0), _linesRow(0), _highScoreValueRow(0)
+{
+    // Score panel
+    _scorePanel.addRow("Score", Align::CENTER);
+    _scorePanel.addSeparator();
+    _scoreValueRow = _scorePanel.addRow("0000000000", Align::CENTER);
+    _scorePanel.addSeparator();
+    _levelRow = _scorePanel.addRow({Cell("Level", Align::LEFT, 15, 7),
+                                    Cell("01", Align::CENTER)});
+    _scorePanel.addSeparator();
+    _linesRow = _scorePanel.addRow({Cell("Lines", Align::LEFT, 15, 7),
+                                    Cell("000001", Align::CENTER)});
+
+    // Playfield panel (20 empty rows)
+    for (int i = 0; i < 20; i++)
+        _playfieldPanel.addRow("");
+
+    // Next panel
+    _nextPanel.addRow("Next", Align::CENTER);
+    _nextPanel.addSeparator();
+    for (int i = 0; i < 4; i++)
+        _nextPanel.addRow("");
+
+    // Hold panel
+    _holdPanel.addRow("Hold", Align::CENTER);
+    _holdPanel.addSeparator();
+    for (int i = 0; i < 4; i++)
+        _holdPanel.addRow("");
+
+    // High score panel
+    _highScorePanel.addRow("High Score", Align::CENTER);
+    _highScorePanel.addSeparator();
+    _highScoreValueRow = _highScorePanel.addRow("0000000000", Align::CENTER);
+}
+
 GameRenderer::~GameRenderer() = default;
 
-void GameRenderer::display() {
-    int ox = Platform::offsetX();
-    int oy = Platform::offsetY();
+void GameRenderer::display() const {
+    const int ox = Platform::offsetX();
+    const int oy = Platform::offsetY();
 
-    rlutil::locate(1 + ox, 6 + oy);
-    cout << "    ╔════════════════╗       ╔════════════════════╗       ╔════════════╗";
-    rlutil::locate(1 + ox, 7 + oy);
-    cout << "    ║     Score      ║       ║                    ║       ║    Next    ║";
-    rlutil::locate(1 + ox, 8 + oy);
-    cout << "    ╠════════════════╣       ║                    ║       ╠════════════╣";
-    rlutil::locate(1 + ox, 9 + oy);
-    cout << "    ║   0000000000   ║       ║                    ║       ║            ║";
-    rlutil::locate(1 + ox, 10 + oy);
-    cout << "    ╠═══════╦════════╣       ║                    ║       ║            ║";
-    rlutil::locate(1 + ox, 11 + oy);
-    cout << "    ║ Level ║   01   ║       ║                    ║       ║            ║";
-    rlutil::locate(1 + ox, 12 + oy);
-    cout << "    ╠═══════╬════════╣       ║                    ║       ║            ║";
-    rlutil::locate(1 + ox, 13 + oy);
-    cout << "    ║ Lines ║ 000001 ║       ║                    ║       ╚════════════╝";
-    rlutil::locate(1 + ox, 14 + oy);
-    cout << "    ╚═══════╩════════╝       ║                    ║                     ";
-
-    for (int i = 28; i <= MATRIX_END; i++) {
-        rlutil::locate(1 + ox, 15 + (i - 28) + oy);
-        cout << "                             ║                    ║                     ";
-    }
-    rlutil::locate(1 + ox, 15 + (MATRIX_END - 28) + 1 + oy);
-    cout << "                             ╚════════════════════╝                     ";
-
-    rlutil::locate(5 + ox, 23 + oy);
-    cout << "╔════════════════╗";
-    rlutil::locate(5 + ox, 24 + oy);
-    cout << "║   High Score   ║";
-    rlutil::locate(5 + ox, 25 + oy);
-    cout << "╠════════════════╣";
-    rlutil::locate(5 + ox, 26 + oy);
-    cout << "║   0000000000   ║";
-    rlutil::locate(5 + ox, 27 + oy);
-    cout << "╚════════════════╝";
-
-    rlutil::locate(59 + ox, 20 + oy);
-    cout << "╔════════════╗";
-    rlutil::locate(59 + ox, 21 + oy);
-    cout << "║    Hold    ║";
-    rlutil::locate(59 + ox, 22 + oy);
-    cout << "╠════════════╣";
-    rlutil::locate(59 + ox, 23 + oy);
-    cout << "║            ║";
-    rlutil::locate(59 + ox, 24 + oy);
-    cout << "║            ║";
-    rlutil::locate(59 + ox, 25 + oy);
-    cout << "║            ║";
-    rlutil::locate(59 + ox, 26 + oy);
-    cout << "║            ║";
-    rlutil::locate(59 + ox, 27 + oy);
-    cout << "╚════════════╝";
+    _scorePanel.draw(5 + ox, 14 + oy);
+    _playfieldPanel.draw(30 + ox, 6 + oy);
+    _nextPanel.draw(59 + ox, 6 + oy);
+    //_highScorePanel.draw(5 + ox, 23 + oy);
+    _holdPanel.draw(5 + ox, 6 + oy);
 }
 
 void GameRenderer::refresh(GameState& state) {
-    // Update highscore before rendering (moved from printScore to avoid mutation in render)
+    // Update the highscore before rendering (moved from printScore to avoid mutation in render)
     if (state._score > state._highscore) {
         state._hasBetterHighscore = true;
     }
@@ -110,22 +99,28 @@ void GameRenderer::printPreview(const GameState& state) {
 }
 
 void GameRenderer::printScore(const GameState& state) {
-    int ox = Platform::offsetX();
-    int oy = Platform::offsetY();
+    const int ox = Platform::offsetX();
+    const int oy = Platform::offsetY();
 
-    rlutil::locate(9 + ox, 9 + oy);
-    if (state._backToBackBonus)
-        rlutil::setColor(rlutil::LIGHTGREEN);
-    cout << Utility::valueToString(state._score, 10);
-    rlutil::setColor(rlutil::WHITE);
+    // Update score value and color
+    const int scoreColor = state._backToBackBonus ? rlutil::LIGHTGREEN : rlutil::WHITE;
+    _scorePanel.setCell(_scoreValueRow, 0, Utility::valueToString(state._score, 10));
+    _scorePanel.setCellColor(_scoreValueRow, 0, scoreColor);
+    _scorePanel.drawRow(5 + ox, 6 + oy, _scoreValueRow);
 
-    rlutil::locate(17 + ox, 11 + oy);
-    cout << Utility::valueToString(state._level, 2);
-    rlutil::locate(15 + ox, 13 + oy);
-    cout << Utility::valueToString(state._lines, 6);
-    rlutil::locate(9 + ox, 26 + oy);
-    cout << Utility::valueToString(state._highscore, 10);
+    // Update level
+    _scorePanel.setCell(_levelRow, 1, Utility::valueToString(state._level, 2));
+    _scorePanel.drawRow(5 + ox, 6 + oy, _levelRow);
 
+    // Update lines
+    _scorePanel.setCell(_linesRow, 1, Utility::valueToString(state._lines, 6));
+    _scorePanel.drawRow(5 + ox, 6 + oy, _linesRow);
+
+    // Update high score
+    _highScorePanel.setCell(_highScoreValueRow, 0, Utility::valueToString(state._highscore, 10));
+    _highScorePanel.drawRow(5 + ox, 23 + oy, _highScoreValueRow);
+
+    // Mute indicator
     rlutil::locate(78 + ox, 2 + oy);
     switch (SoundEngine::getMuteState()) {
         case MuteState::UNMUTED:      rlutil::setColor(rlutil::WHITE);  break;
@@ -137,8 +132,8 @@ void GameRenderer::printScore(const GameState& state) {
 }
 
 void GameRenderer::printLine(const GameState& state, const int line, const bool visible) {
-    int ox = Platform::offsetX();
-    int oy = Platform::offsetY();
+    const int ox = Platform::offsetX();
+    const int oy = Platform::offsetY();
     int x = 31 + ox;
     const int y = 7 + line - MATRIX_START + oy;
 

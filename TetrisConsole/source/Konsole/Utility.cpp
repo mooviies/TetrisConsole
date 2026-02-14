@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include "Panel.h"
 #include "Platform.h"
 #include "rlutil.h"
 
@@ -22,30 +23,11 @@ void Utility::showTitle(const string& sousTitre)
 	int ox = Platform::offsetX();
 	int oy = Platform::offsetY();
 
-	rlutil::locate(1 + ox, 1 + oy);
-	cout << "╔══════════════════════════════════════════════════════════════════════════════╗";
-	rlutil::locate(1 + ox, 2 + oy);
-	cout << "║                                Tetris Console                                ║";
-	rlutil::locate(1 + ox, 3 + oy);
-	cout << "╠══════════════════════════════════════════════════════════════════════════════╣";
-	rlutil::locate(1 + ox, 4 + oy);
-
-	// Build subtitle line: ║ + centered subtitle + ║ (80 chars total)
-	cout << "║";
-	int longueur = static_cast<int>(sousTitre.length());
-	int leadingSpaces = 39 - (longueur / 2);
-	for (int i = 0; i < leadingSpaces; i++)
-		cout << ' ';
-	cout << sousTitre;
-	if (longueur % 2 != 0)
-		longueur++;
-	int trailingSpaces = 39 - (longueur / 2);
-	for (int i = 0; i < trailingSpaces; i++)
-		cout << ' ';
-	cout << "║";
-
-	rlutil::locate(1 + ox, 5 + oy);
-	cout << "╚══════════════════════════════════════════════════════════════════════════════╝";
+	Panel title(78);
+	title.addRow("Tetris Console", Align::CENTER);
+	title.addSeparator();
+	title.addRow(sousTitre, Align::CENTER);
+	title.draw(1 + ox, 1 + oy);
 }
 
 string Utility::valueToString(int64_t value, int length)

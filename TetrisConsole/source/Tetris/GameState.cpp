@@ -40,8 +40,7 @@ void GameState::loadHighscore()
 	}
 }
 
-void GameState::saveHighscore()
-{
+void GameState::saveHighscore() const {
 	ofstream highscoreFile(SCORE_FILE);
 	highscoreFile << _highscore;
 	highscoreFile.close();

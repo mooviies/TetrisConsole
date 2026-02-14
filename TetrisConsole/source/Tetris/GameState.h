@@ -24,7 +24,7 @@ public:
 	~GameState();
 
 	void loadHighscore();
-	void saveHighscore();
+	void saveHighscore() const;
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
 
 	GameMatrix _matrix;
