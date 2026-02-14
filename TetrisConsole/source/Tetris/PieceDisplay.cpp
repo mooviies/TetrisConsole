@@ -37,3 +37,26 @@ void PieceDisplay::update(const std::vector<const Tetrimino*>& pieces) const {
 void PieceDisplay::setPosition(int x, int y) { _panel.setPosition(x, y); }
 void PieceDisplay::invalidate() { _panel.invalidate(); }
 void PieceDisplay::render() { _panel.render(); }
+void PieceDisplay::clear() { _panel.clear(); }
+
+void PieceDisplay::rebuild(size_t size) {
+    _size = size;
+    _pieces.clear();
+    _panel = Panel(12);
+
+    if (_size == 0) _size = 1;
+
+    _panel.addRow("");
+    _pieces.push_back(std::make_shared<PiecePreview>());
+    _panel.addElement(_pieces.back());
+    _panel.addRow("");
+
+    if (_size > 1) {
+        for (size_t i = 1; i < _size; i++) {
+            _pieces.push_back(std::make_shared<PiecePreview>());
+            _panel.addElement(_pieces.back());
+            _panel.addRow("");
+        }
+        _panel.addRow("");
+    }
+}

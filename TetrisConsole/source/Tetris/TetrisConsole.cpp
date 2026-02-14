@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "Tetris.h"
+#include "Constants.h"
 #include "HighScoreDisplay.h"
 #include "Input.h"
 #include "SoundEngine.h"
@@ -43,6 +44,7 @@ int main() {
 
     Menu main("MAIN MENU");
     Menu newGame("NEW GAME");
+    Menu options("OPTIONS");
     Menu pause("PAUSE");
     Menu restartConfirm("Restart game?");
     Menu backToMenuConfirm("Back to menu?");
@@ -50,27 +52,93 @@ int main() {
     Menu gameOver("GAME OVER", "New High Score!");
 
     Tetris tetris(pause, gameOver);
-    HighScoreDisplay highScores(levels, lockDownMode);
+    HighScoreDisplay highScores;
 
     Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
     Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };
 
-    main.addOption("New Game", &newGame);
-    main.addOptionAction("High Scores", [&]() { highScores.open(tetris.highscoreMap()); });
-    main.addOption("Exit", &quit);
-
+    // --- New Game menu (Level + Start) ---
     newGame.addOptionCloseAllMenu("Start", [&tetris](OptionChoice oc) {
         int level = 1;
         try { level = stoi(oc.values["Level"]); } catch (...) {}
-        MODE mode = CLASSIC;
-        if (oc.values["Lock Down"] == "Extended") mode = EXTENDED;
-        else if (oc.values["Lock Down"] == "Infinite") mode = EXTENDED_INFINITY;
         tetris.setStartingLevel(level);
-        tetris.setMode(mode);
+        tetris.saveOptions();
     });
     newGame.addOptionWithValues("Level", levels);
-    newGame.addOptionWithValues("Lock Down", lockDownMode);
 
+    newGame.setOptionHint("Start", "Start a new game with the selected settings.");
+    newGame.setOptionHint("Level", "Starting speed. Higher levels are faster.");
+
+    // --- Options menu (Lock Down, Ghost, Hold, Preview, Reset Defaults, Back) ---
+    vector<string> ghostValues = {"On", "Off"};
+    vector<string> holdValues = {"On", "Off"};
+    vector<string> previewValues;
+    for (int i = 0; i <= NEXT_PIECE_QUEUE_SIZE; i++)
+        previewValues.push_back(Utility::valueToString(i, 2));
+
+    options.addOptionWithValues("Lock Down", lockDownMode);
+    options.addOptionWithValues("Ghost Piece", ghostValues);
+    options.addOptionWithValues("Hold Piece", holdValues);
+    options.addOptionWithValues("Preview", previewValues);
+    options.addOption("Reset Defaults", [&options](OptionChoice) {
+        options.setValueChoice("Lock Down", "Extended");
+        options.setValueChoice("Ghost Piece", "On");
+        options.setValueChoice("Hold Piece", "On");
+        options.setValueChoice("Preview", Utility::valueToString(NEXT_PIECE_QUEUE_SIZE, 2));
+    });
+    options.addOptionClose("Back");
+
+    options.setOptionValueHint("Lock Down", "Extended", "Locks 0.5s after landing. 15 move resets.");
+    options.setOptionValueHint("Lock Down", "Infinite", "Locks 0.5s after landing. Unlimited resets.");
+    options.setOptionValueHint("Lock Down", "Classic", "Locks immediately when the piece can't fall.");
+    options.setOptionValueHint("Ghost Piece", "On", "Shows where the current piece will land.");
+    options.setOptionValueHint("Ghost Piece", "Off", "Hides the landing preview.");
+    options.setOptionValueHint("Hold Piece", "On", "Swap the current piece once per drop.");
+    options.setOptionValueHint("Hold Piece", "Off", "Hold piece is disabled.");
+    for (int i = NEXT_PIECE_QUEUE_SIZE; i >= 0; i--) {
+        string val = Utility::valueToString(i, 2);
+        string hint;
+        if (i == 0) hint = "Hides the next piece queue.";
+        else if (i == 1) hint = "Shows the next piece.";
+        else hint = "Shows the next " + to_string(i) + " pieces.";
+        options.setOptionValueHint("Preview", val, hint);
+    }
+    options.setOptionHint("Reset Defaults", "Restore all options to their default values.");
+    options.setOptionHint("Back", "Return to the main menu.");
+
+    // --- Main menu ---
+    main.addOption("New Game", &newGame, [&]() {
+        newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
+    });
+    main.addOptionAction("Options", [&]() {
+        // Sync menu values from current tetris state
+        string modeStr = "Extended";
+        if (tetris.mode() == CLASSIC) modeStr = "Classic";
+        else if (tetris.mode() == EXTENDED_INFINITY) modeStr = "Infinite";
+        options.setValueChoice("Lock Down", modeStr);
+        options.setValueChoice("Ghost Piece", tetris.ghostEnabled() ? "On" : "Off");
+        options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
+        options.setValueChoice("Preview", Utility::valueToString(tetris.previewCount(), 2));
+
+        options.open(false, true);
+
+        // Apply values back to tetris
+        auto values = options.generateValues();
+        MODE mode = CLASSIC;
+        if (values["Lock Down"] == "Extended") mode = EXTENDED;
+        else if (values["Lock Down"] == "Infinite") mode = EXTENDED_INFINITY;
+        tetris.setMode(mode);
+        tetris.setGhostEnabled(values["Ghost Piece"] != "Off");
+        tetris.setHoldEnabled(values["Hold Piece"] != "Off");
+        int preview = NEXT_PIECE_QUEUE_SIZE;
+        try { preview = stoi(values["Preview"]); } catch (...) {}
+        tetris.setPreviewCount(preview);
+        tetris.saveOptions();
+    });
+    main.addOptionAction("High Scores", [&]() { highScores.open(tetris.highscores()); });
+    main.addOption("Exit", &quit);
+
+    // --- Pause menu ---
     pause.addOptionClose("Resume");
     pause.addOption("Restart", &restartConfirm);
     pause.addOption("Main Menu", &backToMenuConfirm);
@@ -85,13 +153,8 @@ int main() {
     quit.addOption("Yes", [&tetris](OptionChoice) { tetris.exit(); });
     quit.addOptionClose("No");
 
-    gameOver.addOption("Retry", &newGame, [&]() {
-        newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
-        string modeStr = "Extended";
-        if (tetris.mode() == CLASSIC) modeStr = "Classic";
-        else if (tetris.mode() == EXTENDED_INFINITY) modeStr = "Infinite";
-        newGame.setValueChoice("Lock Down", modeStr);
-    });
+    // --- Game Over menu ---
+    gameOver.addOptionClose("Retry");
     gameOver.addOptionClose("Main Menu");
     gameOver.addOption("Exit Game", &quit);
 

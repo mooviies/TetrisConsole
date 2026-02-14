@@ -18,6 +18,8 @@ public:
 	void setPosition(int x, int y);
 	void invalidate();
 	void render();
+	void clear();
+	void rebuild(size_t size);
 
 private:
 	size_t _size;

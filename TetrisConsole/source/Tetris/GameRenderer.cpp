@@ -21,6 +21,20 @@ GameRenderer::GameRenderer()
 
 GameRenderer::~GameRenderer() = default;
 
+void GameRenderer::configure(int previewCount, bool holdEnabled) {
+    if (previewCount != _previewCount) {
+        _next.clear();
+        _previewCount = previewCount;
+        if (previewCount > 0)
+            _next.rebuild(static_cast<size_t>(previewCount));
+        updatePositions();
+    }
+    if (holdEnabled != _holdEnabled) {
+        if (!holdEnabled) _hold.clear();
+        _holdEnabled = holdEnabled;
+    }
+}
+
 void GameRenderer::updatePositions() {
     const int ox = Platform::offsetX();
     const int oy = Platform::offsetY();
@@ -36,21 +50,23 @@ void GameRenderer::invalidate() {
     updatePositions();
     _score.invalidate();
     _playfield.invalidate();
-    _next.invalidate();
-    _hold.invalidate();
+    if (_previewCount > 0) _next.invalidate();
+    if (_holdEnabled) _hold.invalidate();
 }
 
 void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _playfield.update(state, playfieldVisible);
-    _next.update(state.peekTetriminos(NEXT_PIECE_QUEUE_SIZE));
-    _hold.update({state.holdTetrimino()});
+    if (_previewCount > 0)
+        _next.update(state.peekTetriminos(static_cast<size_t>(_previewCount)));
+    if (_holdEnabled)
+        _hold.update({state.holdTetrimino()});
     _score.update(state);
     drawMuteIndicator();
 
     _score.render();
     _playfield.render();
-    _next.render();
-    _hold.render();
+    if (_previewCount > 0) _next.render();
+    if (_holdEnabled) _hold.render();
     Platform::flushOutput();
 }
 

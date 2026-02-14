@@ -24,10 +24,17 @@ public:
 	void clearBackToMenu() { _backToMenu = false; }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
 	void setMode(const MODE mode) { _state.setMode(mode); }
+	void setGhostEnabled(bool v) { _state.setGhostEnabled(v); }
+	void setHoldEnabled(bool v) { _state.setHoldEnabled(v); }
+	void setPreviewCount(int n) { _state.setPreviewCount(n); }
 	[[nodiscard]] int startingLevel() const { return _state.startingLevel(); }
 	[[nodiscard]] MODE mode() const { return _state.mode(); }
-	[[nodiscard]] const std::map<HighScoreKey, HighScoreRecord>& highscoreMap() const { return _state.highscoreMap(); }
+	[[nodiscard]] bool ghostEnabled() const { return _state.ghostEnabled(); }
+	[[nodiscard]] bool holdEnabled() const { return _state.holdEnabled(); }
+	[[nodiscard]] int previewCount() const { return _state.previewCount(); }
+	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _state.highscores(); }
 	void setPlayerName(const std::string& n) { _state.setPlayerName(n); }
+	void saveOptions() const { _state.saveOptions(); }
 
 private:
 	void handlePause();

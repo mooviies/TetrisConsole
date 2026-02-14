@@ -3,6 +3,7 @@
 #include "Color.h"
 #include "GameState.h"
 #include "Constants.h"
+#include "Vector2i.h"
 
 using namespace std;
 
@@ -16,11 +17,19 @@ public:
 private:
     const GameState* _state = nullptr;  // non-owning; lifetime guaranteed by game loop
     bool _visible = true;
+    int _ghostDropDistance = 0;
 };
 
 void PlayfieldElement::update(const GameState& state, bool visible) {
     _state = &state;
     _visible = visible;
+
+    _ghostDropDistance = 0;
+    if (state.ghostEnabled() && state.currentTetrimino() != nullptr) {
+        while (state.currentTetrimino()->simulateMove(Vector2i(_ghostDropDistance + 1, 0)))
+            _ghostDropDistance++;
+    }
+
     markDirty();
 }
 
@@ -29,14 +38,19 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
         return;
 
     const int line = MATRIX_START + rowIndex;
+    const auto* tetrimino = _state->currentTetrimino();
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;
-        if (_state->currentTetrimino() != nullptr)
-            currentTetriminoHere = _state->currentTetrimino()->isMino(line, i);
+        bool ghostHere = false;
+        if (tetrimino != nullptr) {
+            currentTetriminoHere = tetrimino->isMino(line, i);
+            ghostHere = _ghostDropDistance > 0
+                        && tetrimino->isMino(line - _ghostDropDistance, i);
+        }
 
         if (_visible && (_state->matrix()[line][i] || currentTetriminoHere)) {
             if (currentTetriminoHere) {
-                ctx.setColor(_state->currentTetrimino()->getColor());
+                ctx.setColor(tetrimino->getColor());
                 ctx.print("██");
             } else {
                 ctx.setColor(Color::BLACK);
@@ -45,6 +59,10 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
                 ctx.setBackgroundColor(Color::BLACK);
             }
 
+            ctx.setColor(Color::WHITE);
+        } else if (_visible && ghostHere) {
+            ctx.setColor(Color::DARKGREY);
+            ctx.print("██");
             ctx.setColor(Color::WHITE);
         } else {
             ctx.setColor(Color::DARKGREY);

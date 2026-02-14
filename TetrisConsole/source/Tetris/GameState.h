@@ -6,7 +6,6 @@
 #include <memory>
 #include <vector>
 #include <cstdint>
-#include <map>
 
 #include "Constants.h"
 #include "Tetrimino.h"
@@ -21,15 +20,6 @@ enum MODE {
 	CLASSIC
 };
 
-struct HighScoreKey {
-	int startingLevel;
-	MODE mode;
-	bool operator<(const HighScoreKey& o) const {
-		if (mode != o.mode) return mode < o.mode;
-		return startingLevel < o.startingLevel;
-	}
-};
-
 struct HighScoreRecord {
 	int64_t score{};
 	int level{};          // level reached (not starting level)
@@ -41,6 +31,12 @@ struct HighScoreRecord {
 	int tSpins{};
 	double gameElapsed{}; // seconds
 	std::string name;
+	// Options used during this game
+	int startingLevel{1};
+	MODE mode{EXTENDED};
+	bool ghostEnabled{true};
+	bool holdEnabled{true};
+	int previewCount{NEXT_PIECE_QUEUE_SIZE};
 };
 
 class GameState
@@ -51,6 +47,8 @@ public:
 
 	void loadHighscore();
 	void saveHighscore();
+	void loadOptions();
+	void saveOptions() const;
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
 	[[nodiscard]] std::vector<const Tetrimino*> peekTetriminos(size_t count) const;
 
@@ -58,6 +56,9 @@ public:
 	void setMode(MODE m) { _mode = m; }
 	void setStartingLevel(int level);
 	void setPlayerName(const std::string& n) { _playerName = n; }
+	void setGhostEnabled(bool v) { _ghostEnabled = v; }
+	void setHoldEnabled(bool v) { _holdEnabled = v; }
+	void setPreviewCount(int n) { _previewCount = n; }
 
 	[[nodiscard]] const GameMatrix& matrix() const { return _matrix; }
 	[[nodiscard]] const Tetrimino* currentTetrimino() const { return _currentTetrimino; }
@@ -73,10 +74,13 @@ public:
 	[[nodiscard]] int tSpins() const { return _tSpins; }
 	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
 	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
-	[[nodiscard]] const std::map<HighScoreKey, HighScoreRecord>& highscoreMap() const { return _highscoreMap; }
+	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _highscores; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
 	[[nodiscard]] int startingLevel() const { return _startingLevel; }
 	[[nodiscard]] MODE mode() const { return _mode; }
+	[[nodiscard]] bool ghostEnabled() const { return _ghostEnabled; }
+	[[nodiscard]] bool holdEnabled() const { return _holdEnabled; }
+	[[nodiscard]] int previewCount() const { return _previewCount; }
 
 	void markDirty() { _isDirty = true; }
 	[[nodiscard]] bool isDirty() const { return _isDirty; }
@@ -112,7 +116,9 @@ private:
 	GameMatrix _matrix;
 
 	MODE _mode = EXTENDED;
-	size_t _previewSize = 1;
+	bool _ghostEnabled = true;
+	bool _holdEnabled = true;
+	int _previewCount = NEXT_PIECE_QUEUE_SIZE;
 
 	int _startingLevel = 1;
 	int _level{};
@@ -125,7 +131,7 @@ private:
 	int _goal{};
 	int64_t _score{};
 	int64_t _highscore{};
-	std::map<HighScoreKey, HighScoreRecord> _highscoreMap;
+	std::vector<HighScoreRecord> _highscores; // sorted by score desc, max 10
 	int _nbMoveAfterLockDown{};
 	int _lowestLine{};
 

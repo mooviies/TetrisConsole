@@ -139,7 +139,7 @@ void GameController::stepIdle(GameState& state) {
     checkAutorepeat(state, Input::left(), AUTOREPEAT_LEFT, &GameController::moveLeft, GameStep::MoveLeft);
     checkAutorepeat(state, Input::right(), AUTOREPEAT_RIGHT, &GameController::moveRight, GameStep::MoveRight);
 
-    if (!state._isNewHold && Input::hold()) {
+    if (state._holdEnabled && !state._isNewHold && Input::hold()) {
         Tetrimino *buffer = state._holdTetrimino;
         state._holdTetrimino = state._currentTetrimino;
         state._currentTetrimino = buffer;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -10,21 +9,21 @@
 
 class HighScoreDisplay {
 public:
-	HighScoreDisplay(const std::vector<std::string>& levels,
-	                 const std::vector<std::string>& lockDownModes);
+	HighScoreDisplay();
 
-	void open(const std::map<HighScoreKey, HighScoreRecord>& highscoreMap);
+	void open(const std::vector<HighScoreRecord>& highscores);
 
 private:
-	void updateDisplay(const std::map<HighScoreKey, HighScoreRecord>& hsMap);
+	void updateDisplay(const std::vector<HighScoreRecord>& hs);
 	void reposition();
 
-	std::vector<std::string> _levels;
-	std::vector<std::string> _lockDownModes;
+	Panel _leftPanel;
+	Panel _rightPanel;
 
-	Panel _panel;
-	size_t _levelRow{};
-	size_t _modeRow{};
+	// Left panel row indices (10 list entries)
+	std::array<size_t, 10> _listRows{};
+
+	// Right panel row indices
 	size_t _scoreRow{};
 	size_t _timeRow{};
 	size_t _nameRow{};
@@ -35,8 +34,11 @@ private:
 	size_t _tetrisStatRow{};
 	size_t _combosStatRow{};
 	size_t _tSpinsStatRow{};
+	size_t _startRow{};
+	size_t _modeRow{};
+	size_t _ghostRow{};
+	size_t _holdRow{};
+	size_t _previewRow{};
 
-	int _choice{};
-	int _levelIdx{};
-	int _modeIdx{};
+	int _selected{};
 };

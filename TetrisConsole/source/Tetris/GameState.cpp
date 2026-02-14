@@ -11,11 +11,16 @@
 using namespace std;
 
 static constexpr uint32_t kMagic   = 0x53484354; // "TCHS" little-endian
-static constexpr uint32_t kVersion = 2;
-static constexpr size_t   kRecordSize = 68;
-static constexpr size_t   kRecordSizeV1 = 52;
+static constexpr uint32_t kVersion = 3;
+static constexpr size_t   kRecordSize = 80;
+static constexpr size_t   kMaxHighscores = 10;
 
 #define SCORE_FILE (Platform::getDataDir() + "/score.bin")
+
+static constexpr uint32_t kOptMagic   = 0x54434F50; // "PCOT" little-endian
+static constexpr uint32_t kOptVersion = 1;
+
+#define OPTIONS_FILE (Platform::getDataDir() + "/options.bin")
 
 GameState::GameState()
 {
@@ -36,7 +41,7 @@ GameState::~GameState() = default;
 
 void GameState::loadHighscore()
 {
-	_highscoreMap.clear();
+	_highscores.clear();
 
 	ifstream in(SCORE_FILE, ios::binary);
 	if (!in.is_open()) {
@@ -44,85 +49,87 @@ void GameState::loadHighscore()
 		return;
 	}
 
-	uint32_t magic = 0;
+	uint32_t magic = 0, version = 0, count = 0;
 	in.read(reinterpret_cast<char*>(&magic), 4);
+	in.read(reinterpret_cast<char*>(&version), 4);
+	in.read(reinterpret_cast<char*>(&count), 4);
 
-	if (magic == kMagic) {
-		// Binary format
-		uint32_t version = 0;
-		uint32_t count   = 0;
-		in.read(reinterpret_cast<char*>(&version), 4);
-		in.read(reinterpret_cast<char*>(&count), 4);
-
-		const size_t recSize = (version >= 2) ? kRecordSize : kRecordSizeV1;
-
-		for (uint32_t i = 0; i < count; i++) {
-			char buf[kRecordSize]{};
-			in.read(buf, static_cast<streamsize>(recSize));
-			if (!in) break;
-
-			HighScoreKey key{};
-			HighScoreRecord rec{};
-
-			int32_t lvl = 0, md = 0;
-			memcpy(&lvl,           buf + 0,  4);
-			memcpy(&md,            buf + 4,  4);
-			memcpy(&rec.score,     buf + 8,  8);
-			int32_t tmp = 0;
-			memcpy(&tmp,           buf + 16, 4); rec.level   = tmp;
-			memcpy(&tmp,           buf + 20, 4); rec.lines   = tmp;
-			memcpy(&tmp,           buf + 24, 4); rec.tpm     = tmp;
-			memcpy(&tmp,           buf + 28, 4); rec.lpm     = tmp;
-			memcpy(&tmp,           buf + 32, 4); rec.tetris  = tmp;
-			memcpy(&tmp,           buf + 36, 4); rec.combos  = tmp;
-			memcpy(&tmp,           buf + 40, 4); rec.tSpins  = tmp;
-			memcpy(&rec.gameElapsed, buf + 44, 8);
-
-			if (version >= 2) {
-				char nameBuf[17]{};
-				memcpy(nameBuf, buf + 52, 16);
-				rec.name = nameBuf;
-			}
-
-			key.startingLevel = lvl;
-			key.mode          = static_cast<MODE>(md);
-			_highscoreMap[key] = rec;
-		}
-	} else {
-		// Migration: old text format (plain int64_t)
+	if (!in || magic != kMagic || version != kVersion) {
 		in.close();
-		ifstream text(SCORE_FILE);
-		int64_t oldScore = 0;
-		if (text >> oldScore && oldScore > 0) {
-			HighScoreKey key{1, EXTENDED};
-			HighScoreRecord rec{};
-			rec.score = oldScore;
-			_highscoreMap[key] = rec;
-		}
-		text.close();
-		saveHighscore(); // rewrite in new format
 		activateHighscore();
 		return;
 	}
 
+	for (uint32_t i = 0; i < count; i++) {
+		char buf[kRecordSize]{};
+		in.read(buf, static_cast<streamsize>(kRecordSize));
+		if (!in) break;
+
+		HighScoreRecord rec{};
+		int32_t tmp = 0;
+		memcpy(&rec.score,       buf + 0,  8);
+		memcpy(&tmp, buf + 8,  4); rec.level  = tmp;
+		memcpy(&tmp, buf + 12, 4); rec.lines  = tmp;
+		memcpy(&tmp, buf + 16, 4); rec.tpm    = tmp;
+		memcpy(&tmp, buf + 20, 4); rec.lpm    = tmp;
+		memcpy(&tmp, buf + 24, 4); rec.tetris = tmp;
+		memcpy(&tmp, buf + 28, 4); rec.combos = tmp;
+		memcpy(&tmp, buf + 32, 4); rec.tSpins = tmp;
+		memcpy(&rec.gameElapsed, buf + 36, 8);
+
+		char nameBuf[17]{};
+		memcpy(nameBuf, buf + 44, 16);
+		rec.name = nameBuf;
+
+		memcpy(&tmp, buf + 60, 4); rec.startingLevel = tmp;
+		memcpy(&tmp, buf + 64, 4); rec.mode = static_cast<MODE>(tmp);
+		memcpy(&tmp, buf + 68, 4); rec.ghostEnabled = (tmp != 0);
+		memcpy(&tmp, buf + 72, 4); rec.holdEnabled  = (tmp != 0);
+		memcpy(&tmp, buf + 76, 4); rec.previewCount = tmp;
+
+		_highscores.push_back(rec);
+	}
+
 	in.close();
+
+	// Ensure sorted descending by score, cap at 10
+	sort(_highscores.begin(), _highscores.end(),
+	     [](const HighScoreRecord& a, const HighScoreRecord& b) {
+		     return a.score > b.score;
+	     });
+	if (_highscores.size() > kMaxHighscores)
+		_highscores.resize(kMaxHighscores);
+
 	activateHighscore();
 }
 
 void GameState::saveHighscore() {
 	if (_hasBetterHighscore) {
-		HighScoreKey key{_startingLevel, _mode};
-		HighScoreRecord& rec = _highscoreMap[key];
-		rec.score       = _score;
-		rec.level       = _level;
-		rec.lines       = _lines;
-		rec.tpm         = tpm();
-		rec.lpm         = lpm();
-		rec.tetris      = _tetris;
-		rec.combos      = _combos;
-		rec.tSpins      = _tSpins;
-		rec.gameElapsed = gameElapsed();
-		rec.name        = _playerName;
+		HighScoreRecord rec{};
+		rec.score         = _score;
+		rec.level         = _level;
+		rec.lines         = _lines;
+		rec.tpm           = tpm();
+		rec.lpm           = lpm();
+		rec.tetris        = _tetris;
+		rec.combos        = _combos;
+		rec.tSpins        = _tSpins;
+		rec.gameElapsed   = gameElapsed();
+		rec.name          = _playerName;
+		rec.startingLevel = _startingLevel;
+		rec.mode          = _mode;
+		rec.ghostEnabled  = _ghostEnabled;
+		rec.holdEnabled   = _holdEnabled;
+		rec.previewCount  = _previewCount;
+
+		// Insert maintaining sorted order (descending by score)
+		auto it = lower_bound(_highscores.begin(), _highscores.end(), rec,
+		                      [](const HighScoreRecord& a, const HighScoreRecord& b) {
+			                      return a.score > b.score;
+		                      });
+		_highscores.insert(it, rec);
+		if (_highscores.size() > kMaxHighscores)
+			_highscores.resize(kMaxHighscores);
 	}
 
 	ofstream out(SCORE_FILE, ios::binary);
@@ -130,33 +137,35 @@ void GameState::saveHighscore() {
 
 	uint32_t magic   = kMagic;
 	uint32_t version = kVersion;
-	auto     count   = static_cast<uint32_t>(_highscoreMap.size());
+	auto     count   = static_cast<uint32_t>(_highscores.size());
 
 	out.write(reinterpret_cast<const char*>(&magic),   4);
 	out.write(reinterpret_cast<const char*>(&version), 4);
 	out.write(reinterpret_cast<const char*>(&count),   4);
 
-	for (const auto& [key, rec] : _highscoreMap) {
+	for (const auto& rec : _highscores) {
 		char buf[kRecordSize]{};
-		auto lvl = static_cast<int32_t>(key.startingLevel);
-		auto md  = static_cast<int32_t>(key.mode);
-
-		memcpy(buf + 0,  &lvl,             4);
-		memcpy(buf + 4,  &md,              4);
-		memcpy(buf + 8,  &rec.score,       8);
 		int32_t tmp;
-		tmp = static_cast<int32_t>(rec.level);   memcpy(buf + 16, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.lines);   memcpy(buf + 20, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.tpm);     memcpy(buf + 24, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.lpm);     memcpy(buf + 28, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.tetris);  memcpy(buf + 32, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.combos);  memcpy(buf + 36, &tmp, 4);
-		tmp = static_cast<int32_t>(rec.tSpins);  memcpy(buf + 40, &tmp, 4);
-		memcpy(buf + 44, &rec.gameElapsed, 8);
+
+		memcpy(buf + 0,  &rec.score, 8);
+		tmp = static_cast<int32_t>(rec.level);  memcpy(buf + 8,  &tmp, 4);
+		tmp = static_cast<int32_t>(rec.lines);  memcpy(buf + 12, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.tpm);    memcpy(buf + 16, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.lpm);    memcpy(buf + 20, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.tetris); memcpy(buf + 24, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.combos); memcpy(buf + 28, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.tSpins); memcpy(buf + 32, &tmp, 4);
+		memcpy(buf + 36, &rec.gameElapsed, 8);
 
 		// Name field (16 bytes, null-padded; buf is zero-initialized)
-		memcpy(buf + 52, rec.name.c_str(),
+		memcpy(buf + 44, rec.name.c_str(),
 		       min(rec.name.size(), static_cast<size_t>(16)));
+
+		tmp = static_cast<int32_t>(rec.startingLevel); memcpy(buf + 60, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.mode);          memcpy(buf + 64, &tmp, 4);
+		tmp = rec.ghostEnabled ? 1 : 0;               memcpy(buf + 68, &tmp, 4);
+		tmp = rec.holdEnabled  ? 1 : 0;               memcpy(buf + 72, &tmp, 4);
+		tmp = static_cast<int32_t>(rec.previewCount);  memcpy(buf + 76, &tmp, 4);
 
 		out.write(buf, static_cast<streamsize>(kRecordSize));
 	}
@@ -197,9 +206,53 @@ void GameState::updateHighscore() {
 }
 
 void GameState::activateHighscore() {
-	HighScoreKey key{_startingLevel, _mode};
-	auto it = _highscoreMap.find(key);
-	_highscore = (it != _highscoreMap.end()) ? it->second.score : 0;
+	_highscore = (_highscores.size() >= kMaxHighscores)
+		? _highscores[kMaxHighscores - 1].score : 0;
+}
+
+void GameState::loadOptions() {
+	ifstream in(OPTIONS_FILE, ios::binary);
+	if (!in.is_open()) return;
+
+	uint32_t magic = 0, version = 0;
+	in.read(reinterpret_cast<char*>(&magic), 4);
+	in.read(reinterpret_cast<char*>(&version), 4);
+	if (!in || magic != kOptMagic || version < 1) return;
+
+	int32_t val = 0;
+	in.read(reinterpret_cast<char*>(&val), 4);
+	if (in) _startingLevel = clamp(static_cast<int>(val), 1, 15);
+
+	in.read(reinterpret_cast<char*>(&val), 4);
+	if (in) _mode = static_cast<MODE>(clamp(static_cast<int>(val), 0, 2));
+
+	in.read(reinterpret_cast<char*>(&val), 4);
+	if (in) _ghostEnabled = (val != 0);
+
+	in.read(reinterpret_cast<char*>(&val), 4);
+	if (in) _holdEnabled = (val != 0);
+
+	in.read(reinterpret_cast<char*>(&val), 4);
+	if (in) _previewCount = clamp(static_cast<int>(val), 0, NEXT_PIECE_QUEUE_SIZE);
+}
+
+void GameState::saveOptions() const {
+	ofstream out(OPTIONS_FILE, ios::binary);
+	if (!out.is_open()) return;
+
+	uint32_t magic   = kOptMagic;
+	uint32_t version = kOptVersion;
+	out.write(reinterpret_cast<const char*>(&magic), 4);
+	out.write(reinterpret_cast<const char*>(&version), 4);
+
+	auto write32 = [&](int32_t v) {
+		out.write(reinterpret_cast<const char*>(&v), 4);
+	};
+	write32(static_cast<int32_t>(_startingLevel));
+	write32(static_cast<int32_t>(_mode));
+	write32(_ghostEnabled ? 1 : 0);
+	write32(_holdEnabled ? 1 : 0);
+	write32(static_cast<int32_t>(_previewCount));
 }
 
 void GameState::setStartingLevel(int level) {

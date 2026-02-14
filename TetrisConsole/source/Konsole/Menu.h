@@ -38,6 +38,8 @@ public:
 	void addOptionClose(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionCloseAllMenu(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
+	void setOptionHint(const std::string& name, const std::string& hint);
+	void setOptionValueHint(const std::string& name, const std::string& value, const std::string& hint);
 
 	// Global DI hooks, set once at startup before any menu is opened.
 	static std::function<bool()> shouldExitGame;
@@ -45,10 +47,11 @@ public:
 
 	OptionChoice open(bool showSubtitle = false, bool escapeCloses = false);
 
+	std::map<std::string, std::string> generateValues();
+
 protected:
 	void addOption(const std::string& name);
 	void generate();
-	std::map<std::string, std::string> generateValues();
 
 	void draw();
 	void clear() const;
@@ -71,7 +74,14 @@ private:
 	std::set<std::string> _closeOptions;
 	std::set<std::string> _closeAllMenusOptions;
 
+	std::map<std::string, std::string> _optionHints;
+	std::map<std::string, std::map<std::string, std::string>> _optionValueHints;
+	bool _hasHints = false;
+	size_t _longestHint = 0;
+
 	Panel _panel;
+	Panel _hintPanel;
+	size_t _hintRow = 0;
 	std::vector<size_t> _optionRows;
 
 	int _choice;

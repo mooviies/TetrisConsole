@@ -12,11 +12,13 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
     : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu)
 {
     _state.loadHighscore();
+    _state.loadOptions();
 }
 
 Tetris::~Tetris() = default;
 
 void Tetris::start() {
+    _renderer.configure(_state.previewCount(), _state.holdEnabled());
     _controller.start(_state);
     _renderer.invalidate();
     _renderer.render(_state);
@@ -80,6 +82,7 @@ void Tetris::handlePause() {
     if (selected == "Restart") {
         SoundEngine::stopMusic();
         _controller.reset(_state);
+        _renderer.configure(_state.previewCount(), _state.holdEnabled());
         _renderer.invalidate();
         _renderer.render(_state);
         _state.clearDirty();
@@ -117,6 +120,7 @@ void Tetris::handleGameOver() {
     }
 
     _controller.reset(_state);
+    _renderer.configure(_state.previewCount(), _state.holdEnabled());
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();

@@ -6,6 +6,7 @@
 
 #include "rlutil.h"
 #include "Platform.h"
+#include "Color.h"
 
 using namespace std;
 
@@ -66,6 +67,20 @@ void Menu::addOptionWithValues(const string& name, const vector<string> &values)
         if (value.length() > _longestOptionValue)
             _longestOptionValue = value.length();
     }
+}
+
+void Menu::setOptionHint(const string& name, const string& hint) {
+    _optionHints[name] = hint;
+    _hasHints = true;
+    if (hint.length() > _longestHint)
+        _longestHint = hint.length();
+}
+
+void Menu::setOptionValueHint(const string& name, const string& value, const string& hint) {
+    _optionValueHints[name][value] = hint;
+    _hasHints = true;
+    if (hint.length() > _longestHint)
+        _longestHint = hint.length();
 }
 
 void Menu::addOption(const string& name) {
@@ -131,7 +146,7 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
 }
 
 void Menu::generate() {
-    size_t middleWidth = _longestOption + 4;
+    size_t middleWidth = _longestOption + 5;
     middleWidth = max(middleWidth, _title.length() + 2);
     if (_showSubtitle)
         middleWidth = max(middleWidth, _subtitle.length() + 2);
@@ -159,6 +174,17 @@ void Menu::generate() {
     _x = Platform::offsetX() + (windowWidth / 2) - (_width / 2);
     _y = Platform::offsetY() + (windowHeight / 2) - (_height / 2);
     _panel.setPosition(_x, _y);
+
+    if (_hasHints) {
+        size_t hintWidth = max(_longestHint + 2, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
+        _hintPanel = Panel(static_cast<int>(hintWidth));
+        _hintRow = _hintPanel.addRow("", Align::CENTER, Color::GREY);
+        int hintPanelWidth = _hintPanel.width();
+        int hx = Platform::offsetX() + (windowWidth / 2) - (hintPanelWidth / 2);
+        int hy = _y + _height;
+        _hintPanel.setPosition(hx, hy);
+    }
+
     _choice = 0;
     _close = false;
     _escaped = false;
@@ -194,12 +220,42 @@ void Menu::draw() {
         _panel.setCell(_optionRows[i], 0, text);
     }
 
+    if (_hasHints) {
+        string hint;
+        const string& name = _options[static_cast<size_t>(_choice)];
+
+        // Check value-specific hint first
+        auto valHintIt = _optionValueHints.find(name);
+        if (valHintIt != _optionValueHints.end()) {
+            auto valIt = _optionsValues.find(name);
+            if (valIt != _optionsValues.end()) {
+                const string& currentValue = valIt->second[static_cast<size_t>(_optionsValuesChoices[name])];
+                auto it = valHintIt->second.find(currentValue);
+                if (it != valHintIt->second.end())
+                    hint = it->second;
+            }
+        }
+
+        // Fall back to generic hint
+        if (hint.empty()) {
+            auto it = _optionHints.find(name);
+            if (it != _optionHints.end())
+                hint = it->second;
+        }
+
+        _hintPanel.setCell(_hintRow, 0, hint);
+    }
+
     _panel.render();
+    if (_hasHints)
+        _hintPanel.render();
     cout << flush;
 }
 
 void Menu::clear() const {
     _panel.clear();
+    if (_hasHints)
+        _hintPanel.clear();
 }
 
 void Menu::setValueChoice(const string& name, const string& value) {
@@ -224,6 +280,7 @@ void Menu::select(int choice) {
         if (onResize)
             onResize();
         _panel.invalidate();
+        if (_hasHints) _hintPanel.invalidate();
         return;
     }
 
@@ -235,6 +292,7 @@ void Menu::select(int choice) {
             _close = true;
         } else {
             _panel.invalidate();
+            if (_hasHints) _hintPanel.invalidate();
             draw();
         }
     }

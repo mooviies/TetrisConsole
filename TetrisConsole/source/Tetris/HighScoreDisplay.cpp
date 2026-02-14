@@ -9,162 +9,198 @@
 
 using namespace std;
 
-static constexpr int kInterior   = 24;
-static constexpr int kLabelWidth = 12;
-static constexpr int kWindowWidth  = 80;
-static constexpr int kWindowHeight = 28;
-static constexpr int kTitleHeight  = 5; // top border + title + sep + subtitle + bottom border
+static constexpr int kLeftInterior  = 28;
+static constexpr int kRightInterior = 22;
+static constexpr int kLabelWidth    = 9;
+static constexpr int kWindowWidth   = 80;
+static constexpr int kWindowHeight  = 28;
+static constexpr int kTitleHeight   = 5;
+static constexpr int kGap           = 1;
 
-HighScoreDisplay::HighScoreDisplay(const vector<string>& levels,
-                                   const vector<string>& lockDownModes)
-    : _levels(levels), _lockDownModes(lockDownModes), _panel(kInterior)
+HighScoreDisplay::HighScoreDisplay()
+    : _leftPanel(kLeftInterior), _rightPanel(kRightInterior)
 {
-    _panel.addRow("HIGH SCORES", Align::CENTER);
-    _panel.addSeparator();
-    _levelRow = _panel.addRow("", Align::LEFT);
-    _modeRow  = _panel.addRow("", Align::LEFT);
-    _panel.addSeparator();
-    _scoreRow = _panel.addRow("", Align::CENTER);
-    _timeRow  = _panel.addRow("", Align::CENTER);
-    _nameRow  = _panel.addRow("", Align::CENTER);
-    _panel.addSeparator();
-    _lvlStatRow    = _panel.addRow({Cell("Level",   Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _tpmStatRow    = _panel.addRow({Cell("TPM",     Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _lpmStatRow    = _panel.addRow({Cell("LPM",     Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _linesStatRow  = _panel.addRow({Cell("Lines",   Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _tetrisStatRow = _panel.addRow({Cell("Tetris",  Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _combosStatRow = _panel.addRow({Cell("Combos",  Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
-    _tSpinsStatRow = _panel.addRow({Cell("T-Spins", Align::LEFT, 15, kLabelWidth),
-                                    Cell("", Align::CENTER)});
+	// --- Left panel: title + 10 list rows ---
+	_leftPanel.addRow("HIGH SCORES", Align::CENTER);
+	_leftPanel.addSeparator();
+	for (int i = 0; i < 10; i++)
+		_listRows[static_cast<size_t>(i)] = _leftPanel.addRow("", Align::LEFT);
 
-    reposition();
+	// --- Right panel: score/time/name header + stats + options ---
+	_scoreRow = _rightPanel.addRow("", Align::CENTER);
+	_timeRow  = _rightPanel.addRow("", Align::CENTER);
+	_nameRow  = _rightPanel.addRow("", Align::CENTER);
+	_rightPanel.addSeparator();
+	_lvlStatRow    = _rightPanel.addRow({Cell("Level",   Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_tpmStatRow    = _rightPanel.addRow({Cell("TPM",     Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_lpmStatRow    = _rightPanel.addRow({Cell("LPM",     Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_linesStatRow  = _rightPanel.addRow({Cell("Lines",   Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_tetrisStatRow = _rightPanel.addRow({Cell("Tetris",  Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_combosStatRow = _rightPanel.addRow({Cell("Combos",  Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_tSpinsStatRow = _rightPanel.addRow({Cell("T-Spins", Align::LEFT, 15, kLabelWidth),
+	                                     Cell("", Align::CENTER)});
+	_rightPanel.addSeparator();
+	_startRow   = _rightPanel.addRow({Cell("Start",   Align::LEFT, 15, kLabelWidth),
+	                                  Cell("", Align::CENTER)});
+	_modeRow    = _rightPanel.addRow({Cell("Mode",    Align::LEFT, 15, kLabelWidth),
+	                                  Cell("", Align::CENTER)});
+	_ghostRow   = _rightPanel.addRow({Cell("Ghost",   Align::LEFT, 15, kLabelWidth),
+	                                  Cell("", Align::CENTER)});
+	_holdRow    = _rightPanel.addRow({Cell("Hold",    Align::LEFT, 15, kLabelWidth),
+	                                  Cell("", Align::CENTER)});
+	_previewRow = _rightPanel.addRow({Cell("Preview", Align::LEFT, 15, kLabelWidth),
+	                                  Cell("", Align::CENTER)});
+
+	reposition();
 }
 
 void HighScoreDisplay::reposition() {
-    int w = _panel.width();
-    int h = _panel.height();
-    int availableTop = kTitleHeight + 1;
-    int availableHeight = kWindowHeight - availableTop;
-    int px = Platform::offsetX() + (kWindowWidth / 2) - (w / 2);
-    int py = Platform::offsetY() + availableTop + (availableHeight - h) / 2;
-    _panel.setPosition(px, py);
+	int lw = _leftPanel.width();
+	int rw = _rightPanel.width();
+	int totalW = lw + kGap + rw;
+
+	int availableTop = kTitleHeight + 1;
+	int availableHeight = kWindowHeight - availableTop;
+
+	int lh = _leftPanel.height();
+	int rh = _rightPanel.height();
+
+	int cx = Platform::offsetX() + (kWindowWidth / 2);
+	int lx = cx - (totalW / 2);
+	int rx = lx + lw + kGap;
+
+	int ly = Platform::offsetY() + availableTop + (availableHeight - lh) / 2;
+	int ry = Platform::offsetY() + availableTop + (availableHeight - rh) / 2;
+
+	_leftPanel.setPosition(lx, ly);
+	_rightPanel.setPosition(rx, ry);
 }
 
-void HighScoreDisplay::updateDisplay(const map<HighScoreKey, HighScoreRecord>& hsMap) {
-    string lp = (_choice == 0) ? "> " : "  ";
-    string mp = (_choice == 1) ? "> " : "  ";
-    _panel.setCell(_levelRow, 0,
-                   lp + "Level     : " + _levels[static_cast<size_t>(_levelIdx)]);
-    _panel.setCell(_modeRow, 0,
-                   mp + "Lock Down : " + _lockDownModes[static_cast<size_t>(_modeIdx)]);
+void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
+	// --- Left panel: list entries ---
+	for (int i = 0; i < 10; i++) {
+		string prefix = (_selected == i) ? "> " : "  ";
+		string rank = Utility::valueToString(i + 1, 2) + ". ";
 
-    int lvl = _levelIdx + 1;
-    MODE mode = EXTENDED;
-    if (_modeIdx == 1) mode = EXTENDED_INFINITY;
-    else if (_modeIdx == 2) mode = CLASSIC;
+		if (i < static_cast<int>(hs.size())) {
+			const auto& rec = hs[static_cast<size_t>(i)];
+			// Pad or truncate name to 10 chars
+			string name = rec.name;
+			if (name.empty()) name = "----------";
+			if (name.size() > 10) name.resize(10);
+			while (name.size() < 10) name += ' ';
+			string score = Utility::valueToString(rec.score, 10);
+			_leftPanel.setCell(_listRows[static_cast<size_t>(i)], 0,
+			                   prefix + rank + name + " " + score);
+		} else {
+			_leftPanel.setCell(_listRows[static_cast<size_t>(i)], 0,
+			                   prefix + rank + "----------" + " " + "----------");
+		}
+	}
 
-    HighScoreKey key{lvl, mode};
-    auto it = hsMap.find(key);
+	// --- Right panel: details for selected entry ---
+	if (_selected < static_cast<int>(hs.size())) {
+		const auto& rec = hs[static_cast<size_t>(_selected)];
+		_rightPanel.setCell(_scoreRow, 0, Utility::valueToString(rec.score, 10));
+		_rightPanel.setCell(_timeRow,  0, Utility::timeToString(rec.gameElapsed));
+		_rightPanel.setCell(_nameRow,  0, rec.name.empty() ? "----------" : rec.name);
 
-    if (it != hsMap.end()) {
-        const auto& rec = it->second;
-        _panel.setCell(_scoreRow, 0, Utility::valueToString(rec.score, 10));
-        _panel.setCell(_timeRow, 0, Utility::timeToString(rec.gameElapsed));
-        _panel.setCell(_nameRow, 0, rec.name);
-        _panel.setCell(_lvlStatRow, 1, Utility::valueToString(rec.level, 2));
-        _panel.setCell(_tpmStatRow, 1, Utility::valueToString(rec.tpm, 6));
-        _panel.setCell(_lpmStatRow, 1, Utility::valueToString(rec.lpm, 6));
-        _panel.setCell(_linesStatRow, 1, Utility::valueToString(rec.lines, 6));
-        _panel.setCell(_tetrisStatRow, 1, Utility::valueToString(rec.tetris, 6));
-        _panel.setCell(_combosStatRow, 1, Utility::valueToString(rec.combos, 6));
-        _panel.setCell(_tSpinsStatRow, 1, Utility::valueToString(rec.tSpins, 6));
-    } else {
-        _panel.setCell(_scoreRow, 0, "----------");
-        _panel.setCell(_timeRow, 0, "--:--.--");
-        _panel.setCell(_nameRow, 0, "");
-        _panel.setCell(_lvlStatRow, 1, "--");
-        _panel.setCell(_tpmStatRow, 1, "------");
-        _panel.setCell(_lpmStatRow, 1, "------");
-        _panel.setCell(_linesStatRow, 1, "------");
-        _panel.setCell(_tetrisStatRow, 1, "------");
-        _panel.setCell(_combosStatRow, 1, "------");
-        _panel.setCell(_tSpinsStatRow, 1, "------");
-    }
+		_rightPanel.setCell(_lvlStatRow,    1, Utility::valueToString(rec.level, 6));
+		_rightPanel.setCell(_tpmStatRow,    1, Utility::valueToString(rec.tpm, 6));
+		_rightPanel.setCell(_lpmStatRow,    1, Utility::valueToString(rec.lpm, 6));
+		_rightPanel.setCell(_linesStatRow,  1, Utility::valueToString(rec.lines, 6));
+		_rightPanel.setCell(_tetrisStatRow, 1, Utility::valueToString(rec.tetris, 6));
+		_rightPanel.setCell(_combosStatRow, 1, Utility::valueToString(rec.combos, 6));
+		_rightPanel.setCell(_tSpinsStatRow, 1, Utility::valueToString(rec.tSpins, 6));
+
+		_rightPanel.setCell(_startRow, 1, Utility::valueToString(rec.startingLevel, 2));
+		string modeStr = "Extended";
+		if (rec.mode == CLASSIC) modeStr = "Classic";
+		else if (rec.mode == EXTENDED_INFINITY) modeStr = "Infinite";
+		_rightPanel.setCell(_modeRow,    1, modeStr);
+		_rightPanel.setCell(_ghostRow,   1, rec.ghostEnabled ? "On" : "Off");
+		_rightPanel.setCell(_holdRow,    1, rec.holdEnabled  ? "On" : "Off");
+		_rightPanel.setCell(_previewRow, 1, Utility::valueToString(rec.previewCount, 2));
+	} else {
+		_rightPanel.setCell(_scoreRow, 0, "----------");
+		_rightPanel.setCell(_timeRow,  0, "--:--.--");
+		_rightPanel.setCell(_nameRow,  0, "");
+
+		_rightPanel.setCell(_lvlStatRow,    1, "------");
+		_rightPanel.setCell(_tpmStatRow,    1, "------");
+		_rightPanel.setCell(_lpmStatRow,    1, "------");
+		_rightPanel.setCell(_linesStatRow,  1, "------");
+		_rightPanel.setCell(_tetrisStatRow, 1, "------");
+		_rightPanel.setCell(_combosStatRow, 1, "------");
+		_rightPanel.setCell(_tSpinsStatRow, 1, "------");
+
+		_rightPanel.setCell(_startRow,   1, "--");
+		_rightPanel.setCell(_modeRow,    1, "------");
+		_rightPanel.setCell(_ghostRow,   1, "---");
+		_rightPanel.setCell(_holdRow,    1, "---");
+		_rightPanel.setCell(_previewRow, 1, "--");
+	}
 }
 
-void HighScoreDisplay::open(const map<HighScoreKey, HighScoreRecord>& highscoreMap) {
-    _choice = 0;
-    _levelIdx = 0;
-    _modeIdx = 0;
+void HighScoreDisplay::open(const vector<HighScoreRecord>& highscores) {
+	_selected = 0;
 
-    reposition();
-    _panel.invalidate();
-    updateDisplay(highscoreMap);
-    Platform::flushInput();
+	reposition();
+	_leftPanel.invalidate();
+	_rightPanel.invalidate();
+	updateDisplay(highscores);
+	Platform::flushInput();
 
-    while (true) {
-        if (!Platform::isTerminalTooSmall()) {
-            _panel.render();
-            cout << flush;
-        }
+	while (true) {
+		if (!Platform::isTerminalTooSmall()) {
+			_leftPanel.render();
+			_rightPanel.render();
+			cout << flush;
+		}
 
-        switch (Platform::getKey()) {
-            case rlutil::KEY_UP:
-            case rlutil::KEY_DOWN:
-                _choice = (_choice == 0) ? 1 : 0;
-                updateDisplay(highscoreMap);
-                break;
-            case rlutil::KEY_LEFT:
-                if (_choice == 0) {
-                    _levelIdx--;
-                    if (_levelIdx < 0)
-                        _levelIdx = static_cast<int>(_levels.size()) - 1;
-                } else {
-                    _modeIdx--;
-                    if (_modeIdx < 0)
-                        _modeIdx = static_cast<int>(_lockDownModes.size()) - 1;
-                }
-                updateDisplay(highscoreMap);
-                break;
-            case rlutil::KEY_RIGHT:
-                if (_choice == 0) {
-                    _levelIdx++;
-                    if (_levelIdx >= static_cast<int>(_levels.size()))
-                        _levelIdx = 0;
-                } else {
-                    _modeIdx++;
-                    if (_modeIdx >= static_cast<int>(_lockDownModes.size()))
-                        _modeIdx = 0;
-                }
-                updateDisplay(highscoreMap);
-                break;
-            case rlutil::KEY_ESCAPE:
-            case rlutil::KEY_ENTER:
-                _panel.clear();
-                return;
-            default:
-                break;
-        }
+		switch (Platform::getKey()) {
+			case rlutil::KEY_UP:
+				if (_selected > 0) {
+					_selected--;
+					updateDisplay(highscores);
+				}
+				break;
+			case rlutil::KEY_DOWN:
+				if (_selected < 9) {
+					_selected++;
+					updateDisplay(highscores);
+				}
+				break;
+			case rlutil::KEY_ESCAPE:
+			case rlutil::KEY_ENTER:
+				_leftPanel.clear();
+				_rightPanel.clear();
+				return;
+			default:
+				break;
+		}
 
-        if (Platform::wasResized()) {
-            if (!Platform::isTerminalTooSmall()) {
-                if (Menu::onResize)
-                    Menu::onResize();
-                reposition();
-                _panel.invalidate();
-            }
-            continue;
-        }
+		if (Platform::wasResized()) {
+			if (!Platform::isTerminalTooSmall()) {
+				if (Menu::onResize)
+					Menu::onResize();
+				reposition();
+				_leftPanel.invalidate();
+				_rightPanel.invalidate();
+			}
+			continue;
+		}
 
-        if (Menu::shouldExitGame && Menu::shouldExitGame())
-            break;
-    }
+		if (Menu::shouldExitGame && Menu::shouldExitGame())
+			break;
+	}
 
-    _panel.clear();
+	_leftPanel.clear();
+	_rightPanel.clear();
 }
