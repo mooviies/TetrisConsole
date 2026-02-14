@@ -228,22 +228,6 @@ string Panel::renderSeparator(size_t rowIndex) const {
 }
 
 void Panel::drawColoredRow(int x, int y, const RowData& row) const {
-    bool uniformColor = true;
-    int firstColor = row.cells.empty() ? 15 : row.cells[0].color;
-    for (const auto& cell : row.cells) {
-        if (cell.color != firstColor) {
-            uniformColor = false;
-            break;
-        }
-    }
-
-    if (uniformColor) {
-        rlutil::locate(x, y);
-        rlutil::setColor(firstColor);
-        cout << renderTextRow(row);
-        return;
-    }
-
     vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
     rlutil::setColor(rlutil::WHITE);
