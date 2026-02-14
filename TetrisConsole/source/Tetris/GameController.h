@@ -15,7 +15,7 @@ public:
 
 	void start(GameState& state);
 	StepResult step(GameState& state);
-	void reset(GameState& state);
+	void reset(GameState& state) const;
 
 private:
 	void lock(GameState& state) const;
@@ -24,12 +24,12 @@ private:
 
 	void fall(GameState& state) const;
 	void stepIdle(GameState& state);
-	void stepMoveLeft(GameState& state);
-	void stepMoveRight(GameState& state);
-	void stepHardDrop(GameState& state);
+	void stepMoveLeft(GameState& state) const;
+	void stepMoveRight(GameState& state) const;
+	void stepHardDrop(GameState& state) const;
 	static void incrementMove(GameState& state);
 
-	void smallResetLockDown(const GameState& state) const;
+	void resetLockDown(const GameState& state) const;
 	void moveLeft(GameState& state) const;
 	void moveRight(GameState& state) const;
 	[[nodiscard]] static bool moveDown(GameState& state);

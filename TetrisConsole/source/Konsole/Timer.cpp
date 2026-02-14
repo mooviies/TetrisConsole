@@ -15,7 +15,7 @@ void Timer::startTimer(const string& id)
 
 void Timer::resetTimer(const string& id, const double seconds)
 {
-	auto now = chrono::steady_clock::now();
+	const auto now = chrono::steady_clock::now();
 	_timers[id] = now - chrono::duration_cast<chrono::steady_clock::duration>(chrono::duration<double>(seconds));
 }
 
@@ -29,7 +29,7 @@ double Timer::getSeconds(const string& id)
 {
 	if (_timers.count(id) > 0)
 	{
-		auto now = chrono::steady_clock::now();
+		const auto now = chrono::steady_clock::now();
 		return chrono::duration<double>(now - _timers[id]).count();
 	}
 

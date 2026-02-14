@@ -14,7 +14,7 @@ public:
 
 	[[nodiscard]] bool setPosition(const Vector2i &position);
 	[[nodiscard]] bool move(const Vector2i &distance);
-	[[nodiscard]] bool simulateMove(const Vector2i &distance);
+	[[nodiscard]] bool simulateMove(const Vector2i &distance) const;
 	[[nodiscard]] bool rotate(DIRECTION direction);
 	[[nodiscard]] bool lock();
 	void resetRotation();

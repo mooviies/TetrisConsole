@@ -83,7 +83,7 @@ void GameController::fall(GameState& state) const {
         speedIndex = 15;
 
     const auto& speedArray = Input::softDrop() ? GameState::kSpeedFast : GameState::kSpeedNormal;
-    bool isSoftDropping = Input::softDrop();
+    const bool isSoftDropping = Input::softDrop();
 
     if (_timer.getSeconds(FALL) >= speedArray[static_cast<size_t>(speedIndex)]) {
         _timer.resetTimer(FALL);
@@ -92,8 +92,7 @@ void GameController::fall(GameState& state) const {
                 state._score++;
 
             if (state._isInLockDown) {
-                int currentLine = state._currentTetrimino->getPosition().row;
-                if (currentLine > state._lowestLine) {
+                if (const int currentLine = state._currentTetrimino->getPosition().row; currentLine > state._lowestLine) {
                     state._lowestLine = currentLine;
                     state._nbMoveAfterLockDown = 0;
                     _timer.resetTimer(LOCK_DOWN);
@@ -160,7 +159,7 @@ void GameController::stepIdle(GameState& state) {
     }
 }
 
-void GameController::stepMoveLeft(GameState& state) {
+void GameController::stepMoveLeft(GameState& state) const {
     if (state._currentTetrimino == nullptr) {
         state._stepState = GameStep::Idle;
         return;
@@ -180,7 +179,7 @@ void GameController::stepMoveLeft(GameState& state) {
     }
 }
 
-void GameController::stepMoveRight(GameState& state) {
+void GameController::stepMoveRight(GameState& state) const {
     if (state._currentTetrimino == nullptr) {
         state._stepState = GameStep::Idle;
         return;
@@ -200,7 +199,7 @@ void GameController::stepMoveRight(GameState& state) {
     }
 }
 
-void GameController::stepHardDrop(GameState& state) {
+void GameController::stepHardDrop(GameState& state) const {
     if (state._currentTetrimino == nullptr) {
         state._stepState = GameStep::Idle;
         return;
@@ -218,14 +217,12 @@ void GameController::incrementMove(GameState& state) {
         state._nbMoveAfterLockDown++;
 }
 
-void GameController::smallResetLockDown(const GameState& state) const {
+void GameController::resetLockDown(const GameState& state) const {
     if (state._mode == CLASSIC)
         return;
 
-    if (_timer.exist(LOCK_DOWN)) {
-        if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY - LOCK_DOWN_SMALL_DELAY) {
-            _timer.resetTimer(LOCK_DOWN, LOCK_DOWN_DELAY - LOCK_DOWN_SMALL_DELAY);
-        }
+    if (state._isInLockDown) {
+        _timer.resetTimer(LOCK_DOWN);
     }
 }
 
@@ -237,7 +234,7 @@ void GameController::moveLeft(GameState& state) const {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
-        smallResetLockDown(state);
+        resetLockDown(state);
         state.markDirty();
     }
 }
@@ -250,7 +247,7 @@ void GameController::moveRight(GameState& state) const {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
-        smallResetLockDown(state);
+        resetLockDown(state);
         state.markDirty();
     }
 }
@@ -275,7 +272,7 @@ void GameController::rotate(GameState& state, const DIRECTION direction) const {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
-        smallResetLockDown(state);
+        resetLockDown(state);
         state.markDirty();
 
         if (state._currentTetrimino->canTSpin()) {
@@ -307,7 +304,7 @@ void GameController::checkAutorepeat(GameState& state, const bool input, const s
     }
 }
 
-void GameController::reset(GameState& state) {
+void GameController::reset(GameState& state) const {
     state._level = state._startingLevel;
     state._lines = 0;
     state._goal = 0;
@@ -347,8 +344,7 @@ void GameController::lock(GameState& state) const {
     if (state._currentTetrimino->simulateMove(Vector2i(1, 0))) {
         _timer.stopTimer(LOCK_DOWN);
         state._nbMoveAfterLockDown = 0;
-        int row = state._currentTetrimino->getPosition().row;
-        if (row > state._lowestLine)
+        if (const int row = state._currentTetrimino->getPosition().row; row > state._lowestLine)
             state._lowestLine = row;
         return;
     }

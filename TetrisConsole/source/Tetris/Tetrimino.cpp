@@ -49,8 +49,7 @@ bool Tetrimino::move(const Vector2i& distance)
 	return false;
 }
 
-bool Tetrimino::simulateMove(const Vector2i& distance)
-{
+bool Tetrimino::simulateMove(const Vector2i& distance) const {
 	const Vector2i newPosition = _currentPosition + distance;
 	return checkPositionValidity(newPosition, _currentRotation);
 }
