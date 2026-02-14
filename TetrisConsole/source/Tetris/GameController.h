@@ -18,9 +18,6 @@ public:
 	void start(GameState& state);
 	void step(GameState& state);
 
-	void setStartingLevel(GameState& state, int level);
-	void setMode(GameState& state, int mode);
-
 private:
 	void reset(GameState& state);
 	void lock(GameState& state);

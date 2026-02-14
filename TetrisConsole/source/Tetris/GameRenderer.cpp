@@ -34,17 +34,13 @@ void GameRenderer::invalidate() {
 }
 
 void GameRenderer::render(GameState& state, const bool playfieldVisible) {
-    // Highscore must be updated before rendering so the panel shows the current value
-    if (state._score > state._highscore)
-        state._hasBetterHighscore = true;
-    if (state._hasBetterHighscore)
-        state._highscore = state._score;
+    state.updateHighscore();
 
     _playfield.update(state, playfieldVisible);
     _next.update(state.peekTetrimino());
-    _hold.update(state._holdTetrimino);
+    _hold.update(state.holdTetrimino());
     _score.update(state);
-    _highScore.update(state._highscore);
+    _highScore.update(state.highscore());
     drawMuteIndicator();
 
     _score.render();

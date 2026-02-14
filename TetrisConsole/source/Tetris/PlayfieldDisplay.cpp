@@ -31,16 +31,16 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
     int line = MATRIX_START + rowIndex;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;
-        if (_state->_currentTetrimino != nullptr)
-            currentTetriminoHere = _state->_currentTetrimino->isMino(line, i);
+        if (_state->currentTetrimino() != nullptr)
+            currentTetriminoHere = _state->currentTetrimino()->isMino(line, i);
 
-        if (_visible && (_state->_matrix[line][i] || currentTetriminoHere)) {
+        if (_visible && (_state->matrix()[line][i] || currentTetriminoHere)) {
             if (currentTetriminoHere) {
-                ctx.setColor(_state->_currentTetrimino->getColor());
+                ctx.setColor(_state->currentTetrimino()->getColor());
                 ctx.print("██");
             } else {
                 ctx.setColor(Color::BLACK);
-                ctx.setBackgroundColor(_state->_matrix[line][i]);
+                ctx.setBackgroundColor(_state->matrix()[line][i]);
                 ctx.print("░░");
                 ctx.setBackgroundColor(Color::BLACK);
             }

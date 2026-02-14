@@ -1,7 +1,5 @@
 #include "GameController.h"
 
-#include <algorithm>
-
 #include "GameState.h"
 #include "GameRenderer.h"
 #include "Timer.h"
@@ -78,14 +76,6 @@ void GameController::step(GameState& state) {
         if (!Input::rotateClockwise() && !Input::rotateCounterClockwise())
             state._didRotate = false;
     }
-}
-
-void GameController::setStartingLevel(GameState& state, int level) {
-    state._startingLevel = std::clamp(level, 1, 15);
-}
-
-void GameController::setMode(GameState& state, int mode) {
-    state._mode = static_cast<MODE>(mode);
 }
 
 void GameController::fall(GameState& state) {

@@ -1,5 +1,6 @@
 #include "GameState.h"
 
+#include <algorithm>
 #include <fstream>
 #include <cassert>
 
@@ -50,4 +51,15 @@ Tetrimino* GameState::peekTetrimino() const
 {
 	assert(_bagIndex < _bag.size());
 	return _bag[_bagIndex].get();
+}
+
+void GameState::updateHighscore() {
+	if (_score > _highscore)
+		_hasBetterHighscore = true;
+	if (_hasBetterHighscore)
+		_highscore = _score;
+}
+
+void GameState::setStartingLevel(int level) {
+	_startingLevel = std::clamp(level, 1, 15);
 }

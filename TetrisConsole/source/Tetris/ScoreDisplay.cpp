@@ -19,11 +19,11 @@ ScoreDisplay::ScoreDisplay()
 }
 
 void ScoreDisplay::update(const GameState& state) {
-    const int scoreColor = state._backToBackBonus ? Color::LIGHTGREEN : Color::WHITE;
-    _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state._score, 10));
+    const int scoreColor = state.backToBackBonus() ? Color::LIGHTGREEN : Color::WHITE;
+    _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state.score(), 10));
     _panel.setCellColor(_scoreValueRow, 0, scoreColor);
-    _panel.setCell(_levelRow, 1, Utility::valueToString(state._level, 2));
-    _panel.setCell(_linesRow, 1, Utility::valueToString(state._lines, 6));
+    _panel.setCell(_levelRow, 1, Utility::valueToString(state.level(), 2));
+    _panel.setCell(_linesRow, 1, Utility::valueToString(state.lines(), 6));
 }
 
 void ScoreDisplay::setPosition(int x, int y) { _panel.setPosition(x, y); }
