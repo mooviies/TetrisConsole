@@ -50,14 +50,14 @@ void GameController::step(GameState& state) {
 
     if (Input::pause()) {
         SoundEngine::pauseMusic();
-        _renderer.printMatrix(state, false);
+        _renderer.render(state, false);
         if (const OptionChoice choices = _pauseMenu.open(false, true); choices.options[choices.selected] == "Restart") {
             SoundEngine::stopMusic();
             reset(state);
             return;
         }
         _renderer.invalidate();
-        _renderer.refresh(state);
+        _renderer.render(state);
         SoundEngine::unpauseMusic();
     }
 
@@ -145,7 +145,7 @@ void GameController::stepIdle(GameState& state) {
             return;
         }
         _timer.startTimer(FALL);
-        _renderer.refresh(state);
+        _renderer.render(state);
     }
 
     fall(state);
@@ -164,7 +164,7 @@ void GameController::stepIdle(GameState& state) {
                 return;
             }
             _timer.startTimer(FALL);
-            _renderer.refresh(state);
+            _renderer.render(state);
         }
         state._isNewHold = true;
     }
@@ -246,7 +246,7 @@ void GameController::moveLeft(GameState& state) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.refresh(state);
+        _renderer.render(state);
     }
 }
 
@@ -259,7 +259,7 @@ void GameController::moveRight(GameState& state) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.refresh(state);
+        _renderer.render(state);
     }
 }
 
@@ -270,7 +270,7 @@ bool GameController::moveDown(GameState& state) {
     if (state._currentTetrimino->move(Vector2i(1, 0))) {
         state._lastMoveIsTSpin = false;
         state._lastMoveIsMiniTSpin = false;
-        _renderer.refresh(state);
+        _renderer.render(state);
         return true;
     }
 
@@ -287,7 +287,7 @@ void GameController::rotate(GameState& state, const DIRECTION direction) {
         state._lastMoveIsMiniTSpin = false;
         incrementMove(state);
         smallResetLockDown(state);
-        _renderer.refresh(state);
+        _renderer.render(state);
 
         if (state._currentTetrimino->canTSpin()) {
             if (state._currentTetrimino->checkTSpin()) {
@@ -349,7 +349,7 @@ void GameController::reset(GameState& state) {
     _timer.stopTimer(AUTOREPEAT_RIGHT);
 
     _renderer.invalidate();
-    _renderer.refresh(state);
+    _renderer.render(state);
 
     SoundEngine::playMusic("A");
 }
@@ -492,7 +492,7 @@ void GameController::lock(GameState& state) {
         SoundEngine::playSound("LINE_CLEAR");
 
     state._stepState = GameStep::Idle;
-    _renderer.refresh(state);
+    _renderer.render(state);
 }
 
 void GameController::shuffle(GameState& state) {

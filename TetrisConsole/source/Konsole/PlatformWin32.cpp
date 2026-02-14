@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <conio.h>
+#include <iostream>
 #include <string>
 
 #include "rlutil.h"
@@ -50,6 +51,11 @@ void Platform::cleanupConsole()
 void Platform::flushInput()
 {
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+}
+
+void Platform::flushOutput()
+{
+	std::cout << std::flush;
 }
 
 int Platform::getKey()

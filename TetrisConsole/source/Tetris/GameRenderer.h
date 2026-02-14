@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Panel.h"
+#include "Icon.h"
 #include "ScoreDisplay.h"
 #include "HighScoreDisplay.h"
 #include "PieceDisplay.h"
@@ -15,12 +16,11 @@ public:
 	~GameRenderer();
 
 	void invalidate();
-	void refresh(GameState& state);
-	void printMatrix(const GameState& state, bool visible = true);
+	void render(GameState& state, bool playfieldVisible = true);
 
 private:
 	void updatePositions();
-	static void drawMuteIndicator();
+	void drawMuteIndicator();
 
 	ScoreDisplay _score;
 	HighScoreDisplay _highScore;
@@ -28,4 +28,5 @@ private:
 	PieceDisplay _hold;
 	PlayfieldDisplay _playfield;
 	Panel _nextQueuePanel;
+	Icon _muteIcon;
 };

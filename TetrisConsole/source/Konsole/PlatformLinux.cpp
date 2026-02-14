@@ -82,6 +82,11 @@ void Platform::flushInput()
 	tcflush(STDIN_FILENO, TCIFLUSH);
 }
 
+void Platform::flushOutput()
+{
+	std::cout << std::flush;
+}
+
 int Platform::getKey()
 {
 	unsigned char c;

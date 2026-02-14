@@ -8,6 +8,7 @@ public:
 	static void initConsole();
 	static void cleanupConsole();
 	static void flushInput();
+	static void flushOutput();
 	static int getKey();
 	static bool wasResized();
 	static bool isTerminalTooSmall();
