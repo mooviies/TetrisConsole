@@ -116,8 +116,8 @@ void GameState::saveHighscore() {
 		rec.score       = _score;
 		rec.level       = _level;
 		rec.lines       = _lines;
-		rec.tpm         = _tpm;
-		rec.lpm         = _lpm;
+		rec.tpm         = tpm();
+		rec.lpm         = lpm();
 		rec.tetris      = _tetris;
 		rec.combos      = _combos;
 		rec.tSpins      = _tSpins;
@@ -177,6 +177,16 @@ vector<const Tetrimino*> GameState::peekTetriminos(size_t count) const
 	for (size_t i = 0; i < count && _bagIndex + i < _bag.size(); i++)
 		result.push_back(_bag[_bagIndex + i].get());
 	return result;
+}
+
+int GameState::tpm() const {
+	const double minutes = gameElapsed() / 60.0;
+	return (minutes > 0.0) ? static_cast<int>(_nbMinos / minutes) : 0;
+}
+
+int GameState::lpm() const {
+	const double minutes = gameElapsed() / 60.0;
+	return (minutes > 0.0) ? static_cast<int>(_lines / minutes) : 0;
 }
 
 void GameState::updateHighscore() {

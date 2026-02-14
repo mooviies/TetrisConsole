@@ -65,8 +65,8 @@ public:
 	[[nodiscard]] int64_t score() const { return _score; }
 	[[nodiscard]] int64_t highscore() const { return _highscore; }
 	[[nodiscard]] int level() const { return _level; }
-	[[nodiscard]] int tpm() const { return _tpm; }
-	[[nodiscard]] int lpm() const { return _lpm; }
+	[[nodiscard]] int tpm() const;
+	[[nodiscard]] int lpm() const;
 	[[nodiscard]] int lines() const { return _lines; }
 	[[nodiscard]] int tetris() const { return _tetris; }
 	[[nodiscard]] int combos() const { return _combos; }
@@ -116,8 +116,6 @@ private:
 
 	int _startingLevel = 1;
 	int _level{};
-	int _tpm{};
-	int _lpm{};
 	int _lines{};
 	int _tetris{};
 	int _combos{};       // best combo (Ren) achieved

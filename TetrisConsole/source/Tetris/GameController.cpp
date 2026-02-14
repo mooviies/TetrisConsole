@@ -308,8 +308,6 @@ void GameController::reset(GameState& state) const {
     state._currentCombo = -1;
     state._tetris = 0;
     state._nbMinos = 0;
-    state._lpm = 0;
-    state._tpm = 0;
     state._shouldIgnoreHardDrop = false;
     state._lastMoveIsTSpin = false;
     state._lastMoveIsMiniTSpin = false;
@@ -374,11 +372,6 @@ void GameController::lock(GameState& state) const {
     const int linesCleared = clearLines(state);
     awardScore(state, linesCleared);
 
-    const double minutes = state.gameElapsed() / 60.0;
-    if (minutes > 0.0) {
-        state._lpm = static_cast<int>(state._lines / minutes);
-        state._tpm = static_cast<int>(state._nbMinos / minutes);
-    }
     state._stepState = GameStep::Idle;
     state.markDirty();
 }
