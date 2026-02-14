@@ -33,25 +33,29 @@ The terminal should be at least 80 columns wide and 29 rows tall.
 ## Game Modes
 
 - **Extended** — Modern Tetris with lock delay resets (up to 15 moves before forced lock)
-- **Infinite** — Same as Extended, but levels continue past 15
+- **Infinite** — Same as Extended, but with unlimited lock delay resets
 - **Classic** — Traditional rules without lock delay resets
 
 ## Features
 
 - 10x20 playfield with standard 7-bag piece randomization
 - SRS (Super Rotation System) wall kicks with 5 test points per rotation
-- Hold piece and next piece preview
+- Hold piece and configurable next piece preview (0-6 pieces)
 - T-spin and mini T-spin detection with bonus scoring
 - Back-to-back bonus (50% extra) for consecutive Tetrises or T-spins
+- Combo (Ren) tracking
 - 15 levels with Guideline gravity speeds
-- Persistent high score (`$XDG_DATA_HOME/TetrisConsole/score.bin` on Linux, `%APPDATA%\TetrisConsole\score.bin` on Windows)
+- In-game stats: score, time, TPM, LPM, level, lines, Tetrises, combos, T-spins
+- Top-10 high score leaderboard with detailed stats and game options per entry
+- Options menu: lock-down mode, ghost piece, hold piece, preview count — persisted across sessions
 - Mute toggle (M key): cycles unmuted (white ♪) → music muted (yellow ♪) → all muted (red ♪)
 - Streamed music (three tracks that cycle A/B/C) and sound effects via miniaudio
 - UTF-8 box-drawing and block characters for the UI
+- Persistent data in `$XDG_DATA_HOME/TetrisConsole/` (Linux) or `%APPDATA%\TetrisConsole\` (Windows)
 
 ## Scoring
 
-All points are multiplied by the current level.
+All base points are multiplied by the current level. Consecutive Tetrises or T-spin line clears earn a 1.5x back-to-back bonus.
 
 | Action           | Points |
 |------------------|--------|
@@ -59,7 +63,6 @@ All points are multiplied by the current level.
 | Double           | 300    |
 | Triple           | 500    |
 | Tetris           | 800    |
-| T-Spin           | 400    |
 | T-Spin Single    | 400    |
 | T-Spin Double    | 800    |
 | T-Spin Triple    | 1200   |

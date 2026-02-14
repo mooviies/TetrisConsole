@@ -33,7 +33,23 @@ ln -s cmake-build-debug/compile_commands.json .
 
 ## Architecture
 
-The project is a cross-platform console Tetris built in C++17, split into two layers:
+The project is a cross-platform console Tetris built in C++17, split into two layers. See `ARCHITECTURE.md` for full details.
+
+### MVC Pattern
+
+```
+GameController (logic) --friend access--> GameState (model) <--const getters-- GameRenderer (view)
+                                                ^
+                                                |
+                                 Tetris (facade) owns all three
+```
+
+- **GameController** — Pure game logic. Returns `StepResult` enum (`Continue`, `PauseRequested`, `GameOver`). Never touches renderer or menus.
+- **GameState** — All game data (matrix, bag, score, level, highscores, flags). Members private; `friend class GameController` for write access, public `const` getters for views.
+- **GameRenderer** — Owns display components: `ScoreDisplay`, `PieceDisplay` (next + hold), `PlayfieldDisplay`, `Icon` (mute). Calls `update()` then `render()` on each.
+- **Tetris** — Facade that owns the above three plus `Menu&` references. Dispatches `StepResult`, handles pause/game-over flow, cycles music.
+
+Dirty flag (`markDirty`/`isDirty`/`clearDirty`) on `GameState` controls when rendering happens.
 
 ### Platform Abstraction (`source/Konsole/`)
 
@@ -41,17 +57,22 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 
 - **Platform.h** — Console init/cleanup/flush/getKey. Linux uses termios raw mode (VMIN=1, OPOST|ONLCR), terminal resize via ANSI `\033[8;rows;colst`, and a custom `getKey()` that does blocking reads with `select()`-based ANSI escape sequence parsing. Windows uses Console API and delegates `getKey()` to `rlutil::getkey()`.
 - **Input.h** — Keyboard polling. Linux: non-blocking `select()` + `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
+- **Panel** — Core UI rendering primitive. Box-drawn frame with rows of cells (text with alignment/color), separators with smart junctions, and `PanelElement` subclasses for custom content. Row-level dirty tracking for efficient redraws.
+- **Menu** — Hierarchical menu system using `Platform::getKey()` for blocking input. Panel-based rendering. Supports option values (cycled with LEFT/RIGHT), callbacks, submenus, and per-option/per-value hint text.
 - **SoundEngine** — Wraps miniaudio. Manages streamed music (A/B/C cycle) and decoded sound effects.
-- **Menu** — Self-contained hierarchical menu system using `Platform::getKey()` for blocking navigation input.
-- **Timer** — Meyers singleton named-timer using `clock()`. Drives fall speed, autorepeat, and lock-down delays.
+- **Timer** — Meyers singleton named-timer using `steady_clock`. Drives fall speed, autorepeat, and lock-down delays.
 - **Random** — Static utility using `std::mt19937` with Meyers singleton pattern (static local generator).
 
 ### Game Logic (`source/Tetris/`)
 
-- **TetrisConsole.cpp** — Entry point. Sets up menus, initializes subsystems, runs the main loop: `pollKeys() → step() → SoundEngine::update()`.
-- **Tetris** — Core game class. Uses a function-pointer state machine (`_stepState`) for states: idle, moving left/right, hard dropping. Manages the 40x10 matrix (rows 0-19 are the invisible buffer zone above the playfield, 20-39 are visible). Owns tetriminos via `std::unique_ptr`. Speed arrays are `constexpr std::array`. Score uses `int64_t`.
-- **Tetrimino** — Base class for all 7 piece types (I/J/L/O/S/T/Z). Each has 4 `Facing` objects (stored in `std::array<Facing, 4>`) defining rotation states with SRS-style wall kick data (`std::array<RotationPoint, 5>`).
-- **Overseer** — Global accessor singleton bridging menu callbacks to the active Tetris instance (asserts non-null).
+- **TetrisConsole.cpp** — Entry point. Sets up menus (main, new game, options, pause, confirmations, game over), initializes subsystems, runs the main loop: `pollKeys() → step() → render()`.
+- **Tetris** — Facade class (see MVC above). Owns `GameState`, `GameRenderer`, `GameController`, and `Menu&` references. Coordinates game flow, sound playback, and music cycling.
+- **GameController** — Per-frame state machine (`GameStep`: Idle, MoveLeft, MoveRight, HardDrop). Handles gravity, SRS rotation, autorepeat (DAS), lock-down, line clearing, and scoring. Operates on `GameState` through friend access.
+- **Tetrimino** — Live game piece. Holds position, rotation state, SRS wall kick data. `PieceData` provides static per-type data (color, preview strings, 4 facings, T-spin corner positions).
+- **ScoreDisplay** — Panel showing Score, Time, TPM, LPM, Level, Lines, Tetris, Combos, T-Spins. Has `updateTimer()` for smooth TPM/LPM updates without full redraws.
+- **HighScoreDisplay** — Standalone two-panel viewer (not a game HUD element). Left panel: ranked top-10 list. Right panel: detailed stats + game options for the selected entry. UP/DOWN navigation, ENTER/ESC to close.
+- **PlayfieldDisplay** — 10x20 visible grid using a `PanelElement` subclass.
+- **PieceDisplay** — Next queue (configurable 0-6 slots) and Hold piece preview panels.
 
 ### Dependencies (header-only, vendored in `include/`)
 
@@ -60,11 +81,11 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 
 ### Key Quirks
 
-- `Tetris::_shouldExit` is set via `Tetris::exit()`; the game exits from the main loop in `TetrisConsole.cpp`.
+- `_shouldExit` is set via `Tetris::exit()` → `GameState::setShouldExit(true)`; the game exits from the main loop in `TetrisConsole.cpp`.
 - Media files are embedded at build time via `scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
-- The `Menu::save()` method body is empty — it previously used Windows-only `ReadConsoleOutput` and was dead code.
-- High score persists in `$XDG_DATA_HOME/TetrisConsole/score.bin` (Linux) or `%APPDATA%\TetrisConsole\score.bin` (Windows).
+- High scores persist as a flat top-10 leaderboard in `$XDG_DATA_HOME/TetrisConsole/score.bin` (Linux) or `%APPDATA%\TetrisConsole\score.bin` (Windows). Binary format v3, 80 bytes per record. Each record stores game stats and the options used (starting level, mode, ghost, hold, preview count).
+- Game options persist separately in `options.bin` in the same data directory.
 - Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8.
-- `Tetris::refresh()` flushes stdout after drawing — necessary in termios raw mode where line-buffering is disabled.
+- `Platform::flushOutput()` is called after drawing — necessary in termios raw mode where line-buffering is disabled.
 - No `using namespace std;` in headers — all headers use explicit `std::` prefixes. `.cpp` files may use `using namespace std;`.
 - Compiler warnings: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`. The build should be warning-free.

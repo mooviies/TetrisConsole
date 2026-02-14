@@ -34,20 +34,23 @@ Cross-platform console Tetris in C++17. Two layers: a platform abstraction (`sou
 2. `Input::init()` — input subsystem
 3. `SoundEngine::init()` — miniaudio engine with embedded VFS
 4. Wait for terminal to reach minimum size (80x29)
-5. Build the menu tree (main, newGame, options, pause, quit, gameOver)
-6. Create the `Tetris` facade, wire menu callbacks via lambdas
-7. `main.open()` — blocking main menu
-8. `tetris.start()` — initialize game state, begin music
+5. Build the menu tree (main, newGame, options, pause, restartConfirm, backToMenuConfirm, quit, gameOver) with option hints
+6. Create the `Tetris` facade and `HighScoreDisplay`, wire menu callbacks via lambdas
+7. `main.open()` — blocking main menu (includes New Game, Options, High Scores, Exit)
+8. `tetris.start()` — initialize game state, configure renderer, begin music
 9. Enter the main loop
 
 ### Main Loop
 
 ```
-while (!tetris.doExit()) {
+while (!tetris.doExit() && !tetris.backToMenu()) {
+    frameStart = now()
     Input::pollKeys()           // 1. gather input
     Platform::wasResized()?     // 2. handle terminal resize
-    tetris.step()               // 3. game logic
-    tetris.render()             // 4. draw (only if dirty)
+    Platform::isTerminalTooSmall()?  // 3. pause if terminal too small
+    tetris.step()               // 4. game logic + sound dispatch
+    tetris.render()             // 5. draw (dirty → full render, else timer-only)
+    sleep(16ms - elapsed)       // 6. ~60 FPS frame cap
 }
 ```
 
@@ -65,17 +68,37 @@ The `Tetris` class owns all core components and wires them together:
 | Result | Action |
 |--------|--------|
 | `Continue` | Normal frame |
-| `PauseRequested` | Pause music, render overlay, open pause menu |
-| `GameOver` | Stop music, save highscore, open game over menu, reset |
+| `PauseRequested` | Pause timer, pause music, render overlay (playfield hidden), open pause menu |
+| `GameOver` | Pause timer, stop music, prompt player name if new high score, save highscore, open game over menu |
 
 After dispatching, `step()` also:
-- Plays pending sounds queued by the controller
+- Plays pending sounds queued by the controller (`GameSound` enum: Click, Lock, HardDrop, LineClear, Tetris)
 - Handles mute toggle requests
 - Cycles music tracks (A -> B -> C -> A) when a track ends
 
-**`render()`** checks `_state.isDirty()` before calling `_renderer.render()`, then clears the dirty flag. This avoids redundant redraws.
+**`render()`** checks `_state.isDirty()` before calling `_renderer.render()`, then clears the dirty flag. When not dirty, it calls `_renderer.renderTimer()` to update only the time, TPM, and LPM displays (smooth per-frame updates without full redraws).
 
 **`redraw()`** forces a full repaint — called on terminal resize.
+
+### Pause Flow
+
+When `StepResult::PauseRequested` is returned:
+1. Pause game timer and music
+2. Render playfield hidden (replaced with blank)
+3. Open pause menu (Resume / Restart / Main Menu / Exit Game)
+4. On Resume: invalidate renderer, restore music, resume timer
+5. On Restart: stop music, reset controller/state, reconfigure renderer, restart music
+6. On Main Menu: save highscore, set `_backToMenu` flag
+
+### Game Over Flow
+
+When `StepResult::GameOver` is returned:
+1. Pause game timer, stop music
+2. If new high score: prompt player name (Panel-based text input, max 10 chars)
+3. Save highscore to disk
+4. Open game over menu (Retry / Main Menu / Exit Game) — shows "New High Score!" subtitle if applicable
+5. On Retry: reset and restart
+6. On Main Menu: set `_backToMenu` flag
 
 ### Exit Flow
 
@@ -106,7 +129,7 @@ Tetris (facade) owns all three, dispatches StepResult
 
 **GameState** holds all game data: matrix, bag, current/hold tetriminos, score, level, lines, flags. Members are private. The controller has friend access; the renderer reads through `const` public getters.
 
-**GameRenderer** owns the display components (`ScoreDisplay`, `HighScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`, `Icon` for mute). It calls `update()` on each display with data from `GameState`, then `render()` to draw.
+**GameRenderer** owns the display components (`ScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`, `Icon` for mute). It calls `update()` on each display with data from `GameState`, then `render()` to draw. Has `configure(previewCount, holdEnabled)` to adjust the UI based on game options, and `renderTimer()` to update only the time/TPM/LPM without full redraws.
 
 ### Dirty Flag
 
@@ -164,7 +187,7 @@ This guarantees the Tetris Guideline's **7-bag randomizer**: every piece type ap
 
 ### Feeding the Next Queue
 
-`peekTetriminos(count)` reads `count` consecutive pieces starting at `_bagIndex` without consuming them. The renderer calls `peekTetriminos(NEXT_PIECE_QUEUE_SIZE)` (4) each frame and passes the vector to the `PieceDisplay`, which sets each preview slot directly.
+`peekTetriminos(count)` reads `count` consecutive pieces starting at `_bagIndex` without consuming them. The renderer calls `peekTetriminos(previewCount)` (configurable, default 6) each frame and passes the vector to the `PieceDisplay`, which sets each preview slot directly.
 
 ### On Reset
 
@@ -339,10 +362,13 @@ Handles all scoring, stats, leveling, and sound queuing after a lock. Three bran
 
 All base scores are multiplied by the current level. **Back-to-back bonus**: consecutive Tetrises or T-spin line clears get a 1.5x score multiplier. Singles, Doubles, and Triples break the streak.
 
-After scoring, `awardScore()` advances leveling and queues sounds:
+After scoring, `awardScore()` advances leveling, tracks stats, and queues sounds:
 
 - `_lines += awardedLines`, `_goal += awardedLines`
 - When `_goal >= level * 5` → level up, goal resets
+- Combo tracking: `_currentCombo` counts consecutive line-clearing locks (-1 = no chain). `_combos` tracks the best combo achieved.
+- `_tetris` counts 4-line clears, `_tSpins` counts T-spin line clears
+- `_nbMinos` increments per piece locked (feeds TPM calculation: `_nbMinos / minutesElapsed`)
 - 4 lines → Tetris sound; 1-3 lines → LineClear sound
 
 ### Gravity
@@ -357,6 +383,44 @@ Left/right movement uses Delayed Auto Shift:
 2. After `AUTOREPEAT_DELAY` (0.25s): enter autorepeat state
 3. In autorepeat: move every `AUTOREPEAT_SPEED` (0.01s) — very fast repeat
 4. Release: stop timer, return to Idle state
+
+### High Score Persistence
+
+**File:** `GameState.cpp` (persistence) + `GameState.h` (`HighScoreRecord` struct)
+
+A flat top-10 leaderboard stored as a binary file (`score.bin`). Each record stores both game stats and the options used during that game:
+
+```
+Header: magic(4) + version(4) + count(4) = 12 bytes
+
+Per record (80 bytes):
+Offset  Size  Field
+0       8     score (int64)
+8       4     level reached (int32)
+12      4     lines (int32)
+16      4     tpm (int32)
+20      4     lpm (int32)
+24      4     tetris count (int32)
+28      4     combos (int32)
+32      4     tSpins (int32)
+36      8     gameElapsed (double, seconds)
+44      16    name (null-padded string)
+60      4     startingLevel (int32)
+64      4     mode (int32: 0=Extended, 1=Infinite, 2=Classic)
+68      4     ghostEnabled (int32, 0/1)
+72      4     holdEnabled (int32, 0/1)
+76      4     previewCount (int32)
+```
+
+Magic: `0x53484354` ("TCHS" little-endian), version 3.
+
+**New high score detection**: `activateHighscore()` sets the threshold to the 10th-place score (or 0 if fewer than 10 entries). Any score exceeding this threshold triggers the "New High Score!" flow: player name prompt → insert into sorted list → truncate to 10 → save.
+
+**Options persistence**: game settings (starting level, mode, ghost, hold, preview) are stored separately in `options.bin` (magic `0x54434F50`, version 1, five int32 values).
+
+### Game Timer
+
+`GameState` owns a `steady_clock`-based game timer (`startGameTimer`, `pauseGameTimer`, `resumeGameTimer`, `gameElapsed`). It accumulates elapsed time across pause/resume cycles and is used for Time display, TPM, and LPM calculations.
 
 ---
 
@@ -511,11 +575,12 @@ class PanelElement {
 
 ### PieceDisplay
 
-Composite display for the "Next" and "Hold" panels. Constructor takes a title and a size:
+Composite display for the "Next" and "Hold" panels. Constructor takes a size (number of preview slots). The Next panel is configurable (0-6 slots, default `NEXT_PIECE_QUEUE_SIZE` = 6); the Hold panel always has 1 slot.
+
 - Size 1 (Hold): title + separator + 1 preview slot
 - Size N (Next): title + separator + 1 main slot + separator + (N-1) queue slots
 
-`update(vector<const Tetrimino*>)` sets each slot directly from the vector — slot 0 gets the first piece, slot 1 the second, etc.
+`update(vector<const Tetrimino*>)` sets each slot directly from the vector — slot 0 gets the first piece, slot 1 the second, etc. `rebuild(size)` recreates the panel with a different number of slots (used when `GameRenderer::configure()` changes the preview count). `clear()` erases the panel from the screen.
 
 ### PlayfieldDisplay
 
@@ -526,11 +591,20 @@ The 10x20 visible game field. Its `PlayfieldElement` (PanelElement subclass, hei
 
 ### ScoreDisplay
 
-Panel (width 16) showing Score, Level, and Lines. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths (10, 2, and 6 digits).
+Panel (interior width 18) showing Score, Time, TPM, LPM, Level, Lines, Tetris, Combos, and T-Spins. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths. Has two update paths:
+
+- `update(state)` — full update of all fields (called when dirty)
+- `updateTimer(state)` — updates only Time, TPM, and LPM (called every frame for smooth display)
 
 ### HighScoreDisplay
 
-Simpler panel (width 16) showing just the persistent high score, zero-padded to 10 digits.
+Standalone two-panel viewer (not a game HUD element — opened from the main menu). Takes `const vector<HighScoreRecord>&` and blocks until the user presses ENTER or ESC.
+
+**Left panel** (interior width 28): title "HIGH SCORES", separator, 10 ranked entries. Each entry shows cursor indicator, rank, name (10 chars), and score (10 digits). UP/DOWN arrows move the selection cursor.
+
+**Right panel** (interior width 22): shows details for the selected entry. Three header rows (score, time, name), a separator, seven stat rows (Level, TPM, LPM, Lines, Tetris, Combos, T-Spins), a separator, and five option rows (Start, Mode, Ghost, Hold, Preview) showing the settings used during that game. Empty slots show dashes.
+
+Both panels are centered side-by-side with a 1-char gap, positioned relative to the window center.
 
 ### Icon
 
@@ -644,8 +718,10 @@ A hierarchical, tree-based navigation system. Each `Menu` owns:
 - `_options`: ordered list of item names
 - `_menus`: submenu mappings (name -> `Menu*`)
 - `_callbacks`: action callbacks (name -> `function<void(OptionChoice)>`)
+- `_actionCallbacks`: void callbacks for options that trigger immediate actions (e.g. opening a submenu with pre-configuration)
 - `_optionsValues` / `_optionsValuesChoices`: for items with selectable values (cycled with LEFT/RIGHT)
 - `_closeOptions` / `_closeAllMenusOptions`: items that close the current menu or the entire menu tree
+- `_optionHints` / `_optionValueHints`: hint text shown below the menu for the selected option or its current value
 
 ### Navigation
 
@@ -667,15 +743,32 @@ Selection dispatches to:
 
 ### Rendering
 
-Delegates to a `Panel`. Selected item is prefixed with `"> "`, others with `"  "`. Items with values show `"Option : Value"`. Layout is auto-centered in the 80x29 area and regenerated on terminal resize.
+Delegates to a `Panel`. Selected item is prefixed with `"> "`, others with `"  "`. Items with values show `"Option : Value"`. An optional hint panel below the menu shows context-sensitive help text for the selected option or its current value (set via `setOptionHint()` and `setOptionValueHint()`). Layout is auto-centered in the 80x29 area and regenerated on terminal resize.
 
 ### Integration
 
 Two static function pointers allow external control:
 - `Menu::shouldExitGame` — checked each loop iteration to break out when the game exits
-- `Menu::onResize` — called on terminal resize to redraw surrounding UI
+- `Menu::onResize` — called on terminal resize to redraw surrounding UI (also used by `HighScoreDisplay`)
 
-Menu callbacks use lambdas that capture the `Tetris` reference to set starting level, mode, or signal exit.
+Menu callbacks use lambdas that capture the `Tetris` reference. The menu tree:
+
+```
+Main Menu
+├── New Game → Level (1-15) + Start
+├── Options → Lock Down, Ghost Piece, Hold Piece, Preview (0-6), Reset Defaults, Back
+├── High Scores → HighScoreDisplay (standalone two-panel viewer)
+└── Exit → Quit confirmation
+Pause Menu
+├── Resume
+├── Restart → Confirmation
+├── Main Menu → Confirmation
+└── Exit Game → Quit confirmation
+Game Over Menu
+├── Retry
+├── Main Menu
+└── Exit Game → Quit confirmation
+```
 
 ---
 
