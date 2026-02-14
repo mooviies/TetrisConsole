@@ -273,15 +273,10 @@ void GameController::rotate(GameState& state, const DIRECTION direction) const {
         state.markDirty();
 
         if (state._currentTetrimino->canTSpin()) {
-            if (state._currentTetrimino->checkTSpin()) {
-                state._tSpins++;
-                state._score += 400 * state._level;
+            if (state._currentTetrimino->checkTSpin())
                 state._lastMoveIsTSpin = true;
-            } else if (state._currentTetrimino->checkMiniTSpin()) {
-                state._tSpins++;
-                state._score += 100 * state._level;
+            else if (state._currentTetrimino->checkMiniTSpin())
                 state._lastMoveIsMiniTSpin = true;
-            }
         }
     }
 }
@@ -310,6 +305,7 @@ void GameController::reset(GameState& state) const {
     state._score = 0;
     state._tSpins = 0;
     state._combos = 0;
+    state._currentCombo = -1;
     state._tetris = 0;
     state._nbMinos = 0;
     state._lpm = 0;
@@ -378,9 +374,11 @@ void GameController::lock(GameState& state) const {
     const int linesCleared = clearLines(state);
     awardScore(state, linesCleared);
 
-    const int minutesElapsed = state.minutesElapsed() == 0 ? 1 : state.minutesElapsed();
-    state._lpm = state._lines / minutesElapsed;
-    state._tpm = state._nbMinos / minutesElapsed;
+    const double minutes = state.gameElapsed() / 60.0;
+    if (minutes > 0.0) {
+        state._lpm = static_cast<int>(state._lines / minutes);
+        state._tpm = static_cast<int>(state._nbMinos / minutes);
+    }
     state._stepState = GameStep::Idle;
     state.markDirty();
 }
@@ -415,39 +413,42 @@ void GameController::awardScore(GameState& state, const int linesCleared) {
         state._tetris++;
 
     if (state._lastMoveIsTSpin) {
-        if (linesCleared >= 1) {
-            state._combos++;
-            int value = 0;
-            switch (linesCleared) {
-                case 1:  value = 400;  awardedLines = 8;  break;
-                case 2:  value = 800;  awardedLines = 12; break;
-                case 3:  value = 1200; awardedLines = 16; break;
-                default: ;
-            }
+        state._tSpins++;
+        int value = 0;
+        switch (linesCleared) {
+            case 0:  value = 400;  awardedLines = 4;  break;
+            case 1:  value = 800;  awardedLines = 8;  break;
+            case 2:  value = 1200; awardedLines = 12; break;
+            case 3:  value = 1600; awardedLines = 16; break;
+            default: ;
+        }
 
+        if (linesCleared >= 1) {
             if (state._backToBackBonus) {
                 value += value / 2;
-                awardedLines += linesCleared / 2;
+                awardedLines += (linesCleared + 1) / 2;
             }
-
-            state._score += value * state._level;
-        } else {
-            awardedLines = 4;
+            state._backToBackBonus = true;
         }
+
+        state._score += value * state._level;
     } else if (state._lastMoveIsMiniTSpin) {
+        state._tSpins++;
+        int value = 0;
         if (linesCleared == 1) {
-            state._combos++;
-            int value = 100;
+            value = 200;
             awardedLines = 2;
             if (state._backToBackBonus) {
                 value += value / 2;
-                awardedLines += linesCleared / 2;
+                awardedLines += (linesCleared + 1) / 2;
             }
-
-            state._score += value * state._level;
+            state._backToBackBonus = true;
         } else {
+            value = 100;
             awardedLines = 1;
         }
+
+        state._score += value * state._level;
     } else {
         int value = 0;
         switch (linesCleared) {
@@ -469,9 +470,8 @@ void GameController::awardScore(GameState& state, const int linesCleared) {
                 value = 800;
                 awardedLines = 8;
                 if (state._backToBackBonus) {
-                    state._combos++;
                     value += value / 2;
-                    awardedLines += linesCleared / 2;
+                    awardedLines += (linesCleared + 1) / 2;
                 }
                 state._backToBackBonus = true;
                 break;
@@ -484,7 +484,17 @@ void GameController::awardScore(GameState& state, const int linesCleared) {
     state._lastMoveIsTSpin = false;
     state._lastMoveIsMiniTSpin = false;
 
-    state._lines += awardedLines;
+    // Combo (Ren) tracking: consecutive piece placements that clear lines.
+    // _currentCombo reaches 1+ on the 2nd consecutive clear (= first real combo).
+    if (linesCleared > 0) {
+        state._currentCombo++;
+        if (state._currentCombo > state._combos)
+            state._combos = state._currentCombo;
+    } else {
+        state._currentCombo = -1;
+    }
+
+    state._lines += linesCleared;
     state._goal += awardedLines;
 
     if (state._goal >= state._level * 5) {

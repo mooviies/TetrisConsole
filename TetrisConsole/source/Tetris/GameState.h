@@ -91,7 +91,7 @@ public:
 	void pauseGameTimer();
 	void resumeGameTimer();
 	[[nodiscard]] double gameElapsed() const;
-	[[nodiscard]] int minutesElapsed() const { return static_cast<int>(_gameElapsedAccum / 60); }
+	[[nodiscard]] int minutesElapsed() const { return static_cast<int>(gameElapsed() / 60); }
 
 	// Tetris Guideline gravity values for levels 1-15 (index 0 unused).
 	static constexpr std::array<double, 16> kSpeedNormal = {
@@ -120,7 +120,8 @@ private:
 	int _lpm{};
 	int _lines{};
 	int _tetris{};
-	int _combos{};
+	int _combos{};       // best combo (Ren) achieved
+	int _currentCombo{}; // running consecutive-clear count (-1 = no chain)
 	int _tSpins{};
 	int _nbMinos{};
 	int _goal{};
