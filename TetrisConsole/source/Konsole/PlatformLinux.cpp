@@ -140,12 +140,7 @@ bool Platform::wasResized()
 	s_resized = 0;
 
 	if (isTerminalTooSmall()) {
-		rlutil::cls();
-		int row = std::max(1, rlutil::trows() / 2);
-		rlutil::locate(1, row);
-		rlutil::setColor(rlutil::WHITE);
-		std::cout << "  Please resize terminal to "
-		          << CONSOLE_WIDTH << "x" << CONSOLE_HEIGHT << std::flush;
+		showResizePrompt();
 		return false;
 	}
 
@@ -154,6 +149,16 @@ bool Platform::wasResized()
 	rlutil::setColor(rlutil::WHITE);
 	rlutil::setBackgroundColor(rlutil::BLACK);
 	return true;
+}
+
+void Platform::showResizePrompt()
+{
+	rlutil::cls();
+	int row = std::max(1, rlutil::trows() / 2);
+	rlutil::locate(1, row);
+	rlutil::setColor(rlutil::WHITE);
+	std::cout << "  Please resize terminal to "
+	          << CONSOLE_WIDTH << "x" << CONSOLE_HEIGHT << std::flush;
 }
 
 bool Platform::isTerminalTooSmall()

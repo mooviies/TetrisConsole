@@ -1,25 +1,16 @@
 #include "PiecePreview.h"
 
-#include <iostream>
-
-#include "rlutil.h"
+#include "Color.h"
 
 using namespace std;
 
-void PiecePreview::drawRow(int rowIndex, int x, int y, int interiorWidth) const {
-    rlutil::locate(x, y);
-    rlutil::setColor(rlutil::WHITE);
-    cout << "║";
-
+void PiecePreview::drawRow(int rowIndex, RowDrawContext& ctx) const {
     if (_hasPiece) {
-        rlutil::setColor(_color);
-        cout << (rowIndex == 0 ? _line1 : _line2);
+        ctx.setColor(_color);
+        ctx.print(rowIndex == 0 ? _line1 : _line2);
     } else {
-        cout << string(static_cast<size_t>(interiorWidth), ' ');
+        ctx.print(string(static_cast<size_t>(ctx.width()), ' '));
     }
-
-    rlutil::setColor(rlutil::WHITE);
-    cout << "║";
 }
 
 void PiecePreview::setPiece(const string& line1, const string& line2, int color) {

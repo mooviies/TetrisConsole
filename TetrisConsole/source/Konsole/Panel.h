@@ -5,6 +5,8 @@
 #include <memory>
 #include <cstddef>
 
+#include "RowDrawContext.h"
+
 enum class Align { LEFT, CENTER, RIGHT, FILL };
 
 struct Cell {
@@ -24,7 +26,7 @@ public:
     virtual ~PanelElement() = default;
 
     [[nodiscard]] virtual int height() const = 0;
-    virtual void drawRow(int rowIndex, int x, int y, int interiorWidth) const = 0;
+    virtual void drawRow(int rowIndex, RowDrawContext& ctx) const = 0;
 
     [[nodiscard]] bool isDirty() const { return _dirty; }
     void clearDirty() { _dirty = false; }

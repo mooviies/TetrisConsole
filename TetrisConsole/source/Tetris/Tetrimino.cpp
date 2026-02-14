@@ -2,7 +2,6 @@
 
 #include "Constants.h"
 #include "Platform.h"
-#include "rlutil.h"
 
 using namespace std;
 

@@ -12,6 +12,7 @@ public:
 	static int getKey();
 	static bool wasResized();
 	static bool isTerminalTooSmall();
+	static void showResizePrompt();
 	static int offsetX();
 	static int offsetY();
 	static void updateOffsets();

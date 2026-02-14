@@ -1,5 +1,5 @@
 #include "PieceData.h"
-#include "rlutil.h"
+#include "Color.h"
 
 #include <vector>
 
@@ -8,7 +8,7 @@ using namespace std;
 static PieceData buildI()
 {
 	PieceData data;
-	data.color = rlutil::LIGHTBLUE;
+	data.color = Color::LIGHTBLUE;
 	data.previewLine1 = "  ▄▄▄▄▄▄▄▄  ";
 	data.previewLine2 = "  ▀▀▀▀▀▀▀▀  ";
 	data.startingPosition = {19, 4};
@@ -34,7 +34,7 @@ static PieceData buildI()
 static PieceData buildJ()
 {
 	PieceData data;
-	data.color = rlutil::BLUE;
+	data.color = Color::BLUE;
 	data.previewLine1 = "   ██       ";
 	data.previewLine2 = "   ██████   ";
 
@@ -59,7 +59,7 @@ static PieceData buildJ()
 static PieceData buildL()
 {
 	PieceData data;
-	data.color = rlutil::BROWN;
+	data.color = Color::BROWN;
 	data.previewLine1 = "       ██   ";
 	data.previewLine2 = "   ██████   ";
 
@@ -84,7 +84,7 @@ static PieceData buildL()
 static PieceData buildO()
 {
 	PieceData data;
-	data.color = rlutil::YELLOW;
+	data.color = Color::YELLOW;
 	data.previewLine1 = "    ████    ";
 	data.previewLine2 = "    ████    ";
 
@@ -102,7 +102,7 @@ static PieceData buildO()
 static PieceData buildS()
 {
 	PieceData data;
-	data.color = rlutil::GREEN;
+	data.color = Color::GREEN;
 	data.previewLine1 = "     ████   ";
 	data.previewLine2 = "   ████     ";
 
@@ -127,7 +127,7 @@ static PieceData buildS()
 static PieceData buildT()
 {
 	PieceData data;
-	data.color = rlutil::MAGENTA;
+	data.color = Color::MAGENTA;
 	data.previewLine1 = "     ██     ";
 	data.previewLine2 = "   ██████   ";
 
@@ -182,7 +182,7 @@ static PieceData buildT()
 static PieceData buildZ()
 {
 	PieceData data;
-	data.color = rlutil::RED;
+	data.color = Color::RED;
 	data.previewLine1 = "   ████     ";
 	data.previewLine2 = "     ████   ";
 

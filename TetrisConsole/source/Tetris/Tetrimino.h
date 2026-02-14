@@ -5,7 +5,6 @@
 
 #include "Constants.h"
 #include "PieceData.h"
-#include "rlutil.h"
 
 class Tetrimino
 {

@@ -2,7 +2,7 @@
 
 #include "GameState.h"
 #include "Utility.h"
-#include "rlutil.h"
+#include "Color.h"
 
 ScoreDisplay::ScoreDisplay()
     : _panel(16), _scoreValueRow(0), _levelRow(0), _linesRow(0)
@@ -19,7 +19,7 @@ ScoreDisplay::ScoreDisplay()
 }
 
 void ScoreDisplay::update(const GameState& state) {
-    const int scoreColor = state._backToBackBonus ? rlutil::LIGHTGREEN : rlutil::WHITE;
+    const int scoreColor = state._backToBackBonus ? Color::LIGHTGREEN : Color::WHITE;
     _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state._score, 10));
     _panel.setCellColor(_scoreValueRow, 0, scoreColor);
     _panel.setCell(_levelRow, 1, Utility::valueToString(state._level, 2));

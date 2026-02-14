@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <chrono>
 #include <string>
+#include <thread>
 
 #include "Tetris.h"
 #include "Input.h"
@@ -7,7 +9,6 @@
 #include "Utility.h"
 #include "Menu.h"
 #include "Platform.h"
-#include "rlutil.h"
 
 using namespace std;
 
@@ -18,12 +19,8 @@ int main() {
     SoundEngine::init();
 
     while (Platform::isTerminalTooSmall()) {
-        rlutil::cls();
-        int row = std::max(1, rlutil::trows() / 2);
-        rlutil::locate(1, row);
-        rlutil::setColor(rlutil::WHITE);
-        cout << "  Please resize terminal to 80x29" << flush;
-        usleep(100000);
+        Platform::showResizePrompt();
+        this_thread::sleep_for(chrono::milliseconds(100));
     }
 
     Utility::showTitle("A classic in console!");
@@ -101,7 +98,7 @@ int main() {
         if (Platform::wasResized())
             tetris.redraw();
         if (Platform::isTerminalTooSmall()) {
-            usleep(50000);
+            this_thread::sleep_for(chrono::milliseconds(50));
             continue;
         }
         tetris.step();

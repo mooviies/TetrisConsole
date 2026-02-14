@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <set>
 
+#include "Color.h"
 #include "rlutil.h"
 
 using namespace std;
@@ -404,7 +405,14 @@ void Panel::drawSingleRow(size_t row) const {
         rlutil::setColor(rlutil::WHITE);
         cout << renderSeparator(row);
     } else if (_rows[row].type == RowData::Type::ELEMENT) {
-        _rows[row].element->drawRow(_rows[row].elementRowIndex, _x, rowY, _interiorWidth);
+        rlutil::locate(_x, rowY);
+        rlutil::setColor(Color::WHITE);
+        cout << "║";
+        RowDrawContext ctx(_x + 1, rowY, _interiorWidth);
+        _rows[row].element->drawRow(_rows[row].elementRowIndex, ctx);
+        rlutil::setColor(Color::WHITE);
+        rlutil::setBackgroundColor(Color::BLACK);
+        cout << "║";
     } else {
         drawColoredRow(_x, rowY, _rows[row]);
     }

@@ -3,7 +3,7 @@
 #include "GameState.h"
 #include "Platform.h"
 #include "SoundEngine.h"
-#include "rlutil.h"
+#include "Color.h"
 
 GameRenderer::GameRenderer()
     : _next("Next"), _hold("Hold"), _nextQueuePanel(12), _muteIcon("♪")
@@ -62,9 +62,9 @@ void GameRenderer::render(GameState& state, const bool playfieldVisible) {
 
 void GameRenderer::drawMuteIndicator() {
     switch (SoundEngine::getMuteState()) {
-        case MuteState::UNMUTED:      _muteIcon.setColor(rlutil::WHITE);  break;
-        case MuteState::MUSIC_MUTED:  _muteIcon.setColor(rlutil::YELLOW); break;
-        case MuteState::ALL_MUTED:    _muteIcon.setColor(rlutil::RED);    break;
+        case MuteState::UNMUTED:      _muteIcon.setColor(Color::WHITE);  break;
+        case MuteState::MUSIC_MUTED:  _muteIcon.setColor(Color::YELLOW); break;
+        case MuteState::ALL_MUTED:    _muteIcon.setColor(Color::RED);    break;
     }
     _muteIcon.draw();
 }

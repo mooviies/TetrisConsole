@@ -1,17 +1,15 @@
 #include "PlayfieldDisplay.h"
 
-#include <iostream>
-
+#include "Color.h"
 #include "GameState.h"
 #include "Constants.h"
-#include "rlutil.h"
 
 using namespace std;
 
 class PlayfieldElement : public PanelElement {
 public:
     [[nodiscard]] int height() const override { return 20; }
-    void drawRow(int rowIndex, int x, int y, int interiorWidth) const override;
+    void drawRow(int rowIndex, RowDrawContext& ctx) const override;
 
     void update(const GameState& state, bool visible);
 
@@ -26,13 +24,9 @@ void PlayfieldElement::update(const GameState& state, bool visible) {
     markDirty();
 }
 
-void PlayfieldElement::drawRow(int rowIndex, int x, int y, int /*interiorWidth*/) const {
+void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
     if (_state == nullptr)
         return;
-
-    rlutil::locate(x, y);
-    rlutil::setColor(rlutil::WHITE);
-    cout << "║";
 
     int line = MATRIX_START + rowIndex;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
@@ -41,32 +35,25 @@ void PlayfieldElement::drawRow(int rowIndex, int x, int y, int /*interiorWidth*/
             currentTetriminoHere = _state->_currentTetrimino->isMino(line, i);
 
         if (_visible && (_state->_matrix[line][i] || currentTetriminoHere)) {
-            if (currentTetriminoHere)
-                rlutil::setColor(_state->_currentTetrimino->getColor());
-            else
-                rlutil::setColor(_state->_matrix[line][i]);
-
-            if (currentTetriminoHere)
-                cout << "██";
-            else {
-                rlutil::setColor(rlutil::BLACK);
-                rlutil::setBackgroundColor(_state->_matrix[line][i]);
-                cout << "░░";
-                rlutil::setBackgroundColor(rlutil::BLACK);
+            if (currentTetriminoHere) {
+                ctx.setColor(_state->_currentTetrimino->getColor());
+                ctx.print("██");
+            } else {
+                ctx.setColor(Color::BLACK);
+                ctx.setBackgroundColor(_state->_matrix[line][i]);
+                ctx.print("░░");
+                ctx.setBackgroundColor(Color::BLACK);
             }
 
-            rlutil::setColor(rlutil::WHITE);
+            ctx.setColor(Color::WHITE);
         } else {
-            rlutil::setColor(rlutil::DARKGREY);
+            ctx.setColor(Color::DARKGREY);
             if ((line % 2 == 0 && i % 2 != 0) || (line % 2 != 0 && i % 2 == 0))
-                cout << "░░";
+                ctx.print("░░");
             else
-                cout << "▒▒";
+                ctx.print("▒▒");
         }
     }
-
-    rlutil::setColor(rlutil::WHITE);
-    cout << "║";
 }
 
 PlayfieldDisplay::PlayfieldDisplay()

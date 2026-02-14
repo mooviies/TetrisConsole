@@ -73,6 +73,10 @@ bool Platform::isTerminalTooSmall()
 	return false;
 }
 
+void Platform::showResizePrompt()
+{
+}
+
 int Platform::offsetX()
 {
 	return 0;
