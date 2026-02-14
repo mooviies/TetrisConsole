@@ -123,11 +123,11 @@ bool Tetrimino::isMino(const int row, const int column) const
 {
 	const auto position = Vector2i(row, column);
 	Facing const & currentFacing = _facings[_currentRotation];
-	const int nbMino = currentFacing.getMinoCount();
+	const int minoCount = currentFacing.getMinoCount();
 	const Vector2i relativePos = position - _currentPosition;
 
 	bool result = false;
-	for (int i = 0; i < nbMino; i++)
+	for (int i = 0; i < minoCount; i++)
 	{
 		if (currentFacing.getMino(i) == relativePos)
 		{
@@ -162,26 +162,6 @@ bool Tetrimino::checkPositionValidity(const Vector2i& position, const ROTATION r
 			valid = false;
 	}
 	return valid;
-}
-
-void Tetrimino::printPreview(const int line, const bool hold) const {
-	int y = line;
-	if (hold)
-		y += 24;
-	else
-		y += 10;
-
-	rlutil::locate(60 + Platform::offsetX(), y + Platform::offsetY());
-	rlutil::setColor(_color);
-
-	if (line == 0)
-		cout << _previewLine1;
-	else if (line == 1)
-		cout << _previewLine2;
-	else
-		cout << "            ";
-
-	rlutil::setColor(rlutil::WHITE);
 }
 
 // T-spin detection uses the 3-corner rule:

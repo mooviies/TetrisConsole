@@ -175,7 +175,6 @@ map<string, string> Menu::generateValues() {
 }
 
 void Menu::draw() {
-    // Update option cells with current marker and values
     for (size_t i = 0; i < _options.size(); i++) {
         string text;
         if (static_cast<int>(i) == _choice)
@@ -186,7 +185,6 @@ void Menu::draw() {
         text += _options[i];
 
         if (_optionsValues.find(_options[i]) != _optionsValues.end()) {
-            // Pad name to align " : " across all value options
             size_t namePad = _longestOptionWithChoice - _options[i].length();
             text.append(namePad, ' ');
             text += " : ";

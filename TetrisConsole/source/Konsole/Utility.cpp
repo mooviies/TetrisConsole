@@ -10,15 +10,7 @@
 
 using namespace std;
 
-
-Utility::Utility()
-= default;
-
-
-Utility::~Utility()
-= default;
-
-void Utility::showTitle(const string& sousTitre)
+void Utility::showTitle(const string& subtitle)
 {
 	int ox = Platform::offsetX();
 	int oy = Platform::offsetY();
@@ -26,7 +18,7 @@ void Utility::showTitle(const string& sousTitre)
 	Panel title(78);
 	title.addRow("Tetris Console", Align::CENTER);
 	title.addSeparator();
-	title.addRow(sousTitre, Align::CENTER);
+	title.addRow(subtitle, Align::CENTER);
 	title.setPosition(1 + ox, 1 + oy);
 	title.render();
 }

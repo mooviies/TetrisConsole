@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <cstddef>
-
 #include "Panel.h"
+#include "ScoreDisplay.h"
+#include "HighScoreDisplay.h"
+#include "PieceDisplay.h"
+#include "PlayfieldDisplay.h"
 
 class GameState;
-class PiecePreview;
 
 class GameRenderer
 {
@@ -16,28 +16,16 @@ public:
 
 	void invalidate();
 	void refresh(GameState& state);
-	static void printMatrix(const GameState& state, bool visible = true);
+	void printMatrix(const GameState& state, bool visible = true);
 
 private:
 	void updatePositions();
-	static void printLine(const GameState& state, int line, bool visible);
-	void printPreview(const GameState& state) const;
-	void printScore(const GameState& state);
+	static void drawMuteIndicator();
 
-	Panel _scorePanel;
-	Panel _playfieldPanel;
-	Panel _nextPanel;
+	ScoreDisplay _score;
+	HighScoreDisplay _highScore;
+	PieceDisplay _next;
+	PieceDisplay _hold;
+	PlayfieldDisplay _playfield;
 	Panel _nextQueuePanel;
-	Panel _holdPanel;
-	Panel _highScorePanel;
-
-	size_t _scoreValueRow;
-	size_t _levelRow;
-	size_t _linesRow;
-	size_t _highScoreValueRow;
-
-	std::shared_ptr<PiecePreview> _nextPiece;
-	std::shared_ptr<PiecePreview> _holdPiece;
-	size_t _nextPieceRow;
-	size_t _holdPieceRow;
 };

@@ -13,7 +13,6 @@ public:
 	Tetrimino(PieceType type, GameMatrix& matrix);
 	~Tetrimino();
 
-	void printPreview(int line, bool hold = false) const;
 	[[nodiscard]] bool setPosition(const Vector2i &position);
 	[[nodiscard]] bool move(const Vector2i &distance);
 	[[nodiscard]] bool simulateMove(const Vector2i &distance);

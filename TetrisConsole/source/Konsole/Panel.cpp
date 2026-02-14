@@ -188,10 +188,9 @@ string Panel::renderTextRow(const RowData& row) const {
 }
 
 string Panel::renderSeparator(size_t rowIndex) const {
-    // Collect column boundaries from neighboring TEXT rows
+    // Junction characters adapt to column boundaries of neighboring TEXT rows
     set<int> aboveBounds, belowBounds;
 
-    // Search upward for nearest TEXT row
     for (size_t i = rowIndex; i > 0; ) {
         i--;
         if (_rows[i].type == RowData::Type::TEXT) {
@@ -201,7 +200,6 @@ string Panel::renderSeparator(size_t rowIndex) const {
         }
     }
 
-    // Search downward for nearest TEXT row
     for (size_t i = rowIndex + 1; i < _rows.size(); i++) {
         if (_rows[i].type == RowData::Type::TEXT) {
             for (int b : columnBoundaries(_rows[i].cells))
@@ -229,7 +227,6 @@ string Panel::renderSeparator(size_t rowIndex) const {
 }
 
 void Panel::drawColoredRow(int x, int y, const RowData& row) const {
-    // Check if all cells have the same color (common case)
     bool uniformColor = true;
     int firstColor = row.cells.empty() ? 15 : row.cells[0].color;
     for (const auto& cell : row.cells) {
@@ -246,15 +243,14 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
         return;
     }
 
-    // Complex case: different colors per cell
     vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
-    rlutil::setColor(15); // WHITE for border
+    rlutil::setColor(rlutil::WHITE);
     cout << "║";
 
     for (size_t i = 0; i < row.cells.size(); i++) {
         if (i > 0) {
-            rlutil::setColor(15);
+            rlutil::setColor(rlutil::WHITE);
             cout << "║";
         }
 
@@ -300,7 +296,7 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
         }
     }
 
-    rlutil::setColor(15);
+    rlutil::setColor(rlutil::WHITE);
     cout << "║";
 }
 
@@ -319,7 +315,6 @@ void Panel::render() {
         return;
     }
 
-    // Redraw text/separator rows marked dirty
     for (size_t i = 0; i < _rows.size(); i++) {
         if (_dirtyRows.size() > i && _dirtyRows[i]) {
             drawSingleRow(i);
@@ -327,12 +322,11 @@ void Panel::render() {
         }
     }
 
-    // Redraw element rows whose element is dirty
     for (size_t i = 0; i < _rows.size(); i++) {
         if (_rows[i].type == RowData::Type::ELEMENT &&
             _rows[i].element && _rows[i].element->isDirty()) {
             drawSingleRow(i);
-            // Clear dirty only on the last sub-row of this element
+            // Only clear after drawing all sub-rows of a multi-row element
             if (_rows[i].elementRowIndex == _rows[i].element->height() - 1)
                 _rows[i].element->clearDirty();
         }

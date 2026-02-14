@@ -6,10 +6,10 @@
 class Utility
 {
 public:
-	static void showTitle(const std::string& sousTitre);
+	static void showTitle(const std::string& subtitle);
 	static std::string valueToString(int64_t value, int length);
-private:
-	Utility();
-	~Utility();
+
+	Utility() = delete;
+	~Utility() = delete;
 };
 
