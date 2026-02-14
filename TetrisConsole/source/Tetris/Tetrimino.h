@@ -25,6 +25,8 @@ public:
 	[[nodiscard]] Vector2i const & getPosition() const { return _currentPosition; }
 
 	[[nodiscard]] int getColor() const { return _color; }
+	[[nodiscard]] const std::string& getPreviewLine1() const { return _previewLine1; }
+	[[nodiscard]] const std::string& getPreviewLine2() const { return _previewLine2; }
 	[[nodiscard]] Vector2i getStartingPosition() const { return _startingPosition; }
 	[[nodiscard]] bool canTSpin() const { return _hasTSpin; }
 	bool checkTSpin();

@@ -2,9 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstddef>
 
-enum class Align { LEFT, CENTER, RIGHT };
+enum class Align { LEFT, CENTER, RIGHT, FILL };
 
 struct Cell {
     std::string text;
@@ -17,6 +18,22 @@ struct Cell {
         : text(std::move(t)), align(a), color(c), width(w) {}
 };
 
+// Base class for custom elements that can be embedded in a Panel.
+// Subclass this outside the Konsole module to add domain-specific content.
+class PanelElement {
+public:
+    virtual ~PanelElement() = default;
+
+    // Number of rows this element occupies
+    [[nodiscard]] virtual int height() const = 0;
+
+    // Draw one row of this element.
+    // rowIndex: 0..height()-1
+    // x, y: screen position for this row (left border column, row line)
+    // interiorWidth: number of columns between the ║ borders
+    virtual void drawRow(int rowIndex, int x, int y, int interiorWidth) const = 0;
+};
+
 class Panel {
 public:
     explicit Panel(int interiorWidth = 0);
@@ -27,13 +44,15 @@ public:
     size_t addRow(std::vector<Cell> cells);
     // Horizontal separator
     void addSeparator();
+    // Custom element (occupies element->height() rows); returns index of first row
+    size_t addElement(std::shared_ptr<PanelElement> element);
 
-    // Draw full panel at screen position (1-based)
-    void draw(int x, int y) const;
-    // Redraw a single row
-    void drawRow(int x, int y, size_t row) const;
-    // Clear the panel area with spaces
-    void clear(int x, int y) const;
+    // Draw full panel at screen position (1-based); stores position for updates
+    void draw(int x, int y);
+    // Redraw a single row at the stored position
+    void drawRow(size_t row) const;
+    // Clear the panel area at the stored position
+    void clear() const;
 
     // Dynamic content updates
     void setCell(size_t row, size_t col, const std::string& text);
@@ -45,9 +64,11 @@ public:
 
 private:
     struct RowData {
-        enum class Type { TEXT, SEPARATOR };
+        enum class Type { TEXT, SEPARATOR, ELEMENT };
         Type type;
-        std::vector<Cell> cells;
+        std::vector<Cell> cells;                  // TEXT rows
+        std::shared_ptr<PanelElement> element;     // ELEMENT rows
+        int elementRowIndex = 0;                   // sub-row within the element
     };
 
     void ensureWidth();
@@ -62,4 +83,6 @@ private:
     std::vector<RowData> _rows;
     int _interiorWidth;
     mutable bool _widthComputed;
+    int _x = 0;
+    int _y = 0;
 };

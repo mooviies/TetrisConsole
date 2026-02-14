@@ -35,13 +35,26 @@ void Panel::addSeparator() {
     _rows.push_back(std::move(row));
 }
 
+size_t Panel::addElement(shared_ptr<PanelElement> element) {
+    size_t firstRow = _rows.size();
+    int h = element->height();
+    for (int i = 0; i < h; i++) {
+        RowData row;
+        row.type = RowData::Type::ELEMENT;
+        row.element = element;
+        row.elementRowIndex = i;
+        _rows.push_back(std::move(row));
+    }
+    return firstRow;
+}
+
 void Panel::ensureWidth() {
     if (_widthComputed)
         return;
 
     int maxW = 0;
     for (const auto& row : _rows) {
-        if (row.type == RowData::Type::SEPARATOR)
+        if (row.type != RowData::Type::TEXT)
             continue;
 
         if (row.cells.size() == 1) {
@@ -162,6 +175,10 @@ string Panel::renderTextRow(const RowData& row) const {
                     result += " ";
                     break;
                 }
+                case Align::FILL: {
+                    result += cell.text;
+                    break;
+                }
             }
         }
     }
@@ -275,6 +292,10 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
                     cout << " ";
                     break;
                 }
+                case Align::FILL: {
+                    cout << cell.text;
+                    break;
+                }
             }
         }
     }
@@ -283,11 +304,13 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
     cout << "║";
 }
 
-void Panel::draw(int x, int y) const {
-    const_cast<Panel*>(this)->ensureWidth();
+void Panel::draw(int x, int y) {
+    _x = x;
+    _y = y;
+    ensureWidth();
 
     // Top border
-    rlutil::locate(x, y);
+    rlutil::locate(_x, _y);
     rlutil::setColor(rlutil::WHITE);
     {
         string top = "╔";
@@ -313,17 +336,20 @@ void Panel::draw(int x, int y) const {
 
     // Rows
     for (size_t i = 0; i < _rows.size(); i++) {
+        int rowY = _y + static_cast<int>(i) + 1;
         if (_rows[i].type == RowData::Type::SEPARATOR) {
-            rlutil::locate(x, y + static_cast<int>(i) + 1);
+            rlutil::locate(_x, rowY);
             rlutil::setColor(rlutil::WHITE);
             cout << renderSeparator(i);
+        } else if (_rows[i].type == RowData::Type::ELEMENT) {
+            _rows[i].element->drawRow(_rows[i].elementRowIndex, _x, rowY, _interiorWidth);
         } else {
-            drawColoredRow(x, y + static_cast<int>(i) + 1, _rows[i]);
+            drawColoredRow(_x, rowY, _rows[i]);
         }
     }
 
     // Bottom border
-    rlutil::locate(x, y + static_cast<int>(_rows.size()) + 1);
+    rlutil::locate(_x, _y + static_cast<int>(_rows.size()) + 1);
     rlutil::setColor(rlutil::WHITE);
     {
         string bottom = "╚";
@@ -347,26 +373,29 @@ void Panel::draw(int x, int y) const {
     }
 }
 
-void Panel::drawRow(int x, int y, size_t row) const {
+void Panel::drawRow(size_t row) const {
     if (row >= _rows.size())
         return;
 
+    int rowY = _y + static_cast<int>(row) + 1;
     if (_rows[row].type == RowData::Type::SEPARATOR) {
-        rlutil::locate(x, y + static_cast<int>(row) + 1);
+        rlutil::locate(_x, rowY);
         rlutil::setColor(rlutil::WHITE);
         cout << renderSeparator(row);
+    } else if (_rows[row].type == RowData::Type::ELEMENT) {
+        _rows[row].element->drawRow(_rows[row].elementRowIndex, _x, rowY, _interiorWidth);
     } else {
-        drawColoredRow(x, y + static_cast<int>(row) + 1, _rows[row]);
+        drawColoredRow(_x, rowY, _rows[row]);
     }
 }
 
-void Panel::clear(int x, int y) const {
+void Panel::clear() const {
     int w = width();
     int h = height();
     string blank(static_cast<size_t>(w), ' ');
     rlutil::setColor(rlutil::WHITE);
     for (int i = 0; i < h; i++) {
-        rlutil::locate(x, y + i);
+        rlutil::locate(_x, _y + i);
         cout << blank;
     }
 }
@@ -391,3 +420,4 @@ int Panel::width() const {
 int Panel::height() const {
     return static_cast<int>(_rows.size()) + 2;
 }
+

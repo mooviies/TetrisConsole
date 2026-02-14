@@ -1,20 +1,25 @@
 #include "GameRenderer.h"
 
 #include <iostream>
+#include <memory>
 
 #include "GameState.h"
 #include "Constants.h"
 #include "Platform.h"
 #include "Utility.h"
 #include "SoundEngine.h"
+#include "PiecePreview.h"
 #include "rlutil.h"
 
 using namespace std;
 
 GameRenderer::GameRenderer()
     : _scorePanel(16), _playfieldPanel(20), _nextPanel(12),
-      _holdPanel(12), _highScorePanel(16),
-      _scoreValueRow(0), _levelRow(0), _linesRow(0), _highScoreValueRow(0)
+      _nextQueuePanel(12), _holdPanel(12), _highScorePanel(16),
+      _scoreValueRow(0), _levelRow(0), _linesRow(0), _highScoreValueRow(0),
+      _nextPiece(std::make_shared<PiecePreview>()),
+      _holdPiece(std::make_shared<PiecePreview>()),
+      _nextPieceRow(0), _holdPieceRow(0)
 {
     // Score panel
     _scorePanel.addRow("Score", Align::CENTER);
@@ -34,13 +39,19 @@ GameRenderer::GameRenderer()
     // Next panel
     _nextPanel.addRow("Next", Align::CENTER);
     _nextPanel.addSeparator();
-    for (int i = 0; i < 4; i++)
+    _nextPieceRow = _nextPanel.addElement(_nextPiece);
+    for (int i = 0; i < 2; i++)
         _nextPanel.addRow("");
+
+    // Next queue pannel
+    for (int i = 0; i < 12; i++)
+        _nextQueuePanel.addRow("");
 
     // Hold panel
     _holdPanel.addRow("Hold", Align::CENTER);
     _holdPanel.addSeparator();
-    for (int i = 0; i < 4; i++)
+    _holdPieceRow = _holdPanel.addElement(_holdPiece);
+    for (int i = 0; i < 2; i++)
         _holdPanel.addRow("");
 
     // High score panel
@@ -51,15 +62,16 @@ GameRenderer::GameRenderer()
 
 GameRenderer::~GameRenderer() = default;
 
-void GameRenderer::display() const {
+void GameRenderer::display() {
     const int ox = Platform::offsetX();
     const int oy = Platform::offsetY();
 
     _scorePanel.draw(5 + ox, 14 + oy);
     _playfieldPanel.draw(30 + ox, 6 + oy);
     _nextPanel.draw(59 + ox, 6 + oy);
+    _nextQueuePanel.draw(59 + ox, 14 + oy);
     //_highScorePanel.draw(5 + ox, 23 + oy);
-    _holdPanel.draw(5 + ox, 6 + oy);
+    _holdPanel.draw(7 + ox, 6 + oy);
 }
 
 void GameRenderer::refresh(GameState& state) {
@@ -81,21 +93,22 @@ void GameRenderer::printMatrix(const GameState& state, const bool visible) {
         printLine(state, i, visible);
 }
 
-void GameRenderer::printPreview(const GameState& state) {
-    state.peekTetrimino()->printPreview(0);
-    state.peekTetrimino()->printPreview(1);
+void GameRenderer::printPreview(const GameState& state) const {
+    const Tetrimino* next = state.peekTetrimino();
+    _nextPiece->setPiece(next->getPreviewLine1(), next->getPreviewLine2(),
+                         next->getColor());
+    _nextPanel.drawRow(_nextPieceRow);
+    _nextPanel.drawRow(_nextPieceRow + 1);
 
     if (state._holdTetrimino == nullptr) {
-        int ox = Platform::offsetX();
-        int oy = Platform::offsetY();
-        rlutil::locate(60 + ox, 24 + oy);
-        cout << "            ";
-        rlutil::locate(60 + ox, 25 + oy);
-        cout << "            ";
+        _holdPiece->clearPiece();
     } else {
-        state._holdTetrimino->printPreview(0, true);
-        state._holdTetrimino->printPreview(1, true);
+        _holdPiece->setPiece(state._holdTetrimino->getPreviewLine1(),
+                             state._holdTetrimino->getPreviewLine2(),
+                             state._holdTetrimino->getColor());
     }
+    _holdPanel.drawRow(_holdPieceRow);
+    _holdPanel.drawRow(_holdPieceRow + 1);
 }
 
 void GameRenderer::printScore(const GameState& state) {
@@ -106,19 +119,19 @@ void GameRenderer::printScore(const GameState& state) {
     const int scoreColor = state._backToBackBonus ? rlutil::LIGHTGREEN : rlutil::WHITE;
     _scorePanel.setCell(_scoreValueRow, 0, Utility::valueToString(state._score, 10));
     _scorePanel.setCellColor(_scoreValueRow, 0, scoreColor);
-    _scorePanel.drawRow(5 + ox, 6 + oy, _scoreValueRow);
+    _scorePanel.drawRow(_scoreValueRow);
 
     // Update level
     _scorePanel.setCell(_levelRow, 1, Utility::valueToString(state._level, 2));
-    _scorePanel.drawRow(5 + ox, 6 + oy, _levelRow);
+    _scorePanel.drawRow(_levelRow);
 
     // Update lines
     _scorePanel.setCell(_linesRow, 1, Utility::valueToString(state._lines, 6));
-    _scorePanel.drawRow(5 + ox, 6 + oy, _linesRow);
+    _scorePanel.drawRow(_linesRow);
 
     // Update high score
     _highScorePanel.setCell(_highScoreValueRow, 0, Utility::valueToString(state._highscore, 10));
-    _highScorePanel.drawRow(5 + ox, 23 + oy, _highScoreValueRow);
+    _highScorePanel.drawRow(_highScoreValueRow);
 
     // Mute indicator
     rlutil::locate(78 + ox, 2 + oy);

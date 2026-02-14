@@ -200,7 +200,7 @@ void Menu::draw() {
 }
 
 void Menu::clear() const {
-    _panel.clear(_x, _y);
+    _panel.clear();
 }
 
 void Menu::select(int choice) {
