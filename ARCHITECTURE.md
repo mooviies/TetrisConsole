@@ -255,14 +255,21 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ### Lock-Down Mechanics
 
-When a piece can no longer move down, a lock-down timer starts (`LOCK_DOWN_DELAY = 0.5s`). During lock-down:
+When a piece can no longer move down, a lock-down timer starts (`LOCK_DOWN_DELAY = 0.5s`). Three modes govern what happens during lock-down:
 
-- Moving or rotating the piece resets the timer slightly (`LOCK_DOWN_SMALL_DELAY = 0.2s`) — this is the "Extended" lock-down mode
-- A move counter tracks lock-down moves (max `LOCK_DOWN_MOVE = 15`)
-- If the piece reaches a new lowest row during lock-down, the move counter resets and the timer restarts
-- In `CLASSIC` mode, the small reset is disabled
+| Mode | Timer reset on move/rotate | Move limit |
+|------|---------------------------|------------|
+| **Extended** | Full reset to 0.5s | 15 moves (`LOCK_DOWN_MOVE`), then forced lock |
+| **Infinite** | Full reset to 0.5s | No limit |
+| **Classic** | No reset | No limit (timer always runs to expiry) |
 
-When the timer expires or the move limit is reached, the piece locks: its mino colors are written into the matrix.
+In Extended and Infinite modes, every successful move or rotation during lock-down calls `resetLockDown()`, which resets the timer to a fresh 0.5s. This lets the player keep manipulating the piece as long as they keep acting within each 0.5s window. Extended caps this at 15 moves to prevent infinite stalling; Infinite has no such cap.
+
+In Classic mode, `resetLockDown()` returns immediately — the 0.5s timer runs uninterrupted from the moment the piece touches down.
+
+In all modes, if the piece reaches a new lowest row during gravity fall while in lock-down, the move counter resets to 0 and the timer restarts (this is separate from `resetLockDown` — it happens inside `fall()`).
+
+When the timer expires or (in Extended mode only) the move limit is reached, the piece locks: its mino colors are written into the matrix.
 
 ### Hard Drop
 

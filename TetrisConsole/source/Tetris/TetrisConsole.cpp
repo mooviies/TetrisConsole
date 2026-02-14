@@ -34,10 +34,10 @@ int main() {
     for (int i = 1; i <= 15; i++)
         levels.push_back(Utility::valueToString(i, 2));
 
-    vector<string> modes;
-    modes.emplace_back("Extended");
-    modes.emplace_back("Infinite");
-    modes.emplace_back("Classic");
+    vector<string> lockDownMode;
+    lockDownMode.emplace_back("Extended");
+    lockDownMode.emplace_back("Infinite");
+    lockDownMode.emplace_back("Classic");
 
     Menu main("MAIN MENU");
     Menu options("SETTINGS");
@@ -64,10 +64,10 @@ int main() {
         tetris.setMode(mode);
     });
     newGame.addOptionWithValues("Level", levels);
-    newGame.addOptionWithValues("Mode", modes);
+    newGame.addOptionWithValues("Lock Down", lockDownMode);
 
     options.addOptionWithValues("Level", levels);
-    options.addOptionWithValues("Mode", modes);
+    options.addOptionWithValues("Mode", lockDownMode);
     options.addOptionCloseAllMenu("Accept", [&tetris](OptionChoice oc) {
         int level = 1;
         try { level = stoi(oc.values["Level"]); } catch (...) {}
