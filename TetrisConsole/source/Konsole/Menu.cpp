@@ -159,6 +159,7 @@ void Menu::generate() {
     constexpr int windowHeight = 28;
     _x = Platform::offsetX() + (windowWidth / 2) - (_width / 2);
     _y = Platform::offsetY() + (windowHeight / 2) - (_height / 2);
+    _panel.setPosition(_x, _y);
     _choice = 0;
     _close = false;
 }
@@ -195,7 +196,7 @@ void Menu::draw() {
         _panel.setCell(_optionRows[i], 0, text);
     }
 
-    _panel.draw(_x, _y);
+    _panel.render();
     cout << flush;
 }
 

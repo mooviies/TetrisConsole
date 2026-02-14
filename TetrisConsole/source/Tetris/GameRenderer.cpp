@@ -62,16 +62,26 @@ GameRenderer::GameRenderer()
 
 GameRenderer::~GameRenderer() = default;
 
-void GameRenderer::display() {
+void GameRenderer::updatePositions() {
     const int ox = Platform::offsetX();
     const int oy = Platform::offsetY();
 
-    _scorePanel.draw(5 + ox, 14 + oy);
-    _playfieldPanel.draw(30 + ox, 6 + oy);
-    _nextPanel.draw(59 + ox, 6 + oy);
-    _nextQueuePanel.draw(59 + ox, 14 + oy);
-    //_highScorePanel.draw(5 + ox, 23 + oy);
-    _holdPanel.draw(7 + ox, 6 + oy);
+    _scorePanel.setPosition(5 + ox, 14 + oy);
+    _playfieldPanel.setPosition(30 + ox, 6 + oy);
+    _nextPanel.setPosition(59 + ox, 6 + oy);
+    _nextQueuePanel.setPosition(59 + ox, 14 + oy);
+    _highScorePanel.setPosition(5 + ox, 23 + oy);
+    _holdPanel.setPosition(7 + ox, 6 + oy);
+}
+
+void GameRenderer::invalidate() {
+    updatePositions();
+    _scorePanel.invalidate();
+    _playfieldPanel.invalidate();
+    _nextPanel.invalidate();
+    _nextQueuePanel.invalidate();
+    _highScorePanel.invalidate();
+    _holdPanel.invalidate();
 }
 
 void GameRenderer::refresh(GameState& state) {
@@ -82,9 +92,21 @@ void GameRenderer::refresh(GameState& state) {
     if (state._hasBetterHighscore)
         state._highscore = state._score;
 
+    _scorePanel.render();
+    _playfieldPanel.render();
+    _nextPanel.render();
+    _nextQueuePanel.render();
+    _holdPanel.render();
+    _highScorePanel.render();
+
     printMatrix(state);
     printPreview(state);
     printScore(state);
+
+    _scorePanel.render();
+    _highScorePanel.render();
+    _nextPanel.render();
+    _holdPanel.render();
     cout << flush;
 }
 
@@ -97,8 +119,6 @@ void GameRenderer::printPreview(const GameState& state) const {
     const Tetrimino* next = state.peekTetrimino();
     _nextPiece->setPiece(next->getPreviewLine1(), next->getPreviewLine2(),
                          next->getColor());
-    _nextPanel.drawRow(_nextPieceRow);
-    _nextPanel.drawRow(_nextPieceRow + 1);
 
     if (state._holdTetrimino == nullptr) {
         _holdPiece->clearPiece();
@@ -107,8 +127,6 @@ void GameRenderer::printPreview(const GameState& state) const {
                              state._holdTetrimino->getPreviewLine2(),
                              state._holdTetrimino->getColor());
     }
-    _holdPanel.drawRow(_holdPieceRow);
-    _holdPanel.drawRow(_holdPieceRow + 1);
 }
 
 void GameRenderer::printScore(const GameState& state) {
@@ -119,19 +137,15 @@ void GameRenderer::printScore(const GameState& state) {
     const int scoreColor = state._backToBackBonus ? rlutil::LIGHTGREEN : rlutil::WHITE;
     _scorePanel.setCell(_scoreValueRow, 0, Utility::valueToString(state._score, 10));
     _scorePanel.setCellColor(_scoreValueRow, 0, scoreColor);
-    _scorePanel.drawRow(_scoreValueRow);
 
     // Update level
     _scorePanel.setCell(_levelRow, 1, Utility::valueToString(state._level, 2));
-    _scorePanel.drawRow(_levelRow);
 
     // Update lines
     _scorePanel.setCell(_linesRow, 1, Utility::valueToString(state._lines, 6));
-    _scorePanel.drawRow(_linesRow);
 
     // Update high score
     _highScorePanel.setCell(_highScoreValueRow, 0, Utility::valueToString(state._highscore, 10));
-    _highScorePanel.drawRow(_highScoreValueRow);
 
     // Mute indicator
     rlutil::locate(78 + ox, 2 + oy);

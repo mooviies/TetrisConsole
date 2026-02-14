@@ -304,17 +304,51 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
     cout << "║";
 }
 
-void Panel::draw(int x, int y) {
+void Panel::setPosition(int x, int y) {
     _x = x;
     _y = y;
+}
+
+void Panel::invalidate() {
+    _needsFullDraw = true;
+}
+
+void Panel::render() {
+    if (_needsFullDraw) {
+        drawFull();
+        return;
+    }
+
+    // Redraw text/separator rows marked dirty
+    for (size_t i = 0; i < _rows.size(); i++) {
+        if (_dirtyRows.size() > i && _dirtyRows[i]) {
+            drawSingleRow(i);
+            _dirtyRows[i] = false;
+        }
+    }
+
+    // Redraw element rows whose element is dirty
+    for (size_t i = 0; i < _rows.size(); i++) {
+        if (_rows[i].type == RowData::Type::ELEMENT &&
+            _rows[i].element && _rows[i].element->isDirty()) {
+            drawSingleRow(i);
+            // Clear dirty only on the last sub-row of this element
+            if (_rows[i].elementRowIndex == _rows[i].element->height() - 1)
+                _rows[i].element->clearDirty();
+        }
+    }
+}
+
+void Panel::drawFull() {
     ensureWidth();
+    _dirtyRows.assign(_rows.size(), false);
+    _needsFullDraw = false;
 
     // Top border
     rlutil::locate(_x, _y);
     rlutil::setColor(rlutil::WHITE);
     {
         string top = "╔";
-        // Check for column boundaries in first TEXT row
         set<int> firstBounds;
         for (const auto& row : _rows) {
             if (row.type == RowData::Type::TEXT) {
@@ -336,16 +370,9 @@ void Panel::draw(int x, int y) {
 
     // Rows
     for (size_t i = 0; i < _rows.size(); i++) {
-        int rowY = _y + static_cast<int>(i) + 1;
-        if (_rows[i].type == RowData::Type::SEPARATOR) {
-            rlutil::locate(_x, rowY);
-            rlutil::setColor(rlutil::WHITE);
-            cout << renderSeparator(i);
-        } else if (_rows[i].type == RowData::Type::ELEMENT) {
-            _rows[i].element->drawRow(_rows[i].elementRowIndex, _x, rowY, _interiorWidth);
-        } else {
-            drawColoredRow(_x, rowY, _rows[i]);
-        }
+        drawSingleRow(i);
+        if (_rows[i].type == RowData::Type::ELEMENT && _rows[i].element)
+            _rows[i].element->clearDirty();
     }
 
     // Bottom border
@@ -373,7 +400,7 @@ void Panel::draw(int x, int y) {
     }
 }
 
-void Panel::drawRow(size_t row) const {
+void Panel::drawSingleRow(size_t row) const {
     if (row >= _rows.size())
         return;
 
@@ -403,12 +430,16 @@ void Panel::clear() const {
 void Panel::setCell(size_t row, size_t col, const string& text) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         _rows[row].cells[col].text = text;
+        if (row < _dirtyRows.size())
+            _dirtyRows[row] = true;
     }
 }
 
 void Panel::setCellColor(size_t row, size_t col, int color) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         _rows[row].cells[col].color = color;
+        if (row < _dirtyRows.size())
+            _dirtyRows[row] = true;
     }
 }
 

@@ -27,7 +27,8 @@ void Utility::showTitle(const string& sousTitre)
 	title.addRow("Tetris Console", Align::CENTER);
 	title.addSeparator();
 	title.addRow(sousTitre, Align::CENTER);
-	title.draw(1 + ox, 1 + oy);
+	title.setPosition(1 + ox, 1 + oy);
+	title.render();
 }
 
 string Utility::valueToString(int64_t value, int length)

@@ -32,6 +32,16 @@ public:
     // x, y: screen position for this row (left border column, row line)
     // interiorWidth: number of columns between the ║ borders
     virtual void drawRow(int rowIndex, int x, int y, int interiorWidth) const = 0;
+
+    // Dirty tracking — subclasses should call markDirty() when their data changes
+    [[nodiscard]] bool isDirty() const { return _dirty; }
+    void clearDirty() { _dirty = false; }
+
+protected:
+    void markDirty() { _dirty = true; }
+
+private:
+    bool _dirty = false;
 };
 
 class Panel {
@@ -47,11 +57,13 @@ public:
     // Custom element (occupies element->height() rows); returns index of first row
     size_t addElement(std::shared_ptr<PanelElement> element);
 
-    // Draw full panel at screen position (1-based); stores position for updates
-    void draw(int x, int y);
-    // Redraw a single row at the stored position
-    void drawRow(size_t row) const;
-    // Clear the panel area at the stored position
+    // Set screen position (1-based); can be called again on resize
+    void setPosition(int x, int y);
+    // Mark entire panel for full redraw on next render()
+    void invalidate();
+    // Smart render: full draw if invalidated, partial (dirty rows only) otherwise
+    void render();
+    // Clear the panel area
     void clear() const;
 
     // Dynamic content updates
@@ -80,7 +92,13 @@ private:
     // Find column boundaries (interior positions where column separators go)
     std::vector<int> columnBoundaries(const std::vector<Cell>& cells) const;
 
+    void drawSingleRow(size_t row) const;
+
+    void drawFull();
+
     std::vector<RowData> _rows;
+    std::vector<bool> _dirtyRows;
+    bool _needsFullDraw = true;
     int _interiorWidth;
     mutable bool _widthComputed;
     int _x = 0;

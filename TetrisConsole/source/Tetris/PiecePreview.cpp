@@ -27,8 +27,10 @@ void PiecePreview::setPiece(const string& line1, const string& line2, int color)
     _line2 = line2;
     _color = color;
     _hasPiece = true;
+    markDirty();
 }
 
 void PiecePreview::clearPiece() {
     _hasPiece = false;
+    markDirty();
 }

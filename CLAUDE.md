@@ -4,22 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
-**All platforms (Linux/macOS/Windows):**
+**Linux (CLion):**
+```
+cmake -B cmake-build-debug
+cmake --build cmake-build-debug
+```
+The binary is `cmake-build-debug/tetris`.
+
+**Windows / Visual Studio:**
 ```
 cmake -B build
 cmake --build build
 ```
-The binary is `build/tetris` on Linux/macOS, `build/TetrisConsole.exe` on Windows.
+The binary is `build/TetrisConsole.exe`.
 
 There are no tests or linting configured.
 
 ## IDE Setup
 
-**CLion:** Open `CMakeLists.txt` directly — CLion handles CMake natively.
+**CLion:** Open `CMakeLists.txt` directly — CLion handles CMake natively. The build directory is `cmake-build-debug/`.
 
-**VS Code + clangd:** CMake generates `build/compile_commands.json` automatically (`CMAKE_EXPORT_COMPILE_COMMANDS` is enabled). Point clangd at it or symlink:
+**VS Code + clangd:** CMake generates `cmake-build-debug/compile_commands.json` automatically (`CMAKE_EXPORT_COMPILE_COMMANDS` is enabled). Point clangd at it or symlink:
 ```
-ln -s build/compile_commands.json .
+ln -s cmake-build-debug/compile_commands.json .
 ```
 
 **Windows / Visual Studio:** `cmake -B build` generates a `.sln` in `build/` — open it directly.

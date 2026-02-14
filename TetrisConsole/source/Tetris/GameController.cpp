@@ -56,7 +56,7 @@ void GameController::step(GameState& state) {
             reset(state);
             return;
         }
-        _renderer.display();
+        _renderer.invalidate();
         _renderer.refresh(state);
         SoundEngine::unpauseMusic();
     }
@@ -348,7 +348,7 @@ void GameController::reset(GameState& state) {
     _timer.stopTimer(AUTOREPEAT_LEFT);
     _timer.stopTimer(AUTOREPEAT_RIGHT);
 
-    _renderer.display();
+    _renderer.invalidate();
     _renderer.refresh(state);
 
     SoundEngine::playMusic("A");

@@ -14,11 +14,12 @@ public:
 	GameRenderer();
 	~GameRenderer();
 
-	void display();
+	void invalidate();
 	void refresh(GameState& state);
 	static void printMatrix(const GameState& state, bool visible = true);
 
 private:
+	void updatePositions();
 	static void printLine(const GameState& state, int line, bool visible);
 	void printPreview(const GameState& state) const;
 	void printScore(const GameState& state);

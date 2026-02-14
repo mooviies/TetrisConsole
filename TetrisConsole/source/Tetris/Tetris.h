@@ -13,7 +13,7 @@ public:
 
 	void start()  { _controller.start(_state); }
 	void step()   { _controller.step(_state); }
-	void redraw() { _renderer.display(); Utility::showTitle("A classic in console!"); _renderer.refresh(_state); }
+	void redraw() { _renderer.invalidate(); Utility::showTitle("A classic in console!"); _renderer.refresh(_state); }
 	void exit()   { _state._shouldExit = true; }
 	[[nodiscard]] bool doExit() const { return _state._shouldExit; }
 	void setStartingLevel(const int level) { _controller.setStartingLevel(_state, level); }
