@@ -336,6 +336,7 @@ void GameController::reset(GameState& state) const {
     state._nbMoveAfterLockDown = 0;
     state._lowestLine = 0;
     state.startGameTimer();
+    state.activateHighscore();
 
     _timer.stopTimer(LOCK_DOWN);
     _timer.stopTimer(FALL);

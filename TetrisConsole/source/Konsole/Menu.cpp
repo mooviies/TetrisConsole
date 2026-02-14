@@ -21,9 +21,11 @@ Menu::Menu(string title, string subtitle)
 
 Menu::~Menu() = default;
 
-void Menu::addOption(const string &name, Menu *menu) {
+void Menu::addOption(const string &name, Menu *menu, std::function<void()> preOpen) {
     addOption(name);
     _menus[name] = menu;
+    if (preOpen)
+        _preOpenCallbacks[name] = std::move(preOpen);
 }
 
 void Menu::addOption(const string &name, std::function<void(OptionChoice)> callback) {
@@ -195,9 +197,24 @@ void Menu::clear() const {
     _panel.clear();
 }
 
+void Menu::setValueChoice(const string& name, const string& value) {
+    auto valuesIt = _optionsValues.find(name);
+    if (valuesIt == _optionsValues.end())
+        return;
+    const auto& values = valuesIt->second;
+    for (size_t i = 0; i < values.size(); i++) {
+        if (values[i] == value) {
+            _optionsValuesChoices[name] = static_cast<int>(i);
+            return;
+        }
+    }
+}
+
 void Menu::select(int choice) {
     string name = _options[choice];
     if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
+        if (auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second)
+            cb->second();
         clear();
         if (it->second->open(false, true).exitAllMenus) {
             _close = true;

@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 #include "Constants.h"
 #include "Tetrimino.h"
@@ -20,6 +21,27 @@ enum MODE {
 	CLASSIC
 };
 
+struct HighScoreKey {
+	int startingLevel;
+	MODE mode;
+	bool operator<(const HighScoreKey& o) const {
+		if (mode != o.mode) return mode < o.mode;
+		return startingLevel < o.startingLevel;
+	}
+};
+
+struct HighScoreRecord {
+	int64_t score{};
+	int level{};          // level reached (not starting level)
+	int lines{};
+	int tpm{};
+	int lpm{};
+	int tetris{};
+	int combos{};
+	int tSpins{};
+	double gameElapsed{}; // seconds
+};
+
 class GameState
 {
 public:
@@ -27,7 +49,7 @@ public:
 	~GameState();
 
 	void loadHighscore();
-	void saveHighscore() const;
+	void saveHighscore();
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
 	[[nodiscard]] std::vector<const Tetrimino*> peekTetriminos(size_t count) const;
 
@@ -50,6 +72,8 @@ public:
 	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
 	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
+	[[nodiscard]] int startingLevel() const { return _startingLevel; }
+	[[nodiscard]] MODE mode() const { return _mode; }
 
 	void markDirty() { _isDirty = true; }
 	[[nodiscard]] bool isDirty() const { return _isDirty; }
@@ -79,6 +103,7 @@ private:
 	friend class GameController;
 
 	void updateHighscore();
+	void activateHighscore();
 	void queueSound(GameSound s) { _pendingSounds.push_back(s); }
 
 	GameMatrix _matrix;
@@ -98,6 +123,7 @@ private:
 	int _goal{};
 	int64_t _score{};
 	int64_t _highscore{};
+	std::map<HighScoreKey, HighScoreRecord> _highscoreMap;
 	int _nbMoveAfterLockDown{};
 	int _lowestLine{};
 

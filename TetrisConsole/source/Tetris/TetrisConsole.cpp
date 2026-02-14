@@ -40,7 +40,6 @@ int main() {
     lockDownMode.emplace_back("Classic");
 
     Menu main("MAIN MENU");
-    Menu options("SETTINGS");
     Menu newGame("NEW GAME");
     Menu pause("PAUSE");
     Menu restartConfirm("Restart game?");
@@ -59,26 +58,13 @@ int main() {
         int level = 1;
         try { level = stoi(oc.values["Level"]); } catch (...) {}
         MODE mode = CLASSIC;
-        if (oc.values["Mode"] == "Extended") mode = EXTENDED;
-        else if (oc.values["Mode"] == "Infinite") mode = EXTENDED_INFINITY;
+        if (oc.values["Lock Down"] == "Extended") mode = EXTENDED;
+        else if (oc.values["Lock Down"] == "Infinite") mode = EXTENDED_INFINITY;
         tetris.setStartingLevel(level);
         tetris.setMode(mode);
     });
     newGame.addOptionWithValues("Level", levels);
     newGame.addOptionWithValues("Lock Down", lockDownMode);
-
-    options.addOptionWithValues("Level", levels);
-    options.addOptionWithValues("Mode", lockDownMode);
-    options.addOptionCloseAllMenu("Accept", [&tetris](OptionChoice oc) {
-        int level = 1;
-        try { level = stoi(oc.values["Level"]); } catch (...) {}
-        MODE mode = CLASSIC;
-        if (oc.values["Mode"] == "Extended") mode = EXTENDED;
-        else if (oc.values["Mode"] == "Infinite") mode = EXTENDED_INFINITY;
-        tetris.setStartingLevel(level);
-        tetris.setMode(mode);
-    });
-    options.addOptionClose("Cancel");
 
     pause.addOptionClose("Resume");
     pause.addOption("Restart", &restartConfirm);
@@ -90,8 +76,13 @@ int main() {
     quit.addOption("Yes", [&tetris](OptionChoice) { tetris.exit(); });
     quit.addOptionClose("No");
 
-    gameOver.addOptionClose("Retry");
-    gameOver.addOption("Settings", &options);
+    gameOver.addOption("Retry", &newGame, [&]() {
+        newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
+        string modeStr = "Extended";
+        if (tetris.mode() == CLASSIC) modeStr = "Classic";
+        else if (tetris.mode() == EXTENDED_INFINITY) modeStr = "Infinite";
+        newGame.setValueChoice("Lock Down", modeStr);
+    });
     gameOver.addOption("Exit Game", &quit);
 
     main.open();

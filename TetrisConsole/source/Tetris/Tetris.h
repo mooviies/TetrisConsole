@@ -22,6 +22,8 @@ public:
 	[[nodiscard]] bool doExit() const { return _state.shouldExit(); }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
 	void setMode(const MODE mode) { _state.setMode(mode); }
+	[[nodiscard]] int startingLevel() const { return _state.startingLevel(); }
+	[[nodiscard]] MODE mode() const { return _state.mode(); }
 
 private:
 	void handlePause();

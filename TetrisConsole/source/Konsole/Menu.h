@@ -31,8 +31,9 @@ public:
 	explicit Menu(std::string title, std::string subtitle = "");
 	~Menu();
 
-	void addOption(const std::string& name, Menu* menu);
+	void addOption(const std::string& name, Menu* menu, std::function<void()> preOpen = nullptr);
 	void addOption(const std::string& name, std::function<void(OptionChoice)> callback);
+	void setValueChoice(const std::string& name, const std::string& value);
 	void addOptionClose(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionCloseAllMenu(const std::string& name, std::function<void(OptionChoice)> callback = nullptr);
 	void addOptionWithValues(const std::string &name, const std::vector<std::string> &values);
@@ -61,6 +62,7 @@ private:
 
 	std::vector<std::string> _options;
 	std::map<std::string, Menu*> _menus;
+	std::map<std::string, std::function<void()>> _preOpenCallbacks;
 	std::map<std::string, std::function<void(OptionChoice)>> _callbacks;
 	std::map<std::string, std::vector<std::string>> _optionsValues;
 	std::map<std::string, int> _optionsValuesChoices;
