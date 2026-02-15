@@ -10,6 +10,7 @@ public:
 	static void flushInput();
 	static void flushOutput();
 	static int getKey();
+	static int getKeyTimeout(int timeoutMs);
 	static bool wasResized();
 	static bool isTerminalTooSmall();
 	static void showResizePrompt();

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Panel.h"
+#include "Confetti.h"
 #include "GameState.h"
 
 class HighScoreDisplay {
@@ -43,4 +44,5 @@ private:
 	size_t _previewRow{};
 
 	int _selected{};
+	Confetti _confetti;
 };

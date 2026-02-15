@@ -205,6 +205,15 @@ void HighScoreDisplay::open(const vector<HighScoreRecord>& highscores) {
 	_rightPanel.clear();
 }
 
+static vector<Rect> buildExclusionZones(int ox, int oy,
+                                        const Panel& left, const Panel& right) {
+	return {
+		{1 + ox, 1 + oy, kWindowWidth, kTitleHeight},
+		{left.x(), left.y(), left.width(), left.height()},
+		{right.x(), right.y(), right.width(), right.height()}
+	};
+}
+
 string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscores,
                                          const HighScoreRecord& newRecord) {
 	constexpr int kMaxName = 10;
@@ -230,6 +239,12 @@ string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscor
 	auto rankIdx = static_cast<size_t>(rank);
 	_leftPanel.setCellColor(_listRows[rankIdx], 0, rlutil::YELLOW);
 
+	// Start confetti animation
+	int ox = Platform::offsetX();
+	int oy = Platform::offsetY();
+	_confetti.start(kWindowWidth, kWindowHeight, ox, oy,
+	                buildExclusionZones(ox, oy, _leftPanel, _rightPanel));
+
 	Platform::flushInput();
 
 	string name;
@@ -253,9 +268,14 @@ string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscor
 			cout << flush;
 		}
 
-		int key = Platform::getKey();
+		int key = Platform::getKeyTimeout(50);
 
-		if (key == rlutil::KEY_ENTER) {
+		if (key == -1) {
+			if (!Platform::isTerminalTooSmall()) {
+				_confetti.update();
+				Platform::flushOutput();
+			}
+		} else if (key == rlutil::KEY_ENTER) {
 			break;
 		} else if (key == rlutil::KEY_ESCAPE) {
 			name.clear();
@@ -274,6 +294,11 @@ string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscor
 				reposition();
 				_leftPanel.invalidate();
 				_rightPanel.invalidate();
+				_confetti.stop();
+				int newOx = Platform::offsetX();
+				int newOy = Platform::offsetY();
+				_confetti.start(kWindowWidth, kWindowHeight, newOx, newOy,
+				                buildExclusionZones(newOx, newOy, _leftPanel, _rightPanel));
 			}
 			continue;
 		}
@@ -282,6 +307,7 @@ string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscor
 			break;
 	}
 
+	_confetti.stop();
 	_leftPanel.clear();
 	_rightPanel.clear();
 	return name;

@@ -127,6 +127,8 @@ void Tetris::handleGameOver() {
         rlutil::cls();
         GameRenderer::renderTitle("A classic in console!");
         _state.setPlayerName(_highScoreDisplay.openForNewEntry(_state.highscores(), rec));
+        rlutil::cls();
+        GameRenderer::renderTitle("A classic in console!");
     }
     _state.saveHighscore();
 

@@ -55,6 +55,8 @@ public:
     void setCell(size_t row, size_t col, const std::string& text);
     void setCellColor(size_t row, size_t col, int color);
 
+    int x() const { return _x; }
+    int y() const { return _y; }
     int width() const;
     int height() const;
 

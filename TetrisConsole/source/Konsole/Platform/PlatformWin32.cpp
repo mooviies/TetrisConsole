@@ -63,6 +63,16 @@ int Platform::getKey()
 	return rlutil::getkey();
 }
 
+int Platform::getKeyTimeout(int timeoutMs)
+{
+	for (int elapsed = 0; elapsed < timeoutMs; elapsed++) {
+		if (_kbhit())
+			return getKey();
+		Sleep(1);
+	}
+	return -1;
+}
+
 // Intentional no-ops: Windows console window is fixed-size, so resize
 // handling and offset computation are not needed.
 

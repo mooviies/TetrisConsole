@@ -132,6 +132,19 @@ int Platform::getKey()
 	return c;
 }
 
+int Platform::getKeyTimeout(int timeoutMs)
+{
+	fd_set fds;
+	timeval tv{};
+	FD_ZERO(&fds);
+	FD_SET(STDIN_FILENO, &fds);
+	tv.tv_sec = timeoutMs / 1000;
+	tv.tv_usec = (timeoutMs % 1000) * 1000;
+	if (::select(STDIN_FILENO + 1, &fds, nullptr, nullptr, &tv) > 0)
+		return getKey();
+	return -1;
+}
+
 bool Platform::wasResized()
 {
 	if (!s_resized)
