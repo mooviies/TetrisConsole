@@ -39,6 +39,53 @@ struct HighScoreRecord {
 	int previewCount{NEXT_PIECE_QUEUE_SIZE};
 };
 
+struct GameConfig {
+	MODE mode = EXTENDED;
+	bool ghostEnabled = true;
+	bool holdEnabled = true;
+	int previewCount = NEXT_PIECE_QUEUE_SIZE;
+	int startingLevel = 1;
+};
+
+struct Stats {
+	int64_t score{};
+	int level{};
+	int lines{};
+	int goal{};
+	int tetris{};
+	int combos{};
+	int currentCombo{-1};
+	int tSpins{};
+	int nbMinos{};
+	bool backToBackBonus{};
+	int64_t highscore{};
+	bool hasBetterHighscore{};
+};
+
+struct LockDownState {
+	bool active{};
+	int moveCount{};
+	int lowestLine{};
+};
+
+struct PieceState {
+	std::vector<std::unique_ptr<Tetrimino>> bag;
+	unsigned int bagIndex{};
+	Tetrimino* current{};
+	Tetrimino* hold{};
+	bool isNewHold{};
+};
+
+struct FrameFlags {
+	GameStep stepState = GameStep::Idle;
+	bool didRotate{};
+	bool shouldIgnoreHardDrop{};
+	bool lastMoveIsTSpin{};
+	bool lastMoveIsMiniTSpin{};
+	bool isGameOver{};
+	bool isStarted{};
+};
+
 class GameState
 {
 public:
@@ -53,34 +100,33 @@ public:
 	[[nodiscard]] std::vector<const Tetrimino*> peekTetriminos(size_t count) const;
 
 	void setShouldExit(bool v) { _shouldExit = v; }
-	void setMode(MODE m) { _mode = m; }
+	void setMode(MODE m) { config.mode = m; }
 	void setStartingLevel(int level);
 	void setPlayerName(const std::string& n) { _playerName = n; }
-	void setGhostEnabled(bool v) { _ghostEnabled = v; }
-	void setHoldEnabled(bool v) { _holdEnabled = v; }
-	void setPreviewCount(int n) { _previewCount = n; }
+	void setGhostEnabled(bool v) { config.ghostEnabled = v; }
+	void setHoldEnabled(bool v) { config.holdEnabled = v; }
+	void setPreviewCount(int n) { config.previewCount = n; }
 
-	[[nodiscard]] const GameMatrix& matrix() const { return _matrix; }
-	[[nodiscard]] const Tetrimino* currentTetrimino() const { return _currentTetrimino; }
-	[[nodiscard]] const Tetrimino* holdTetrimino() const { return _holdTetrimino; }
-	[[nodiscard]] int64_t score() const { return _score; }
-	[[nodiscard]] int64_t highscore() const { return _highscore; }
-	[[nodiscard]] int level() const { return _level; }
+	[[nodiscard]] const Tetrimino* currentTetrimino() const { return pieces.current; }
+	[[nodiscard]] const Tetrimino* holdTetrimino() const { return pieces.hold; }
+	[[nodiscard]] int64_t score() const { return stats.score; }
+	[[nodiscard]] int64_t highscore() const { return stats.highscore; }
+	[[nodiscard]] int level() const { return stats.level; }
 	[[nodiscard]] int tpm() const;
 	[[nodiscard]] int lpm() const;
-	[[nodiscard]] int lines() const { return _lines; }
-	[[nodiscard]] int tetris() const { return _tetris; }
-	[[nodiscard]] int combos() const { return _combos; }
-	[[nodiscard]] int tSpins() const { return _tSpins; }
-	[[nodiscard]] bool backToBackBonus() const { return _backToBackBonus; }
-	[[nodiscard]] bool hasBetterHighscore() const { return _hasBetterHighscore; }
+	[[nodiscard]] int lines() const { return stats.lines; }
+	[[nodiscard]] int tetris() const { return stats.tetris; }
+	[[nodiscard]] int combos() const { return stats.combos; }
+	[[nodiscard]] int tSpins() const { return stats.tSpins; }
+	[[nodiscard]] bool backToBackBonus() const { return stats.backToBackBonus; }
+	[[nodiscard]] bool hasBetterHighscore() const { return stats.hasBetterHighscore; }
 	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _highscores; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
-	[[nodiscard]] int startingLevel() const { return _startingLevel; }
-	[[nodiscard]] MODE mode() const { return _mode; }
-	[[nodiscard]] bool ghostEnabled() const { return _ghostEnabled; }
-	[[nodiscard]] bool holdEnabled() const { return _holdEnabled; }
-	[[nodiscard]] int previewCount() const { return _previewCount; }
+	[[nodiscard]] int startingLevel() const { return config.startingLevel; }
+	[[nodiscard]] MODE mode() const { return config.mode; }
+	[[nodiscard]] bool ghostEnabled() const { return config.ghostEnabled; }
+	[[nodiscard]] bool holdEnabled() const { return config.holdEnabled; }
+	[[nodiscard]] int previewCount() const { return config.previewCount; }
 
 	void markDirty() { _isDirty = true; }
 	[[nodiscard]] bool isDirty() const { return _isDirty; }
@@ -97,66 +143,25 @@ public:
 	[[nodiscard]] double gameElapsed() const;
 	[[nodiscard]] int minutesElapsed() const { return static_cast<int>(gameElapsed() / 60); }
 
-	// Tetris Guideline gravity values for levels 1-15 (index 0 unused).
-	static constexpr std::array<double, 16> kSpeedNormal = {
-		0, 1.0, 0.793, 0.618, 0.473, 0.355, 0.262, 0.190, 0.135, 0.094, 0.064, 0.043, 0.028, 0.018, 0.011, 0.007
-	};
-	static constexpr std::array<double, 16> kSpeedFast = {
-		0, 0.05, 0.03965, 0.0309, 0.02365, 0.01775, 0.0131, 0.0095, 0.00675, 0.0047, 0.0032, 0.00215, 0.0014,
-		0.0009, 0.00055, 0.00035
-	};
-
-private:
-	friend class GameController;
-
 	void updateHighscore();
 	void activateHighscore();
 	void queueSound(GameSound s) { _pendingSounds.push_back(s); }
 
-	GameMatrix _matrix;
+	// Public sub-structs
+	GameConfig config;
+	Stats stats;
+	LockDownState lockDown;
+	PieceState pieces;
+	FrameFlags flags;
+	GameMatrix matrix;
 
-	MODE _mode = EXTENDED;
-	bool _ghostEnabled = true;
-	bool _holdEnabled = true;
-	int _previewCount = NEXT_PIECE_QUEUE_SIZE;
-
-	int _startingLevel = 1;
-	int _level{};
-	int _lines{};
-	int _tetris{};
-	int _combos{};       // best combo (Ren) achieved
-	int _currentCombo{}; // running consecutive-clear count (-1 = no chain)
-	int _tSpins{};
-	int _nbMinos{};
-	int _goal{};
-	int64_t _score{};
-	int64_t _highscore{};
-	std::vector<HighScoreRecord> _highscores; // sorted by score desc, max 10
-	int _nbMoveAfterLockDown{};
-	int _lowestLine{};
-
-	unsigned int _bagIndex{};
-	Tetrimino* _currentTetrimino{};  // non-owning; points into _bag
-	Tetrimino* _holdTetrimino{};     // non-owning; points into _bag
-	std::vector<std::unique_ptr<Tetrimino>> _bag;
-
-	bool _isStarted{};
-	bool _shouldExit{};
-	bool _didRotate{};
-	bool _isGameOver{};
-	bool _shouldIgnoreHardDrop{};
-	bool _lastMoveIsTSpin{};
-	bool _lastMoveIsMiniTSpin{};
-	bool _backToBackBonus{};
-	bool _isInLockDown{};
-	bool _isNewHold{};
-	bool _hasBetterHighscore{};
+private:
 	bool _isDirty{};
+	bool _shouldExit{};
 	bool _muteRequested{};
 	std::string _playerName;
-
+	std::vector<HighScoreRecord> _highscores; // sorted by score desc, max 10
 	std::vector<GameSound> _pendingSounds;
-	GameStep _stepState = GameStep::Idle;
 
 	std::chrono::steady_clock::time_point _gameTimerStart{};
 	double _gameElapsedAccum{};

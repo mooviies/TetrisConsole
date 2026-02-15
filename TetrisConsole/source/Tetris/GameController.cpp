@@ -4,7 +4,6 @@
 #include "Timer.h"
 #include "Constants.h"
 #include "Random.h"
-#include "Input.h"
 
 using namespace std;
 
@@ -17,156 +16,154 @@ using namespace std;
 #define AUTOREPEAT_SPEED 0.01
 #define LOCK_DOWN_DELAY 0.5
 #define LOCK_DOWN_SMALL_DELAY 0.2
-#define LOCK_DOWN_MOVE 15
 
 GameController::GameController(Timer& timer)
-    : _timer(timer) {}
+    : _timer(timer),
+      _lockDownPolicy(std::make_unique<ExtendedLockDown>()),
+      _scoringRule(makeDefaultScoringRule()),
+      _gravityPolicy(makeDefaultGravityPolicy()) {}
 
 GameController::~GameController() = default;
 
-void GameController::start(GameState& state) const {
-    reset(state);
-    state._isStarted = true;
+void GameController::configurePolicies(MODE mode) {
+    _lockDownPolicy = makeLockDownPolicy(mode);
 }
 
-StepResult GameController::step(GameState& state) {
-    if (state._shouldExit)
+void GameController::start(GameState& state) const {
+    reset(state);
+    state.flags.isStarted = true;
+}
+
+StepResult GameController::step(GameState& state, const InputSnapshot& input) {
+    if (state.shouldExit())
         return StepResult::Continue;
 
-    if (!state._isStarted)
+    if (!state.flags.isStarted)
         return StepResult::Continue;
 
-    switch (state._stepState) {
-        case GameStep::Idle:      stepIdle(state); break;
-        case GameStep::MoveLeft:  stepMoveLeft(state); break;
-        case GameStep::MoveRight: stepMoveRight(state); break;
+    switch (state.flags.stepState) {
+        case GameStep::Idle:      stepIdle(state, input); break;
+        case GameStep::MoveLeft:  stepMoveLeft(state, input); break;
+        case GameStep::MoveRight: stepMoveRight(state, input); break;
         case GameStep::HardDrop:  stepHardDrop(state); break;
     }
 
     auto result = StepResult::Continue;
 
-    if (state._isGameOver) {
+    if (state.flags.isGameOver) {
         result = StepResult::GameOver;
-    } else if (Input::pause()) {
+    } else if (input.pause) {
         result = StepResult::PauseRequested;
     } else {
-        if (!state._didRotate) {
-            if (Input::rotateClockwise())
+        if (!state.flags.didRotate) {
+            if (input.rotateCW)
                 rotate(state, RIGHT);
-            else if (Input::rotateCounterClockwise())
+            else if (input.rotateCCW)
                 rotate(state, LEFT);
         } else {
-            if (!Input::rotateClockwise() && !Input::rotateCounterClockwise())
-                state._didRotate = false;
+            if (!input.rotateCW && !input.rotateCCW)
+                state.flags.didRotate = false;
         }
     }
-
-    const bool mutePressed = Input::mute();
-    if (mutePressed && !_wasMutePressed)
-        state._muteRequested = true;
-    _wasMutePressed = mutePressed;
 
     state.updateHighscore();
 
     return result;
 }
 
-void GameController::fall(GameState& state) const {
-    if (state._currentTetrimino == nullptr)
+void GameController::fall(GameState& state, const InputSnapshot& input) const {
+    if (state.pieces.current == nullptr)
         return;
 
-    int speedIndex = state._level;
-    if (speedIndex > 15)
-        speedIndex = 15;
+    const double interval = _gravityPolicy->fallInterval(state.stats.level, input.softDrop);
+    const bool isSoftDropping = input.softDrop;
 
-    const auto& speedArray = Input::softDrop() ? GameState::kSpeedFast : GameState::kSpeedNormal;
-    const bool isSoftDropping = Input::softDrop();
-
-    if (_timer.getSeconds(FALL) >= speedArray[static_cast<size_t>(speedIndex)]) {
+    if (_timer.getSeconds(FALL) >= interval) {
         _timer.resetTimer(FALL);
         if (moveDown(state)) {
             if (isSoftDropping)
-                state._score++;
+                state.stats.score++;
 
-            if (state._isInLockDown) {
-                if (const int currentLine = state._currentTetrimino->getPosition().row; currentLine > state._lowestLine) {
-                    state._lowestLine = currentLine;
-                    state._nbMoveAfterLockDown = 0;
+            if (state.lockDown.active) {
+                if (const int currentLine = state.pieces.current->getPosition().row; currentLine > state.lockDown.lowestLine) {
+                    state.lockDown.lowestLine = currentLine;
+                    state.lockDown.moveCount = 0;
                     _timer.resetTimer(LOCK_DOWN);
                 }
             }
         }
     }
 
-    if (!state._currentTetrimino->simulateMove(Vector2i(1, 0)) && !_timer.exist(LOCK_DOWN)) {
+    if (!state.pieces.current->simulateMove(Vector2i(1, 0)) && !_timer.exist(LOCK_DOWN)) {
         _timer.startTimer(LOCK_DOWN);
-        state._isInLockDown = true;
+        state.lockDown.active = true;
     }
 
     if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY) {
         lock(state);
-        if (state._isGameOver) return;
+        if (state.flags.isGameOver) return;
     }
 
-    if (state._mode == EXTENDED && state._nbMoveAfterLockDown >= LOCK_DOWN_MOVE) {
+    const int limit = _lockDownPolicy->moveLimit();
+    if (limit >= 0 && state.lockDown.moveCount >= limit) {
         lock(state);
-        if (state._isGameOver) return;
+        if (state.flags.isGameOver) return;
     }
 
-    if (Input::hardDrop() && !state._shouldIgnoreHardDrop) {
+    if (input.hardDrop && !state.flags.shouldIgnoreHardDrop) {
         state.queueSound(GameSound::HardDrop);
-        state._stepState = GameStep::HardDrop;
-        state._shouldIgnoreHardDrop = true;
-    } else if (!Input::hardDrop() && state._shouldIgnoreHardDrop) {
-        state._shouldIgnoreHardDrop = false;
+        state.flags.stepState = GameStep::HardDrop;
+        state.flags.shouldIgnoreHardDrop = true;
+    } else if (!input.hardDrop && state.flags.shouldIgnoreHardDrop) {
+        state.flags.shouldIgnoreHardDrop = false;
     }
 }
 
-void GameController::stepIdle(GameState& state) {
-    if (state._currentTetrimino == nullptr) {
+void GameController::stepIdle(GameState& state, const InputSnapshot& input) {
+    if (state.pieces.current == nullptr) {
         popTetrimino(state);
-        if (!state._currentTetrimino->setPosition(state._currentTetrimino->getStartingPosition())) {
-            state._isGameOver = true;
+        if (!state.pieces.current->setPosition(state.pieces.current->getStartingPosition())) {
+            state.flags.isGameOver = true;
             return;
         }
         _timer.startTimer(FALL);
         state.markDirty();
     }
 
-    fall(state);
-    if (state._isGameOver) return;
+    fall(state, input);
+    if (state.flags.isGameOver) return;
 
-    checkAutorepeat(state, Input::left(), AUTOREPEAT_LEFT, &GameController::moveLeft, GameStep::MoveLeft);
-    checkAutorepeat(state, Input::right(), AUTOREPEAT_RIGHT, &GameController::moveRight, GameStep::MoveRight);
+    checkAutorepeat(state, input.left, AUTOREPEAT_LEFT, &GameController::moveLeft, GameStep::MoveLeft);
+    checkAutorepeat(state, input.right, AUTOREPEAT_RIGHT, &GameController::moveRight, GameStep::MoveRight);
 
-    if (state._holdEnabled && !state._isNewHold && Input::hold()) {
-        Tetrimino *buffer = state._holdTetrimino;
-        state._holdTetrimino = state._currentTetrimino;
-        state._currentTetrimino = buffer;
-        if (state._currentTetrimino != nullptr) {
-            state._currentTetrimino->resetRotation();
-            if (!state._currentTetrimino->setPosition(state._currentTetrimino->getStartingPosition())) {
-                state._isGameOver = true;
+    if (state.config.holdEnabled && !state.pieces.isNewHold && input.hold) {
+        Tetrimino *buffer = state.pieces.hold;
+        state.pieces.hold = state.pieces.current;
+        state.pieces.current = buffer;
+        if (state.pieces.current != nullptr) {
+            state.pieces.current->resetRotation();
+            if (!state.pieces.current->setPosition(state.pieces.current->getStartingPosition())) {
+                state.flags.isGameOver = true;
                 return;
             }
             _timer.startTimer(FALL);
             state.markDirty();
         }
-        state._isNewHold = true;
+        state.pieces.isNewHold = true;
     }
 }
 
-void GameController::stepMoveLeft(GameState& state) const {
-    if (state._currentTetrimino == nullptr) {
-        state._stepState = GameStep::Idle;
+void GameController::stepMoveLeft(GameState& state, const InputSnapshot& input) const {
+    if (state.pieces.current == nullptr) {
+        state.flags.stepState = GameStep::Idle;
         return;
     }
 
-    fall(state);
-    if (state._isGameOver) return;
+    fall(state, input);
+    if (state.flags.isGameOver) return;
 
-    if (!Input::left()) {
-        state._stepState = GameStep::Idle;
+    if (!input.left) {
+        state.flags.stepState = GameStep::Idle;
         _timer.stopTimer(AUTOREPEAT_LEFT);
     }
 
@@ -176,17 +173,17 @@ void GameController::stepMoveLeft(GameState& state) const {
     }
 }
 
-void GameController::stepMoveRight(GameState& state) const {
-    if (state._currentTetrimino == nullptr) {
-        state._stepState = GameStep::Idle;
+void GameController::stepMoveRight(GameState& state, const InputSnapshot& input) const {
+    if (state.pieces.current == nullptr) {
+        state.flags.stepState = GameStep::Idle;
         return;
     }
 
-    fall(state);
-    if (state._isGameOver) return;
+    fall(state, input);
+    if (state.flags.isGameOver) return;
 
-    if (!Input::right()) {
-        state._stepState = GameStep::Idle;
+    if (!input.right) {
+        state.flags.stepState = GameStep::Idle;
         _timer.stopTimer(AUTOREPEAT_RIGHT);
     }
 
@@ -197,39 +194,39 @@ void GameController::stepMoveRight(GameState& state) const {
 }
 
 void GameController::stepHardDrop(GameState& state) const {
-    if (state._currentTetrimino == nullptr) {
-        state._stepState = GameStep::Idle;
+    if (state.pieces.current == nullptr) {
+        state.flags.stepState = GameStep::Idle;
         return;
     }
 
     while (moveDown(state)) {
-        state._score += 2;
+        state.stats.score += 2;
     }
     lock(state);
 }
 
 void GameController::incrementMove(GameState& state) {
     state.queueSound(GameSound::Click);
-    if (state._isInLockDown)
-        state._nbMoveAfterLockDown++;
+    if (state.lockDown.active)
+        state.lockDown.moveCount++;
 }
 
 void GameController::resetLockDown(const GameState& state) const {
-    if (state._mode == CLASSIC)
+    if (!_lockDownPolicy->resetsTimerOnMove())
         return;
 
-    if (state._isInLockDown) {
+    if (state.lockDown.active) {
         _timer.resetTimer(LOCK_DOWN);
     }
 }
 
 void GameController::moveLeft(GameState& state) const {
-    if (state._currentTetrimino == nullptr)
+    if (state.pieces.current == nullptr)
         return;
 
-    if (state._currentTetrimino->move(Vector2i(0, -1))) {
-        state._lastMoveIsTSpin = false;
-        state._lastMoveIsMiniTSpin = false;
+    if (state.pieces.current->move(Vector2i(0, -1))) {
+        state.flags.lastMoveIsTSpin = false;
+        state.flags.lastMoveIsMiniTSpin = false;
         incrementMove(state);
         resetLockDown(state);
         state.markDirty();
@@ -237,12 +234,12 @@ void GameController::moveLeft(GameState& state) const {
 }
 
 void GameController::moveRight(GameState& state) const {
-    if (state._currentTetrimino == nullptr)
+    if (state.pieces.current == nullptr)
         return;
 
-    if (state._currentTetrimino->move(Vector2i(0, 1))) {
-        state._lastMoveIsTSpin = false;
-        state._lastMoveIsMiniTSpin = false;
+    if (state.pieces.current->move(Vector2i(0, 1))) {
+        state.flags.lastMoveIsTSpin = false;
+        state.flags.lastMoveIsMiniTSpin = false;
         incrementMove(state);
         resetLockDown(state);
         state.markDirty();
@@ -250,9 +247,9 @@ void GameController::moveRight(GameState& state) const {
 }
 
 bool GameController::moveDown(GameState& state) {
-    if (state._currentTetrimino->move(Vector2i(1, 0))) {
-        state._lastMoveIsTSpin = false;
-        state._lastMoveIsMiniTSpin = false;
+    if (state.pieces.current->move(Vector2i(1, 0))) {
+        state.flags.lastMoveIsTSpin = false;
+        state.flags.lastMoveIsMiniTSpin = false;
         state.markDirty();
         return true;
     }
@@ -261,22 +258,22 @@ bool GameController::moveDown(GameState& state) {
 }
 
 void GameController::rotate(GameState& state, const DIRECTION direction) const {
-    if (state._currentTetrimino == nullptr)
+    if (state.pieces.current == nullptr)
         return;
 
-    if (state._currentTetrimino->rotate(direction)) {
-        state._didRotate = true;
-        state._lastMoveIsTSpin = false;
-        state._lastMoveIsMiniTSpin = false;
+    if (state.pieces.current->rotate(direction)) {
+        state.flags.didRotate = true;
+        state.flags.lastMoveIsTSpin = false;
+        state.flags.lastMoveIsMiniTSpin = false;
         incrementMove(state);
         resetLockDown(state);
         state.markDirty();
 
-        if (state._currentTetrimino->canTSpin()) {
-            if (state._currentTetrimino->checkTSpin())
-                state._lastMoveIsTSpin = true;
-            else if (state._currentTetrimino->checkMiniTSpin())
-                state._lastMoveIsMiniTSpin = true;
+        if (state.pieces.current->canTSpin()) {
+            if (state.pieces.current->checkTSpin())
+                state.flags.lastMoveIsTSpin = true;
+            else if (state.pieces.current->checkMiniTSpin())
+                state.flags.lastMoveIsMiniTSpin = true;
         }
     }
 }
@@ -291,7 +288,7 @@ void GameController::checkAutorepeat(GameState& state, const bool input, const s
         if (_timer.getSeconds(timer) >= AUTOREPEAT_DELAY) {
             _timer.startTimer(timer);
             (this->*move)(state);
-            state._stepState = nextState;
+            state.flags.stepState = nextState;
         }
     } else {
         _timer.stopTimer(timer);
@@ -299,37 +296,21 @@ void GameController::checkAutorepeat(GameState& state, const bool input, const s
 }
 
 void GameController::reset(GameState& state) const {
-    state._level = state._startingLevel;
-    state._lines = 0;
-    state._goal = 0;
-    state._score = 0;
-    state._tSpins = 0;
-    state._combos = 0;
-    state._currentCombo = -1;
-    state._tetris = 0;
-    state._nbMinos = 0;
-    state._shouldIgnoreHardDrop = false;
-    state._lastMoveIsTSpin = false;
-    state._lastMoveIsMiniTSpin = false;
-    state._backToBackBonus = false;
-    state._isInLockDown = false;
-    state._isNewHold = false;
-    state._hasBetterHighscore = false;
-    state._isGameOver = false;
-    state._playerName.clear();
+    state.stats = Stats{};
+    state.stats.level = state.config.startingLevel;
+    state.lockDown = {};
+    state.flags = {};
+    state.setPlayerName("");
 
-    for (auto& row : state._matrix) row.fill(0);
+    for (auto& row : state.matrix) row.fill(0);
 
-    state._holdTetrimino = nullptr;
-    state._currentTetrimino = nullptr;
-    state._bagIndex = 0;
+    state.pieces.hold = nullptr;
+    state.pieces.current = nullptr;
+    state.pieces.bagIndex = 0;
+    state.pieces.isNewHold = false;
     shuffle(state, 0);
     shuffle(state, 7);
 
-    state._stepState = GameStep::Idle;
-    state._didRotate = false;
-    state._nbMoveAfterLockDown = 0;
-    state._lowestLine = 0;
     state.startGameTimer();
     state.activateHighscore();
 
@@ -340,39 +321,39 @@ void GameController::reset(GameState& state) const {
 }
 
 void GameController::lock(GameState& state) const {
-    if (state._currentTetrimino == nullptr || state._isGameOver)
+    if (state.pieces.current == nullptr || state.flags.isGameOver)
         return;
 
     // False alarm: piece was nudged off its resting surface (e.g. slid over a gap)
-    if (state._currentTetrimino->simulateMove(Vector2i(1, 0))) {
+    if (state.pieces.current->simulateMove(Vector2i(1, 0))) {
         _timer.stopTimer(LOCK_DOWN);
-        state._nbMoveAfterLockDown = 0;
-        if (const int row = state._currentTetrimino->getPosition().row; row > state._lowestLine)
-            state._lowestLine = row;
+        state.lockDown.moveCount = 0;
+        if (const int row = state.pieces.current->getPosition().row; row > state.lockDown.lowestLine)
+            state.lockDown.lowestLine = row;
         return;
     }
 
     // Lock-out: piece overlaps the buffer zone
-    if (!state._currentTetrimino->lock()) {
-        state._isGameOver = true;
+    if (!state.pieces.current->lock()) {
+        state.flags.isGameOver = true;
         return;
     }
 
     state.queueSound(GameSound::Lock);
 
-    state._isNewHold = false;
-    state._isInLockDown = false;
-    state._nbMoveAfterLockDown = 0;
-    state._lowestLine = 0;
-    state._currentTetrimino = nullptr;
-    state._nbMinos++;
+    state.pieces.isNewHold = false;
+    state.lockDown.active = false;
+    state.lockDown.moveCount = 0;
+    state.lockDown.lowestLine = 0;
+    state.pieces.current = nullptr;
+    state.stats.nbMinos++;
 
     _timer.stopTimer(LOCK_DOWN);
 
     const int linesCleared = clearLines(state);
     awardScore(state, linesCleared);
 
-    state._stepState = GameStep::Idle;
+    state.flags.stepState = GameStep::Idle;
     state.markDirty();
 }
 
@@ -381,7 +362,7 @@ int GameController::clearLines(GameState& state) {
     for (int i = MATRIX_END; i >= MATRIX_START; i--) {
         bool fullLine = true;
         for (int j = 0; j < TETRIS_WIDTH; j++) {
-            if (state._matrix[i][j] == 0) {
+            if (state.matrix[i][j] == 0) {
                 fullLine = false;
                 break;
             }
@@ -389,110 +370,47 @@ int GameController::clearLines(GameState& state) {
 
         if (fullLine) {
             linesCleared++;
-            state._matrix.erase(state._matrix.begin() + i);
+            state.matrix.erase(state.matrix.begin() + i);
         }
     }
 
     for (int i = 0; i < linesCleared; i++)
-        state._matrix.push_front(MatrixRow{});
+        state.matrix.push_front(MatrixRow{});
 
     return linesCleared;
 }
 
-void GameController::awardScore(GameState& state, const int linesCleared) {
-    int awardedLines = linesCleared;
-
+void GameController::awardScore(GameState& state, const int linesCleared) const {
     if (linesCleared == 4)
-        state._tetris++;
+        state.stats.tetris++;
+    if (state.flags.lastMoveIsTSpin || state.flags.lastMoveIsMiniTSpin)
+        state.stats.tSpins++;
 
-    if (state._lastMoveIsTSpin) {
-        state._tSpins++;
-        int value = 0;
-        switch (linesCleared) {
-            case 0:  value = 400;  awardedLines = 4;  break;
-            case 1:  value = 800;  awardedLines = 8;  break;
-            case 2:  value = 1200; awardedLines = 12; break;
-            case 3:  value = 1600; awardedLines = 16; break;
-            default: ;
-        }
+    auto result = _scoringRule->compute(linesCleared,
+        state.flags.lastMoveIsTSpin, state.flags.lastMoveIsMiniTSpin,
+        state.stats.backToBackBonus, state.stats.level);
 
-        if (linesCleared >= 1) {
-            if (state._backToBackBonus) {
-                value += value / 2;
-                awardedLines += (linesCleared + 1) / 2;
-            }
-            state._backToBackBonus = true;
-        }
-
-        state._score += value * state._level;
-    } else if (state._lastMoveIsMiniTSpin) {
-        state._tSpins++;
-        int value = 0;
-        if (linesCleared == 1) {
-            value = 200;
-            awardedLines = 2;
-            if (state._backToBackBonus) {
-                value += value / 2;
-                awardedLines += (linesCleared + 1) / 2;
-            }
-            state._backToBackBonus = true;
-        } else {
-            value = 100;
-            awardedLines = 1;
-        }
-
-        state._score += value * state._level;
-    } else {
-        int value = 0;
-        switch (linesCleared) {
-            case 1:
-                value = 100;
-                state._backToBackBonus = false;
-                break;
-            case 2:
-                value = 300;
-                awardedLines = 3;
-                state._backToBackBonus = false;
-                break;
-            case 3:
-                value = 500;
-                awardedLines = 5;
-                state._backToBackBonus = false;
-                break;
-            case 4:
-                value = 800;
-                awardedLines = 8;
-                if (state._backToBackBonus) {
-                    value += value / 2;
-                    awardedLines += (linesCleared + 1) / 2;
-                }
-                state._backToBackBonus = true;
-                break;
-            default: ;
-        }
-
-        state._score += value * state._level;
-    }
-
-    state._lastMoveIsTSpin = false;
-    state._lastMoveIsMiniTSpin = false;
+    state.stats.score += result.points;
+    state.stats.backToBackBonus = result.continuesBackToBack;
+    state.flags.lastMoveIsTSpin = false;
+    state.flags.lastMoveIsMiniTSpin = false;
 
     // Combo (Ren) tracking: consecutive piece placements that clear lines.
-    // _currentCombo reaches 1+ on the 2nd consecutive clear (= first real combo).
+    // currentCombo reaches 1+ on the 2nd consecutive clear (= first real combo).
     if (linesCleared > 0) {
-        state._currentCombo++;
-        if (state._currentCombo > state._combos)
-            state._combos = state._currentCombo;
+        state.stats.currentCombo++;
+        if (state.stats.currentCombo > state.stats.combos)
+            state.stats.combos = state.stats.currentCombo;
     } else {
-        state._currentCombo = -1;
+        state.stats.currentCombo = -1;
     }
 
-    state._lines += linesCleared;
-    state._goal += awardedLines;
+    state.stats.lines += linesCleared;
+    state.stats.goal += result.awardedLines;
 
-    if (state._goal >= state._level * 5) {
-        state._level++;
-        state._goal = 0;
+    if (state.stats.goal >= state.stats.level * 5) {
+        state.stats.level++;
+        state.stats.goal = 0;
     }
 
     if (linesCleared == 4)
@@ -505,16 +423,16 @@ void GameController::shuffle(GameState& state, size_t start) {
     for (int i = 6; i >= 0; i--) {
         int j = Random::getInteger(0, i);
         if (i != j)
-            state._bag[start + static_cast<size_t>(i)].swap(state._bag[start + static_cast<size_t>(j)]);
+            state.pieces.bag[start + static_cast<size_t>(i)].swap(state.pieces.bag[start + static_cast<size_t>(j)]);
     }
 }
 
 void GameController::popTetrimino(GameState& state) {
-    state._currentTetrimino = state._bag[state._bagIndex++].get();
-    if (state._bagIndex >= 7) {
-        std::swap_ranges(state._bag.begin(), state._bag.begin() + 7,
-                         state._bag.begin() + 7);
+    state.pieces.current = state.pieces.bag[state.pieces.bagIndex++].get();
+    if (state.pieces.bagIndex >= 7) {
+        std::swap_ranges(state.pieces.bag.begin(), state.pieces.bag.begin() + 7,
+                         state.pieces.bag.begin() + 7);
         shuffle(state, 7);
-        state._bagIndex = 0;
+        state.pieces.bagIndex = 0;
     }
 }

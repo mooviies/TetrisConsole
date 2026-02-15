@@ -3,6 +3,7 @@
 #include "GameState.h"
 #include "GameRenderer.h"
 #include "GameController.h"
+#include "InputSnapshot.h"
 
 class Menu;
 
@@ -13,7 +14,7 @@ public:
 	~Tetris();
 
 	void start();
-	void step();
+	void step(const InputSnapshot& input);
 	void render();
 	void redraw();
 	void pauseGameTimer() { _state.pauseGameTimer(); }
@@ -48,4 +49,5 @@ private:
 	Menu& _pauseMenu;
 	Menu& _gameOverMenu;
 	bool _backToMenu{};
+	bool _wasMutePressed{};
 };

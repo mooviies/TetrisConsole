@@ -25,16 +25,16 @@ static constexpr uint32_t kOptVersion = 1;
 GameState::GameState()
 {
 	for (int batch = 0; batch < 2; batch++) {
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::O, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::I, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::T, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::L, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::J, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::S, _matrix));
-		_bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, _matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::O, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::I, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::T, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::L, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::J, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::S, matrix));
+		pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, matrix));
 	}
 
-	_matrix.resize(TETRIS_HEIGHT);
+	matrix.resize(TETRIS_HEIGHT);
 }
 
 GameState::~GameState() = default;
@@ -104,23 +104,23 @@ void GameState::loadHighscore()
 }
 
 void GameState::saveHighscore() {
-	if (_hasBetterHighscore) {
+	if (stats.hasBetterHighscore) {
 		HighScoreRecord rec{};
-		rec.score         = _score;
-		rec.level         = _level;
-		rec.lines         = _lines;
+		rec.score         = stats.score;
+		rec.level         = stats.level;
+		rec.lines         = stats.lines;
 		rec.tpm           = tpm();
 		rec.lpm           = lpm();
-		rec.tetris        = _tetris;
-		rec.combos        = _combos;
-		rec.tSpins        = _tSpins;
+		rec.tetris        = stats.tetris;
+		rec.combos        = stats.combos;
+		rec.tSpins        = stats.tSpins;
 		rec.gameElapsed   = gameElapsed();
 		rec.name          = _playerName;
-		rec.startingLevel = _startingLevel;
-		rec.mode          = _mode;
-		rec.ghostEnabled  = _ghostEnabled;
-		rec.holdEnabled   = _holdEnabled;
-		rec.previewCount  = _previewCount;
+		rec.startingLevel = config.startingLevel;
+		rec.mode          = config.mode;
+		rec.ghostEnabled  = config.ghostEnabled;
+		rec.holdEnabled   = config.holdEnabled;
+		rec.previewCount  = config.previewCount;
 
 		// Insert maintaining sorted order (descending by score)
 		auto it = lower_bound(_highscores.begin(), _highscores.end(), rec,
@@ -175,38 +175,38 @@ void GameState::saveHighscore() {
 
 Tetrimino* GameState::peekTetrimino() const
 {
-	assert(_bagIndex < _bag.size());
-	return _bag[_bagIndex].get();
+	assert(pieces.bagIndex < pieces.bag.size());
+	return pieces.bag[pieces.bagIndex].get();
 }
 
 vector<const Tetrimino*> GameState::peekTetriminos(size_t count) const
 {
 	vector<const Tetrimino*> result;
 	result.reserve(count);
-	for (size_t i = 0; i < count && _bagIndex + i < _bag.size(); i++)
-		result.push_back(_bag[_bagIndex + i].get());
+	for (size_t i = 0; i < count && pieces.bagIndex + i < pieces.bag.size(); i++)
+		result.push_back(pieces.bag[pieces.bagIndex + i].get());
 	return result;
 }
 
 int GameState::tpm() const {
 	const double minutes = gameElapsed() / 60.0;
-	return (minutes > 0.0) ? static_cast<int>(_nbMinos / minutes) : 0;
+	return (minutes > 0.0) ? static_cast<int>(stats.nbMinos / minutes) : 0;
 }
 
 int GameState::lpm() const {
 	const double minutes = gameElapsed() / 60.0;
-	return (minutes > 0.0) ? static_cast<int>(_lines / minutes) : 0;
+	return (minutes > 0.0) ? static_cast<int>(stats.lines / minutes) : 0;
 }
 
 void GameState::updateHighscore() {
-	if (_score > _highscore)
-		_hasBetterHighscore = true;
-	if (_hasBetterHighscore)
-		_highscore = _score;
+	if (stats.score > stats.highscore)
+		stats.hasBetterHighscore = true;
+	if (stats.hasBetterHighscore)
+		stats.highscore = stats.score;
 }
 
 void GameState::activateHighscore() {
-	_highscore = (_highscores.size() >= kMaxHighscores)
+	stats.highscore = (_highscores.size() >= kMaxHighscores)
 		? _highscores[kMaxHighscores - 1].score : 0;
 }
 
@@ -221,19 +221,19 @@ void GameState::loadOptions() {
 
 	int32_t val = 0;
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) _startingLevel = clamp(static_cast<int>(val), 1, 15);
+	if (in) config.startingLevel = clamp(static_cast<int>(val), 1, 15);
 
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) _mode = static_cast<MODE>(clamp(static_cast<int>(val), 0, 2));
+	if (in) config.mode = static_cast<MODE>(clamp(static_cast<int>(val), 0, 2));
 
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) _ghostEnabled = (val != 0);
+	if (in) config.ghostEnabled = (val != 0);
 
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) _holdEnabled = (val != 0);
+	if (in) config.holdEnabled = (val != 0);
 
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) _previewCount = clamp(static_cast<int>(val), 0, NEXT_PIECE_QUEUE_SIZE);
+	if (in) config.previewCount = clamp(static_cast<int>(val), 0, NEXT_PIECE_QUEUE_SIZE);
 }
 
 void GameState::saveOptions() const {
@@ -248,15 +248,15 @@ void GameState::saveOptions() const {
 	auto write32 = [&](int32_t v) {
 		out.write(reinterpret_cast<const char*>(&v), 4);
 	};
-	write32(static_cast<int32_t>(_startingLevel));
-	write32(static_cast<int32_t>(_mode));
-	write32(_ghostEnabled ? 1 : 0);
-	write32(_holdEnabled ? 1 : 0);
-	write32(static_cast<int32_t>(_previewCount));
+	write32(static_cast<int32_t>(config.startingLevel));
+	write32(static_cast<int32_t>(config.mode));
+	write32(config.ghostEnabled ? 1 : 0);
+	write32(config.holdEnabled ? 1 : 0);
+	write32(static_cast<int32_t>(config.previewCount));
 }
 
 void GameState::setStartingLevel(int level) {
-	_startingLevel = std::clamp(level, 1, 15);
+	config.startingLevel = std::clamp(level, 1, 15);
 }
 
 void GameState::startGameTimer() {

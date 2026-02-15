@@ -48,13 +48,13 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
                         && tetrimino->isMino(line - _ghostDropDistance, i);
         }
 
-        if (_visible && (_state->matrix()[line][i] || currentTetriminoHere)) {
+        if (_visible && (_state->matrix[line][i] || currentTetriminoHere)) {
             if (currentTetriminoHere) {
                 ctx.setColor(tetrimino->getColor());
                 ctx.print("██");
             } else {
                 ctx.setColor(Color::BLACK);
-                ctx.setBackgroundColor(_state->matrix()[line][i]);
+                ctx.setBackgroundColor(_state->matrix[line][i]);
                 ctx.print("░░");
                 ctx.setBackgroundColor(Color::BLACK);
             }

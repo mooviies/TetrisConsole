@@ -1,9 +1,14 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "Facing.h"
 #include "GameState.h"
+#include "InputSnapshot.h"
+#include "LockDownPolicy.h"
+#include "ScoringRule.h"
+#include "GravityPolicy.h"
 
 class Timer;
 
@@ -14,20 +19,21 @@ public:
 	~GameController();
 
 	void start(GameState& state) const;
-	StepResult step(GameState& state);
+	StepResult step(GameState& state, const InputSnapshot& input);
 	void reset(GameState& state) const;
+	void configurePolicies(MODE mode);
 
 private:
 	void lock(GameState& state) const;
 	static int clearLines(GameState& state);
-	static void awardScore(GameState& state, int linesCleared);
+	void awardScore(GameState& state, int linesCleared) const;
 	static void shuffle(GameState& state, size_t start);
 	static void popTetrimino(GameState& state);
 
-	void fall(GameState& state) const;
-	void stepIdle(GameState& state);
-	void stepMoveLeft(GameState& state) const;
-	void stepMoveRight(GameState& state) const;
+	void fall(GameState& state, const InputSnapshot& input) const;
+	void stepIdle(GameState& state, const InputSnapshot& input);
+	void stepMoveLeft(GameState& state, const InputSnapshot& input) const;
+	void stepMoveRight(GameState& state, const InputSnapshot& input) const;
 	void stepHardDrop(GameState& state) const;
 	static void incrementMove(GameState& state);
 
@@ -41,5 +47,7 @@ private:
 	void checkAutorepeat(GameState& state, bool input, const std::string& timer, MoveFunc move, GameStep nextState);
 
 	Timer& _timer;
-	bool _wasMutePressed{};
+	std::unique_ptr<LockDownPolicy> _lockDownPolicy;
+	std::unique_ptr<ScoringRule> _scoringRule;
+	std::unique_ptr<GravityPolicy> _gravityPolicy;
 };

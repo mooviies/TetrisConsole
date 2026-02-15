@@ -19,21 +19,21 @@ Tetris::~Tetris() = default;
 
 void Tetris::start() {
     _renderer.configure(_state.previewCount(), _state.holdEnabled());
+    _controller.configurePolicies(_state.mode());
     _controller.start(_state);
     _renderer.invalidate();
     _renderer.render(_state);
     SoundEngine::playMusic("A");
 }
 
-void Tetris::step() {
-    const StepResult result = _controller.step(_state);
+void Tetris::step(const InputSnapshot& input) {
+    const StepResult result = _controller.step(_state, input);
 
     playPendingSounds();
 
-    if (_state.muteRequested()) {
+    if (input.mute && !_wasMutePressed)
         SoundEngine::cycleMute();
-        _state.clearMuteRequested();
-    }
+    _wasMutePressed = input.mute;
 
     if (SoundEngine::musicEnded()) {
         const auto& name = SoundEngine::currentMusicName();

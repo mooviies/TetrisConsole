@@ -182,7 +182,19 @@ int main() {
                 tetris.resumeGameTimer();
                 wasTooSmall = false;
             }
-            tetris.step();
+
+            InputSnapshot snapshot;
+            snapshot.left     = Input::left();
+            snapshot.right    = Input::right();
+            snapshot.softDrop = Input::softDrop();
+            snapshot.hardDrop = Input::hardDrop();
+            snapshot.rotateCW  = Input::rotateClockwise();
+            snapshot.rotateCCW = Input::rotateCounterClockwise();
+            snapshot.hold     = Input::hold();
+            snapshot.pause    = Input::pause();
+            snapshot.mute     = Input::mute();
+
+            tetris.step(snapshot);
             tetris.render();
 
             const auto elapsed = chrono::steady_clock::now() - frameStart;
