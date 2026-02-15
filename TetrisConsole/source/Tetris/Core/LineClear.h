@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "GameState.h"
+#include "GoalPolicy.h"
 
 class ScoringRule;
 class Timer;
@@ -10,7 +11,7 @@ class Timer;
 class LineClear
 {
 public:
-	LineClear(Timer& timer, ScoringRule* scoringRule);
+	LineClear(Timer& timer, ScoringRule* scoringRule, GoalPolicy* goalPolicy);
 
 	void stepPattern(GameState& state) const;
 	void stepAnimate(GameState& state) const;
@@ -24,4 +25,5 @@ private:
 
 	Timer& _timer;
 	ScoringRule* _scoringRule;
+	GoalPolicy* _goalPolicy;
 };

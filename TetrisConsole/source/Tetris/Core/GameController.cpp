@@ -14,8 +14,9 @@ GameController::GameController(Timer& timer)
       _lockDownPolicy(std::make_unique<ExtendedLockDown>()),
       _scoringRule(makeDefaultScoringRule()),
       _gravityPolicy(makeDefaultGravityPolicy()),
+      _goalPolicy(makeDefaultGoalPolicy()),
       _movement(timer, _lockDownPolicy.get(), _gravityPolicy.get()),
-      _lineClear(timer, _scoringRule.get()) {}
+      _lineClear(timer, _scoringRule.get(), _goalPolicy.get()) {}
 
 GameController::~GameController() = default;
 
@@ -63,6 +64,7 @@ StepResult GameController::step(GameState& state, const InputSnapshot& input) {
 void GameController::reset(GameState& state) const {
 	state.stats = Stats{};
 	state.stats.level = state.config.startingLevel;
+	state.stats.goal = _goalPolicy->startingGoalValue(state.stats.level);
 	state.lockDown = {};
 	state.flags = {};
 	state.phase = GamePhase::Falling;
@@ -101,9 +103,9 @@ void GameController::stepGeneration(GameState& state) const {
 }
 
 void GameController::stepCompletion(GameState& state) const {
-	if (state.stats.goal >= state.stats.level * 5) {
+	if (state.stats.goal <= 0) {
 		state.stats.level++;
-		state.stats.goal = 0;
+		state.stats.goal = _goalPolicy->goalValue(state.stats.level);
 	}
 
 	_timer.startTimer(GENERATION);

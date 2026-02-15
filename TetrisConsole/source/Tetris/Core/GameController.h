@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "GameState.h"
+#include "GoalPolicy.h"
 #include "InputSnapshot.h"
 #include "LineClear.h"
 #include "LockDownPolicy.h"
@@ -34,6 +35,7 @@ private:
 	std::unique_ptr<LockDownPolicy> _lockDownPolicy;
 	std::unique_ptr<ScoringRule> _scoringRule;
 	std::unique_ptr<GravityPolicy> _gravityPolicy;
+	std::unique_ptr<GoalPolicy> _goalPolicy;
 	PieceMovement _movement;
 	LineClear _lineClear;
 };

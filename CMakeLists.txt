@@ -71,6 +71,8 @@ endif()
 add_executable(${TARGET_NAME}
     ${TETRIS_SRCS}
     ${CMAKE_BINARY_DIR}/media_data.cpp
+        TetrisConsole/source/Tetris/Rules/GoalPolicy.cpp
+        TetrisConsole/source/Tetris/Rules/GoalPolicy.h
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE

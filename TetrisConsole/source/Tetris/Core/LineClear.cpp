@@ -11,8 +11,8 @@ static constexpr auto ANIMATE = "animate";
 static constexpr double ANIMATE_DURATION = 0.4;
 static constexpr double FLASH_INTERVAL   = 0.1;
 
-LineClear::LineClear(Timer& timer, ScoringRule* scoringRule)
-    : _timer(timer), _scoringRule(scoringRule) {}
+LineClear::LineClear(Timer& timer, ScoringRule* scoringRule, GoalPolicy* goalPolicy)
+    : _timer(timer), _scoringRule(scoringRule), _goalPolicy(goalPolicy) {}
 
 void LineClear::resetTimers() const {
 	_timer.stopTimer(ANIMATE);
@@ -123,5 +123,9 @@ void LineClear::awardScore(GameState& state, const int linesCleared) const {
 	}
 
 	state.stats.lines += linesCleared;
-	state.stats.goal += awardedLines;
+
+	if (_goalPolicy->useAwardedLines())
+		state.stats.goal -= awardedLines;
+	else
+		state.stats.goal -= linesCleared;
 }

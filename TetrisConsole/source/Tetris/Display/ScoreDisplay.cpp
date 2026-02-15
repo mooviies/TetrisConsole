@@ -5,10 +5,8 @@
 #include "Color.h"
 
 ScoreDisplay::ScoreDisplay()
-    : _panel(18), _scoreValueRow(0), _levelRow(0), _linesRow(0)
+    : _panel(18)
 {
-    _panel.addRow("Score", Align::CENTER);
-    _panel.addSeparator();
     _scoreValueRow = _panel.addRow("0000000000", Align::CENTER);
     _panel.addSeparator();
     _timeValueRow = _panel.addRow("00:00.00", Align::CENTER);
@@ -17,13 +15,18 @@ ScoreDisplay::ScoreDisplay()
                                 Cell("01", Align::CENTER)});
     _panel.addSeparator();
 
+    _linesRow = _panel.addRow({Cell("Lines", Align::LEFT, 17, 9),
+                                Cell("000000", Align::CENTER)});
+
+    _goalRow = _panel.addRow({Cell("Goal", Align::LEFT, 17, 9),
+                                Cell("000000", Align::CENTER)});
+
+    _panel.addSeparator();
+
     _tpmRow = _panel.addRow({Cell("TPM", Align::LEFT, 17, 9),
                                 Cell("000000", Align::CENTER)});
 
     _lpmRow = _panel.addRow({Cell("LPM", Align::LEFT, 17, 9),
-                                Cell("000000", Align::CENTER)});
-
-    _linesRow = _panel.addRow({Cell("Lines", Align::LEFT, 17, 9),
                                 Cell("000000", Align::CENTER)});
 
     _tetrisRow = _panel.addRow({Cell("Tetris", Align::LEFT, 17, 9),
@@ -44,6 +47,7 @@ void ScoreDisplay::update(const GameState& state) {
     _panel.setCell(_levelRow, 1, Utility::valueToString(state.stats.level, 2));
     _panel.setCell(_tpmRow, 1, Utility::valueToString(state.tpm(), 6));
     _panel.setCell(_lpmRow, 1, Utility::valueToString(state.lpm(), 6));
+    _panel.setCell(_goalRow, 1, Utility::valueToString(state.stats.goal, 6));
     _panel.setCell(_linesRow, 1, Utility::valueToString(state.stats.lines, 6));
     _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.stats.tetris, 6));
     _panel.setCell(_combosRow, 1, Utility::valueToString(state.stats.combos, 6));
