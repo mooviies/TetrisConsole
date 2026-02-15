@@ -52,16 +52,16 @@ HighScoreDisplay::HighScoreDisplay()
 	_tSpinsStatRow = _rightPanel.addRow({Cell("T-Spins", Align::LEFT, 15, kLabelWidth),
 	                                     Cell("", Align::CENTER)});
 	_rightPanel.addSeparator();
-	_startRow   = _rightPanel.addRow({Cell("Start",   Align::LEFT, 15, kLabelWidth),
+	_startRow   = _rightPanel.addRow({Cell("FirstLvl",   Align::LEFT, 15, kLabelWidth),
 	                                  Cell("", Align::CENTER)});
-	_modeRow    = _rightPanel.addRow({Cell("Mode",    Align::LEFT, 15, kLabelWidth),
-	                                  Cell("", Align::CENTER)});
+	_previewRow = _rightPanel.addRow({Cell("Preview", Align::LEFT, 15, kLabelWidth),
+									  Cell("", Align::CENTER)});
 	_ghostRow   = _rightPanel.addRow({Cell("Ghost",   Align::LEFT, 15, kLabelWidth),
 	                                  Cell("", Align::CENTER)});
 	_holdRow    = _rightPanel.addRow({Cell("Hold",    Align::LEFT, 15, kLabelWidth),
 	                                  Cell("", Align::CENTER)});
-	_previewRow = _rightPanel.addRow({Cell("Preview", Align::LEFT, 15, kLabelWidth),
-	                                  Cell("", Align::CENTER)});
+	_modeRow    = _rightPanel.addRow({Cell("LckDwn",    Align::LEFT, 15, kLabelWidth),
+									  Cell("", Align::CENTER)});
 
 	reposition();
 }
@@ -341,6 +341,7 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable& allHighscores,
 	}
 
 	_confetti.stop();
+	_leftPanel.setCellColor(_listRows[rankIdx], 0, Color::WHITE);
 	_leftPanel.clear();
 	_rightPanel.clear();
 	return name;
