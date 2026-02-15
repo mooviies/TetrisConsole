@@ -81,7 +81,7 @@ void Tetris::handlePause() {
 
     if (selected == "Restart") {
         SoundEngine::stopMusic();
-        _controller.reset(_state);
+        _controller.start(_state);
         _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
         _renderer.invalidate();
         _renderer.render(_state);
@@ -91,7 +91,6 @@ void Tetris::handlePause() {
     }
 
     if (selected == "Main Menu") {
-        _state.saveHighscore();
         SoundEngine::stopMusic();
         _backToMenu = true;
         return;
@@ -119,7 +118,7 @@ void Tetris::handleGameOver() {
         return;
     }
 
-    _controller.reset(_state);
+    _controller.start(_state);
     _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
     _renderer.invalidate();
     _renderer.render(_state);
