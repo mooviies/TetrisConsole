@@ -73,6 +73,8 @@ add_executable(${TARGET_NAME}
     ${CMAKE_BINARY_DIR}/media_data.cpp
         TetrisConsole/source/Tetris/Rules/GoalPolicy.cpp
         TetrisConsole/source/Tetris/Rules/GoalPolicy.h
+        TetrisConsole/source/Tetris/Rules/VariantRule.cpp
+        TetrisConsole/source/Tetris/Rules/VariantRule.h
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE

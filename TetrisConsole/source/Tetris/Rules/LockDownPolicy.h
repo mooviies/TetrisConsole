@@ -29,4 +29,4 @@ public:
 	[[nodiscard]] int moveLimit() const override { return -1; }
 };
 
-std::unique_ptr<LockDownPolicy> makeLockDownPolicy(MODE mode);
+std::unique_ptr<LockDownPolicy> makeLockDownPolicy(LOCKDOWN_MODE mode = LOCKDOWN_MODE::EXTENDED);

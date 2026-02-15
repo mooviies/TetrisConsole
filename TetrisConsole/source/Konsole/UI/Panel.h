@@ -45,12 +45,13 @@ public:
     size_t addRow(const std::string& text, Align align = Align::LEFT, int color = 15);
     size_t addRow(std::vector<Cell> cells);
     void addSeparator();
-    size_t addElement(std::shared_ptr<PanelElement> element);
+    size_t addElement(const std::shared_ptr<PanelElement>& element);
 
     void setPosition(int x, int y);
     void invalidate();
     void render();
     void clear() const;
+    void recreate();
 
     void setCell(size_t row, size_t col, const std::string& text);
     void setCellColor(size_t row, size_t col, int color);

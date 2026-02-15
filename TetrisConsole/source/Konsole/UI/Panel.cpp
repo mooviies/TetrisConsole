@@ -15,7 +15,7 @@ Panel::Panel(const int interiorWidth)
 size_t Panel::addRow(const string& text, const Align align, const int color) {
     RowData row;
     row.type = RowData::Type::TEXT;
-    row.cells.push_back(Cell(text, align, color, 0));
+    row.cells.emplace_back(text, align, color, 0);
     _rows.push_back(std::move(row));
     _widthComputed = (_interiorWidth > 0);
     return _rows.size() - 1;
@@ -36,7 +36,7 @@ void Panel::addSeparator() {
     _rows.push_back(std::move(row));
 }
 
-size_t Panel::addElement(shared_ptr<PanelElement> element) {
+size_t Panel::addElement(const shared_ptr<PanelElement>& element) {
     size_t firstRow = _rows.size();
     int h = element->height();
     for (int i = 0; i < h; i++) {
@@ -411,6 +411,12 @@ void Panel::clear() const {
         rlutil::locate(_x, _y + i);
         cout << blank;
     }
+}
+
+void Panel::recreate() {
+    _rows.clear();
+    _dirtyRows.clear();
+    _needsFullDraw = true;
 }
 
 void Panel::setCell(const size_t row, const size_t col, const string& text) {

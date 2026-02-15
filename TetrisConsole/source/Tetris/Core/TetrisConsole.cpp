@@ -74,13 +74,18 @@ int main() {
     GameRenderer::renderTitle("A classic in console!");
 
     vector<string> levels;
-    for (int i = 1; i <= 15; i++)
+    for (int i = MIN_LEVEL; i <= MAX_LEVEL; i++)
         levels.push_back(Utility::valueToString(i, 2));
 
     vector<string> lockDownMode;
     lockDownMode.emplace_back("Extended");
     lockDownMode.emplace_back("Infinite");
     lockDownMode.emplace_back("Classic");
+
+    vector<string> variants;
+    variants.emplace_back("Marathon");
+    variants.emplace_back("Sprint");
+    variants.emplace_back("Ultra");
 
     Menu main("MAIN MENU");
     Menu newGame("NEW GAME");
@@ -103,18 +108,28 @@ int main() {
         int level = 1;
         try { level = stoi(oc.values["Level"]); } catch (...) {}
         tetris.setStartingLevel(level);
+
+        auto v = VARIANT::MARATHON;
+        if (oc.values["Variant"] == "Sprint") v = VARIANT::SPRINT;
+        else if (oc.values["Variant"] == "Ultra") v = VARIANT::ULTRA;
+        tetris.setVariant(v);
+
         tetris.saveOptions();
     });
     newGame.addOptionWithValues("Level", levels);
+    newGame.addOptionWithValues("Variant", variants);
 
     newGame.setOptionHint("Start", "Start a new game with the selected settings.");
     newGame.setOptionHint("Level", "Starting speed. Higher levels are faster.");
+    newGame.setOptionValueHint("Variant", "Marathon", "Reach over level 15 with the highest score.");
+    newGame.setOptionValueHint("Variant", "Sprint", "Clear 40 lines in the shortest amount of time.");
+    newGame.setOptionValueHint("Variant", "Ultra", "Get the highest score in 2 minutes.");
 
     // --- Options menu (Lock Down, Ghost, Hold, Preview, Reset Defaults, Back) ---
     vector<string> ghostValues = {"On", "Off"};
     vector<string> holdValues = {"On", "Off"};
     vector<string> previewValues;
-    for (int i = 0; i <= NEXT_PIECE_QUEUE_SIZE; i++)
+    for (int i = 0; i <= 6; i++)
         previewValues.push_back(Utility::valueToString(i, 2));
 
     options.addOptionWithValues("Lock Down", lockDownMode);
@@ -125,7 +140,7 @@ int main() {
         options.setValueChoice("Lock Down", "Extended");
         options.setValueChoice("Ghost Piece", "On");
         options.setValueChoice("Hold Piece", "On");
-        options.setValueChoice("Preview", Utility::valueToString(NEXT_PIECE_QUEUE_SIZE, 2));
+        options.setValueChoice("Preview", Utility::valueToString(6, 2));
     });
     options.addOptionClose("Back");
 
@@ -136,7 +151,7 @@ int main() {
     options.setOptionValueHint("Ghost Piece", "Off", "Hides the landing preview.");
     options.setOptionValueHint("Hold Piece", "On", "Swap the current piece once per drop.");
     options.setOptionValueHint("Hold Piece", "Off", "Hold piece is disabled.");
-    for (int i = NEXT_PIECE_QUEUE_SIZE; i >= 0; i--) {
+    for (int i = 6; i >= 0; i--) {
         string val = Utility::valueToString(i, 2);
         string hint;
         if (i == 0) hint = "Hides the next piece queue.";
@@ -150,12 +165,16 @@ int main() {
     // --- Main menu ---
     main.addOption("New Game", &newGame, [&]() {
         newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
+        string varStr = "Marathon";
+        if (tetris.variant() == VARIANT::SPRINT) varStr = "Sprint";
+        else if (tetris.variant() == VARIANT::ULTRA) varStr = "Ultra";
+        newGame.setValueChoice("Variant", varStr);
     });
     main.addOptionAction("Options", [&]() {
         // Sync menu values from current tetris state
         string modeStr = "Extended";
-        if (tetris.mode() == MODE::CLASSIC) modeStr = "Classic";
-        else if (tetris.mode() == MODE::EXTENDED_INFINITY) modeStr = "Infinite";
+        if (tetris.mode() == LOCKDOWN_MODE::CLASSIC) modeStr = "Classic";
+        else if (tetris.mode() == LOCKDOWN_MODE::EXTENDED_INFINITY) modeStr = "Infinite";
         options.setValueChoice("Lock Down", modeStr);
         options.setValueChoice("Ghost Piece", tetris.ghostEnabled() ? "On" : "Off");
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
@@ -165,18 +184,18 @@ int main() {
 
         // Apply values back to tetris
         auto values = options.generateValues();
-        auto mode = MODE::CLASSIC;
-        if (values["Lock Down"] == "Extended") mode = MODE::EXTENDED;
-        else if (values["Lock Down"] == "Infinite") mode = MODE::EXTENDED_INFINITY;
-        tetris.setMode(mode);
+        auto mode = LOCKDOWN_MODE::EXTENDED;
+        if (values["Lock Down"] == "Classic") mode = LOCKDOWN_MODE::CLASSIC;
+        else if (values["Lock Down"] == "Infinite") mode = LOCKDOWN_MODE::EXTENDED_INFINITY;
+        tetris.setLockDownMode(mode);
         tetris.setGhostEnabled(values["Ghost Piece"] != "Off");
         tetris.setHoldEnabled(values["Hold Piece"] != "Off");
-        int preview = NEXT_PIECE_QUEUE_SIZE;
+        int preview = 6;
         try { preview = stoi(values["Preview"]); } catch (...) {}
         tetris.setPreviewCount(preview);
         tetris.saveOptions();
     });
-    main.addOptionAction("High Scores", [&]() { highScores.open(tetris.highscores()); });
+    main.addOptionAction("High Scores", [&]() { highScores.open(tetris.allHighscores(), tetris.variant()); });
     main.addOptionAction("Help", [&]() { help.open(); });
     main.addOption("Exit", &quit);
 

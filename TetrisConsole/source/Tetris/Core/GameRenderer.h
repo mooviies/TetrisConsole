@@ -14,7 +14,7 @@ public:
 	GameRenderer();
 	~GameRenderer();
 
-	void configure(int previewCount, bool holdEnabled);
+	void configure(int previewCount, bool holdEnabled, bool showGoal);
 	void invalidate();
 	void render(const GameState& state, bool playfieldVisible = true);
 	void renderTimer(const GameState& state);
@@ -29,6 +29,6 @@ private:
 	PieceDisplay _hold;
 	PlayfieldDisplay _playfield;
 	Icon _muteIcon;
-	int _previewCount = NEXT_PIECE_QUEUE_SIZE;
+	int _previewCount = 6;
 	bool _holdEnabled = true;
 };

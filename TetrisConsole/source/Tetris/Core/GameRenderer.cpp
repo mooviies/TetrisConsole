@@ -15,24 +15,26 @@ namespace Layout {
 }}
 
 GameRenderer::GameRenderer()
-    : _next(NEXT_PIECE_QUEUE_SIZE), _muteIcon("♪")
+    : _muteIcon("♪")
 {
 }
 
 GameRenderer::~GameRenderer() = default;
 
-void GameRenderer::configure(const int previewCount, const bool holdEnabled) {
-    if (previewCount != _previewCount) {
-        _next.clear();
-        _previewCount = previewCount;
-        if (previewCount > 0)
-            _next.rebuild(static_cast<size_t>(previewCount));
-        updatePositions();
-    }
+void GameRenderer::configure(const int previewCount, const bool holdEnabled, const bool showGoal) {
+    _next.clear();
+    _previewCount = previewCount;
+    if (previewCount > 0)
+        _next.rebuild(static_cast<size_t>(previewCount));
+
+    updatePositions();
+
     if (holdEnabled != _holdEnabled) {
         if (!holdEnabled) _hold.clear();
         _holdEnabled = holdEnabled;
     }
+
+    _score.configure(showGoal);
 }
 
 void GameRenderer::updatePositions() {

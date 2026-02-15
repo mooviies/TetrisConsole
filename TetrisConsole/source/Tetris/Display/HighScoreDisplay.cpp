@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
+#include "Color.h"
 #include "Menu.h"
 #include "Platform.h"
 #include "Utility.h"
@@ -10,7 +11,7 @@
 
 using namespace std;
 
-static constexpr int kLeftInterior  = 28;
+static constexpr int kLeftInterior  = 30;
 static constexpr int kRightInterior = 22;
 static constexpr int kLabelWidth    = 9;
 static constexpr int kWindowWidth   = 80;
@@ -21,8 +22,12 @@ static constexpr int kGap           = 1;
 HighScoreDisplay::HighScoreDisplay()
     : _leftPanel(kLeftInterior), _rightPanel(kRightInterior)
 {
-	// --- Left panel: title + 10 list rows ---
-	_leftPanel.addRow("HIGH SCORES", Align::CENTER);
+	// --- Left panel: tab row + 10 list rows ---
+	_tabRow = _leftPanel.addRow({
+		Cell("Marathon", Align::CENTER),
+		Cell("Sprint",  Align::CENTER),
+		Cell("Ultra",   Align::CENTER)
+	});
 	_leftPanel.addSeparator();
 	for (int i = 0; i < 10; i++)
 		_listRows[static_cast<size_t>(i)] = _leftPanel.addRow("", Align::LEFT);
@@ -82,6 +87,12 @@ void HighScoreDisplay::reposition() {
 	_rightPanel.setPosition(rx, ry);
 }
 
+void HighScoreDisplay::updateTabRow() {
+	for (size_t i = 0; i < VARIANT_COUNT; i++)
+		_leftPanel.setCellColor(_tabRow, i,
+		                        static_cast<size_t>(_activeTab) == i ? rlutil::YELLOW : Color::GREY);
+}
+
 void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 	// --- Left panel: list entries ---
 	for (int i = 0; i < 10; i++) {
@@ -121,8 +132,8 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 
 		_rightPanel.setCell(_startRow, 1, Utility::valueToString(rec.startingLevel, 2));
 		string modeStr = "Extended";
-		if (rec.mode == MODE::CLASSIC) modeStr = "Classic";
-		else if (rec.mode == MODE::EXTENDED_INFINITY) modeStr = "Infinite";
+		if (rec.mode == LOCKDOWN_MODE::CLASSIC) modeStr = "Classic";
+		else if (rec.mode == LOCKDOWN_MODE::EXTENDED_INFINITY) modeStr = "Infinite";
 		_rightPanel.setCell(_modeRow,    1, modeStr);
 		_rightPanel.setCell(_ghostRow,   1, rec.ghostEnabled ? "On" : "Off");
 		_rightPanel.setCell(_holdRow,    1, rec.holdEnabled  ? "On" : "Off");
@@ -148,13 +159,15 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 	}
 }
 
-void HighScoreDisplay::open(const vector<HighScoreRecord>& highscores) {
+void HighScoreDisplay::open(const HighScoreTable& allHighscores, VARIANT initialVariant) {
 	_selected = 0;
+	_activeTab = initialVariant;
 
 	reposition();
 	_leftPanel.invalidate();
 	_rightPanel.invalidate();
-	updateDisplay(highscores);
+	updateTabRow();
+	updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
 	Platform::flushInput();
 
 	while (true) {
@@ -168,15 +181,31 @@ void HighScoreDisplay::open(const vector<HighScoreRecord>& highscores) {
 			case rlutil::KEY_UP:
 				if (_selected > 0) {
 					_selected--;
-					updateDisplay(highscores);
+					updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
 				}
 				break;
 			case rlutil::KEY_DOWN:
 				if (_selected < 9) {
 					_selected++;
-					updateDisplay(highscores);
+					updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
 				}
 				break;
+			case rlutil::KEY_LEFT: {
+				auto idx = static_cast<size_t>(_activeTab);
+				_activeTab = static_cast<VARIANT>(idx == 0 ? VARIANT_COUNT - 1 : idx - 1);
+				_selected = 0;
+				updateTabRow();
+				updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
+				break;
+			}
+			case rlutil::KEY_RIGHT: {
+				auto idx = static_cast<size_t>(_activeTab);
+				_activeTab = static_cast<VARIANT>((idx + 1) % VARIANT_COUNT);
+				_selected = 0;
+				updateTabRow();
+				updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
+				break;
+			}
 			case rlutil::KEY_ESCAPE:
 			case rlutil::KEY_ENTER:
 				_leftPanel.clear();
@@ -214,12 +243,15 @@ static vector<Rect> buildExclusionZones(int ox, int oy,
 	};
 }
 
-string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscores,
-                                         const HighScoreRecord& newRecord) {
+string HighScoreDisplay::openForNewEntry(const HighScoreTable& allHighscores,
+                                         const HighScoreRecord& newRecord,
+                                         VARIANT variant) {
 	constexpr int kMaxName = 10;
 
+	_activeTab = variant;
+
 	// Build merged list: insert new record at correct sorted position
-	auto merged = highscores;
+	auto merged = allHighscores[static_cast<size_t>(variant)];
 	auto it = lower_bound(merged.begin(), merged.end(), newRecord,
 	                       [](const HighScoreRecord& a, const HighScoreRecord& b) {
 		                       return a.score > b.score;
@@ -233,6 +265,7 @@ string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscor
 	reposition();
 	_leftPanel.invalidate();
 	_rightPanel.invalidate();
+	updateTabRow();
 	updateDisplay(merged);
 
 	// Highlight the new entry row in yellow

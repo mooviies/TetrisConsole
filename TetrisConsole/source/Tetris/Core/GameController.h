@@ -10,6 +10,7 @@
 #include "ScoringRule.h"
 #include "GravityPolicy.h"
 #include "PieceMovement.h"
+#include "VariantRule.h"
 
 class Timer;
 
@@ -22,7 +23,8 @@ public:
 	void start(GameState& state) const;
 	StepResult step(GameState& state, const InputSnapshot& input);
 	void reset(GameState& state) const;
-	void configurePolicies(MODE mode);
+	void configurePolicies(LOCKDOWN_MODE mode);
+	void configureVariant(VARIANT variant, GameState &state);
 
 private:
 	void stepGeneration(GameState& state) const;
@@ -36,6 +38,7 @@ private:
 	std::unique_ptr<ScoringRule> _scoringRule;
 	std::unique_ptr<GravityPolicy> _gravityPolicy;
 	std::unique_ptr<GoalPolicy> _goalPolicy;
+	std::unique_ptr<VariantRule> _variantRule;
 	PieceMovement _movement;
 	LineClear _lineClear;
 };

@@ -11,18 +11,26 @@ static constexpr double GENERATION_DELAY = 0.2;
 
 GameController::GameController(Timer& timer)
     : _timer(timer),
-      _lockDownPolicy(std::make_unique<ExtendedLockDown>()),
+      _lockDownPolicy(makeLockDownPolicy()),
       _scoringRule(makeDefaultScoringRule()),
       _gravityPolicy(makeDefaultGravityPolicy()),
       _goalPolicy(makeDefaultGoalPolicy()),
+      _variantRule(makeVariantRule()),
       _movement(timer, _lockDownPolicy.get(), _gravityPolicy.get()),
-      _lineClear(timer, _scoringRule.get(), _goalPolicy.get()) {}
+      _lineClear(timer, _scoringRule.get(), _goalPolicy.get(), _variantRule.get()) {}
 
 GameController::~GameController() = default;
 
-void GameController::configurePolicies(const MODE mode) {
+void GameController::configurePolicies(const LOCKDOWN_MODE mode) {
 	_lockDownPolicy = makeLockDownPolicy(mode);
 	_movement.setLockDownPolicy(_lockDownPolicy.get());
+}
+
+void GameController::configureVariant(const VARIANT variant, GameState& state) {
+	_variantRule = makeVariantRule(variant);
+	_lineClear.setVariantRule(_variantRule.get());
+	state.config.timeLimit = _variantRule->timeLimit();
+	state.config.showGoal = _variantRule->levelUp();
 }
 
 void GameController::start(GameState& state) const {
@@ -49,6 +57,10 @@ StepResult GameController::step(GameState& state, const InputSnapshot& input) {
 		case GamePhase::Completion:  stepCompletion(state); break;
 	}
 
+	if (state.displayTime() <= 0) {
+		state.flags.isGameOver = true;
+	}
+
 	auto result = StepResult::Continue;
 
 	if (state.flags.isGameOver)
@@ -70,6 +82,10 @@ void GameController::reset(GameState& state) const {
 	state.phase = GamePhase::Falling;
 	state.lineClear = {};
 	state.setPlayerName("");
+
+	if (_variantRule->linesGoal() > 0) {
+		state.stats.lines = _variantRule->linesGoal();
+	}
 
 	for (auto& row : state.matrix) row.fill(0);
 
@@ -103,9 +119,14 @@ void GameController::stepGeneration(GameState& state) const {
 }
 
 void GameController::stepCompletion(GameState& state) const {
-	if (state.stats.goal <= 0) {
+	if (_variantRule->levelUp() && state.stats.goal <= 0) {
 		state.stats.level++;
 		state.stats.goal = _goalPolicy->goalValue(state.stats.level) + state.stats.goal;
+
+		if (state.stats.level > MAX_LEVEL) {
+			state.flags.isGameOver = true;
+			return;
+		}
 	}
 
 	_timer.startTimer(GENERATION);

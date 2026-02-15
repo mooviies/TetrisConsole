@@ -1,10 +1,10 @@
 #include "LockDownPolicy.h"
 
-std::unique_ptr<LockDownPolicy> makeLockDownPolicy(const MODE mode) {
+std::unique_ptr<LockDownPolicy> makeLockDownPolicy(const LOCKDOWN_MODE mode) {
 	switch (mode) {
-		case MODE::EXTENDED:          return std::make_unique<ExtendedLockDown>();
-		case MODE::EXTENDED_INFINITY: return std::make_unique<InfiniteLockDown>();
-		case MODE::CLASSIC:           return std::make_unique<ClassicLockDown>();
+		case LOCKDOWN_MODE::EXTENDED:          return std::make_unique<ExtendedLockDown>();
+		case LOCKDOWN_MODE::EXTENDED_INFINITY: return std::make_unique<InfiniteLockDown>();
+		case LOCKDOWN_MODE::CLASSIC:           return std::make_unique<ClassicLockDown>();
 	}
 	return std::make_unique<ExtendedLockDown>();
 }

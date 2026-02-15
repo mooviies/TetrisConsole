@@ -7,6 +7,13 @@
 ScoreDisplay::ScoreDisplay()
     : _panel(18)
 {
+
+}
+
+void ScoreDisplay::configure(bool showGoal) {
+    _showGoal = showGoal;
+    _panel.recreate();
+
     _scoreValueRow = _panel.addRow("0000000000", Align::CENTER);
     _panel.addSeparator();
     _timeValueRow = _panel.addRow("00:00.00", Align::CENTER);
@@ -18,8 +25,10 @@ ScoreDisplay::ScoreDisplay()
     _linesRow = _panel.addRow({Cell("Lines", Align::LEFT, 17, 9),
                                 Cell("000000", Align::CENTER)});
 
-    _goalRow = _panel.addRow({Cell("Goal", Align::LEFT, 17, 9),
+    if (showGoal) {
+        _goalRow = _panel.addRow({Cell("Goal", Align::LEFT, 17, 9),
                                 Cell("000000", Align::CENTER)});
+    }
 
     _panel.addSeparator();
 
@@ -43,11 +52,11 @@ void ScoreDisplay::update(const GameState& state) {
     const int scoreColor = state.stats.backToBackBonus ? Color::LIGHTGREEN : Color::WHITE;
     _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state.stats.score, 10));
     _panel.setCellColor(_scoreValueRow, 0, scoreColor);
-    _panel.setCell(_timeValueRow, 0, Utility::timeToString(state.gameElapsed()));
     _panel.setCell(_levelRow, 1, Utility::valueToString(state.stats.level, 2));
-    _panel.setCell(_tpmRow, 1, Utility::valueToString(state.tpm(), 6));
-    _panel.setCell(_lpmRow, 1, Utility::valueToString(state.lpm(), 6));
-    _panel.setCell(_goalRow, 1, Utility::valueToString(state.stats.goal, 6));
+
+    if (_showGoal)
+        _panel.setCell(_goalRow, 1, Utility::valueToString(state.stats.goal, 6));
+
     _panel.setCell(_linesRow, 1, Utility::valueToString(state.stats.lines, 6));
     _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.stats.tetris, 6));
     _panel.setCell(_combosRow, 1, Utility::valueToString(state.stats.combos, 6));
@@ -55,7 +64,7 @@ void ScoreDisplay::update(const GameState& state) {
 }
 
 void ScoreDisplay::updateTimer(const GameState& state) {
-    _panel.setCell(_timeValueRow, 0, Utility::timeToString(state.gameElapsed()));
+    _panel.setCell(_timeValueRow, 0, Utility::timeToString(state.displayTime()));
     _panel.setCell(_tpmRow, 1, Utility::valueToString(state.tpm(), 6));
     _panel.setCell(_lpmRow, 1, Utility::valueToString(state.lpm(), 6));
 }

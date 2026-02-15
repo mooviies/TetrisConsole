@@ -5,7 +5,6 @@
 #include "HighScoreDisplay.h"
 #include "Timer.h"
 #include "Menu.h"
-#include "Platform.h"
 #include "SoundEngine.h"
 #include "rlutil.h"
 
@@ -13,15 +12,16 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreD
     : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu),
       _highScoreDisplay(highScoreDisplay)
 {
-    _state.loadHighscore();
     _state.loadOptions();
+    _state.loadHighscore();
 }
 
 Tetris::~Tetris() = default;
 
 void Tetris::start() {
-    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
     _controller.configurePolicies(_state.config.mode);
+    _controller.configureVariant(_state.config.variant, _state);
+    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled, _state.config.showGoal);
     _controller.start(_state);
     _renderer.invalidate();
     _renderer.render(_state);
@@ -84,7 +84,7 @@ void Tetris::handlePause() {
     if (selected == "Restart") {
         SoundEngine::stopMusic();
         _controller.start(_state);
-        _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
+        _renderer.configure(_state.config.previewCount, _state.config.holdEnabled, _state.config.showGoal);
         _renderer.invalidate();
         _renderer.render(_state);
         _state.clearDirty();
@@ -126,7 +126,7 @@ void Tetris::handleGameOver() {
         rec.previewCount  = _state.config.previewCount;
         rlutil::cls();
         GameRenderer::renderTitle("A classic in console!");
-        _state.setPlayerName(_highScoreDisplay.openForNewEntry(_state.highscores(), rec));
+        _state.setPlayerName(_highScoreDisplay.openForNewEntry(_state.allHighscores(), rec, _state.config.variant));
         rlutil::cls();
         GameRenderer::renderTitle("A classic in console!");
     }
@@ -141,7 +141,7 @@ void Tetris::handleGameOver() {
     }
 
     _controller.start(_state);
-    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
+    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled, _state.config.showGoal);
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();

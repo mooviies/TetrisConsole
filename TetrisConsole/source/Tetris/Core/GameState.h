@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <vector>
+#include <array>
 #include <cstdint>
 
 #include "Constants.h"
@@ -23,19 +24,24 @@ struct HighScoreRecord {
 	std::string name;
 	// Options used during this game
 	int startingLevel{1};
-	MODE mode{MODE::EXTENDED};
+	LOCKDOWN_MODE mode{LOCKDOWN_MODE::EXTENDED};
 	bool ghostEnabled{true};
 	bool holdEnabled{true};
-	int previewCount{NEXT_PIECE_QUEUE_SIZE};
+	int previewCount{6};
 };
 
 struct GameConfig {
-	MODE mode = MODE::EXTENDED;
+	LOCKDOWN_MODE mode = LOCKDOWN_MODE::EXTENDED;
+	VARIANT variant = VARIANT::MARATHON;
 	bool ghostEnabled = true;
 	bool holdEnabled = true;
-	int previewCount = NEXT_PIECE_QUEUE_SIZE;
+	int previewCount = 6;
 	int startingLevel = 1;
+	double timeLimit = -1;
+	bool showGoal = true;
 };
+
+using HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>;
 
 struct Stats {
 	int64_t score{};
@@ -94,7 +100,9 @@ public:
 
 	[[nodiscard]] int tpm() const;
 	[[nodiscard]] int lpm() const;
-	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _highscores; }
+	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _highscores[static_cast<size_t>(config.variant)]; }
+	[[nodiscard]] const std::vector<HighScoreRecord>& highscores(VARIANT v) const { return _highscores[static_cast<size_t>(v)]; }
+	[[nodiscard]] const HighScoreTable& allHighscores() const { return _highscores; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
 
 	void markDirty() { _isDirty = true; }
@@ -108,6 +116,7 @@ public:
 	void pauseGameTimer();
 	void resumeGameTimer();
 	[[nodiscard]] double gameElapsed() const;
+	[[nodiscard]] double displayTime() const;
 	[[nodiscard]] int minutesElapsed() const { return static_cast<int>(gameElapsed() / 60); }
 
 	void updateHighscore();
@@ -128,7 +137,7 @@ private:
 	bool _isDirty{};
 	bool _shouldExit{};
 	std::string _playerName;
-	std::vector<HighScoreRecord> _highscores; // sorted by score desc, max 10
+	HighScoreTable _highscores; // per-variant, each sorted by score desc, max 10
 	std::vector<GameSound> _pendingSounds;
 
 	std::chrono::steady_clock::time_point _gameTimerStart{};

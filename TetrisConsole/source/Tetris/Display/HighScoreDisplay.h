@@ -12,12 +12,14 @@ class HighScoreDisplay {
 public:
 	HighScoreDisplay();
 
-	void open(const std::vector<HighScoreRecord>& highscores);
-	std::string openForNewEntry(const std::vector<HighScoreRecord>& highscores,
-	                            const HighScoreRecord& newRecord);
+	void open(const HighScoreTable& allHighscores, VARIANT initialVariant);
+	std::string openForNewEntry(const HighScoreTable& allHighscores,
+	                            const HighScoreRecord& newRecord,
+	                            VARIANT variant);
 
 private:
 	void updateDisplay(const std::vector<HighScoreRecord>& hs);
+	void updateTabRow();
 	void reposition();
 
 	Panel _leftPanel;
@@ -43,6 +45,8 @@ private:
 	size_t _holdRow{};
 	size_t _previewRow{};
 
+	size_t _tabRow{};
+	VARIANT _activeTab{};
 	int _selected{};
 	Confetti _confetti;
 };
