@@ -39,11 +39,22 @@ The terminal should be at least 80 columns wide and 29 rows tall.
 | Cycle mute |             | M       |             |
 | Select     | Enter       |         |             |
 
-## Game Modes
+## Options
 
-- **Extended** — Modern Tetris with lock delay resets (up to 15 moves before forced lock)
-- **Infinite** — Same as Extended, but with unlimited lock delay resets
-- **Classic** — Traditional rules without lock delay resets
+All options are persisted across sessions.
+
+**Starting Level** (1–15) — Higher levels have faster gravity.
+
+**Lock Down** — Controls what happens when a piece lands:
+- **Extended** (default) — 0.5s lock delay, resets on move/rotate, up to 15 resets
+- **Infinite** — 0.5s lock delay, unlimited resets
+- **Classic** — Locks immediately when the piece can't fall
+
+**Ghost Piece** (On/Off) — Shows a preview of where the current piece will land.
+
+**Hold Piece** (On/Off) — Allows swapping the current piece once per drop.
+
+**Preview** (0–6) — Number of next pieces shown in the queue.
 
 ## Features
 
