@@ -105,7 +105,7 @@ void GameController::stepGeneration(GameState& state) const {
 void GameController::stepCompletion(GameState& state) const {
 	if (state.stats.goal <= 0) {
 		state.stats.level++;
-		state.stats.goal = _goalPolicy->goalValue(state.stats.level);
+		state.stats.goal = _goalPolicy->goalValue(state.stats.level) + state.stats.goal;
 	}
 
 	_timer.startTimer(GENERATION);
