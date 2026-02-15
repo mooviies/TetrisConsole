@@ -96,9 +96,11 @@ void GameRenderer::invalidate() {
 void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _playfield.update(state, playfieldVisible);
     if (_previewCount > 0)
-        _next.update(state.peekTetriminos(static_cast<size_t>(_previewCount)));
+        _next.update(playfieldVisible ? state.peekTetriminos(static_cast<size_t>(_previewCount))
+                                      : std::vector<const Tetrimino*>{});
     if (_holdEnabled)
-        _hold.update({state.pieces.hold});
+        _hold.update(playfieldVisible ? std::vector<const Tetrimino*>{state.pieces.hold}
+                                      : std::vector<const Tetrimino*>{});
     _score.update(state);
     drawMuteIndicator();
 
