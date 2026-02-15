@@ -1,9 +1,14 @@
 #include "GameRenderer.h"
 
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
 #include "GameState.h"
 #include "Platform.h"
 #include "SoundEngine.h"
 #include "Color.h"
+#include "rlutil.h"
 
 namespace {
 namespace Layout {
@@ -12,7 +17,39 @@ namespace Layout {
     constexpr int kNextX = 59,      kNextY = 6;
     constexpr int kHoldX = 7,       kHoldY = 6;
     constexpr int kMuteX = 78,      kMuteY = 2;
-}}
+    constexpr int kSideNotifWidth = 12;  // next-piece queue interior width
+    constexpr int kSideNotifBaseY = kPlayfieldY + VISIBLE_ROWS;  // 2nd-to-last playfield row
+}
+
+std::vector<std::string> wrapText(const std::string& text, int maxWidth) {
+    std::vector<std::string> lines;
+    if (static_cast<int>(text.length()) <= maxWidth) {
+        lines.push_back(text);
+        return lines;
+    }
+    auto pos = text.rfind(' ', static_cast<size_t>(maxWidth));
+    if (pos == std::string::npos) {
+        lines.push_back(text.substr(0, static_cast<size_t>(maxWidth)));
+        lines.push_back(text.substr(static_cast<size_t>(maxWidth)));
+    } else {
+        lines.push_back(text.substr(0, pos));
+        lines.push_back(text.substr(pos + 1));
+    }
+    return lines;
+}
+
+void renderCenteredLine(int x, int y, int width, const std::string& text, int color) {
+    const auto textLen = static_cast<int>(text.length());
+    const int leftPad = (width - textLen) / 2;
+    const int rightPad = width - textLen - leftPad;
+    rlutil::locate(x, y);
+    rlutil::setBackgroundColor(Color::BLACK);
+    rlutil::setColor(color);
+    std::cout << std::string(static_cast<size_t>(leftPad), ' ')
+              << text
+              << std::string(static_cast<size_t>(rightPad), ' ');
+}
+}
 
 GameRenderer::GameRenderer()
     : _muteIcon("♪")
@@ -69,6 +106,41 @@ void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     _playfield.render();
     if (_previewCount > 0) _next.render();
     if (_holdEnabled) _hold.render();
+
+    // Side notification overlay (levels 11+): render over bottom of next-piece queue
+    const auto& lc = state.lineClear;
+    const bool hasNotification = state.phase == GamePhase::Animate
+        && state.stats.level > OVERLAY_LEVEL_THRESHOLD
+        && (!lc.notificationText.empty() || !lc.comboText.empty());
+
+    if (hasNotification) {
+        const int ox = Platform::offsetX();
+        const int oy = Platform::offsetY();
+        const int baseX = Layout::kNextX + 1 + ox;
+        const int baseY = Layout::kSideNotifBaseY + oy;
+
+        if (!lc.notificationText.empty()) {
+            auto lines = wrapText(lc.notificationText, Layout::kSideNotifWidth);
+            const int startY = baseY - static_cast<int>(lines.size()) + 1;
+            for (size_t i = 0; i < lines.size(); i++)
+                renderCenteredLine(baseX, startY + static_cast<int>(i),
+                    Layout::kSideNotifWidth, lines[i], lc.notificationColor);
+        }
+
+        if (!lc.comboText.empty())
+            renderCenteredLine(baseX, baseY + 1,
+                Layout::kSideNotifWidth, lc.comboText, lc.comboColor);
+
+        rlutil::setColor(Color::WHITE);
+        rlutil::setBackgroundColor(Color::BLACK);
+    }
+
+    if (_wasShowingNotification && !hasNotification) {
+        _next.invalidate();
+        if (_previewCount > 0) _next.render();
+    }
+    _wasShowingNotification = hasNotification;
+
     Platform::flushOutput();
 }
 

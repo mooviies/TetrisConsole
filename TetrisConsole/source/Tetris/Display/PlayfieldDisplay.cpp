@@ -43,6 +43,36 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
 
     const int line = MATRIX_START + rowIndex;
 
+    // Notification overlay (levels 1-10): steady text centered on playfield
+    static constexpr int kNotificationRow = VISIBLE_ROWS / 2 - 1;  // 9
+    static constexpr int kComboRow        = VISIBLE_ROWS / 2;       // 10
+    if (_state->phase == GamePhase::Animate && _state->stats.level <= OVERLAY_LEVEL_THRESHOLD) {
+        const std::string* text = nullptr;
+        int color = 0;
+        if (rowIndex == kNotificationRow && !_state->lineClear.notificationText.empty()) {
+            text = &_state->lineClear.notificationText;
+            color = _state->lineClear.notificationColor;
+        } else if (rowIndex == kComboRow && !_state->lineClear.comboText.empty()) {
+            text = &_state->lineClear.comboText;
+            color = _state->lineClear.comboColor;
+        }
+        if (text != nullptr) {
+            const int totalWidth = TETRIS_WIDTH * 2;
+            const auto textLen = static_cast<int>(text->length());
+            const int leftPad = (totalWidth - textLen) / 2;
+            const int rightPad = totalWidth - textLen - leftPad;
+            ctx.setBackgroundColor(Color::BLACK);
+            ctx.setColor(Color::BLACK);
+            ctx.print(std::string(static_cast<size_t>(leftPad), ' '));
+            ctx.setColor(color);
+            ctx.print(*text);
+            ctx.setColor(Color::BLACK);
+            ctx.print(std::string(static_cast<size_t>(rightPad), ' '));
+            ctx.setBackgroundColor(Color::BLACK);
+            return;
+        }
+    }
+
     // Line-clear flash: draw entire row as white blocks when flashing on
     if (_state->phase == GamePhase::Animate && _state->lineClear.flashOn) {
         const auto& rows = _state->lineClear.rows;

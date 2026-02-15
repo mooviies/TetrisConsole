@@ -12,6 +12,8 @@ constexpr int MATRIX_END = 39;
 constexpr int SKYLINE_START = 18;
 constexpr int MIN_LEVEL = 1;
 constexpr int MAX_LEVEL = 15;
+constexpr int VISIBLE_ROWS = MATRIX_END - MATRIX_START + 1;
+constexpr int OVERLAY_LEVEL_THRESHOLD = 10;
 
 enum class  VARIANT { MARATHON, SPRINT, ULTRA };
 inline constexpr size_t VARIANT_COUNT = 3;

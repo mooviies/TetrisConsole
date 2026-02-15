@@ -31,4 +31,5 @@ private:
 	Icon _muteIcon;
 	int _previewCount = 6;
 	bool _holdEnabled = true;
+	bool _wasShowingNotification{};
 };

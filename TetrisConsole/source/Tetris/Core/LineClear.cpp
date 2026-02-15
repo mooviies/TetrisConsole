@@ -1,5 +1,6 @@
 #include "LineClear.h"
 
+#include "Color.h"
 #include "Constants.h"
 #include "ScoringRule.h"
 #include "Timer.h"
@@ -21,10 +22,49 @@ void LineClear::resetTimers() const {
 void LineClear::stepPattern(GameState& state) const {
 	if (auto rows = detectFullRows(state); !rows.empty()) {
 		state.lineClear.rows = std::move(rows);
-		if (const int linesCleared = static_cast<int>(state.lineClear.rows.size()); linesCleared == 4)
+		const int linesCleared = static_cast<int>(state.lineClear.rows.size());
+		if (linesCleared == 4)
 			state.queueSound(GameSound::Tetris);
 		else
 			state.queueSound(GameSound::LineClear);
+
+		// Build notification text for impressive manoeuvres
+		const bool isTSpin = state.flags.lastMoveIsTSpin;
+		const bool isMiniTSpin = state.flags.lastMoveIsMiniTSpin;
+		const bool isTetris = (linesCleared == 4);
+		const bool isDifficult = isTetris
+			|| (isTSpin && linesCleared > 0)
+			|| (isMiniTSpin && linesCleared == 1);
+		const bool isB2B = state.stats.backToBackBonus && isDifficult;
+
+		string text;
+		int color = 0;
+		if (isTSpin) {
+			static const char* const names[] = {
+				"T-SPIN", "T-SPIN SINGLE", "T-SPIN DOUBLE", "T-SPIN TRIPLE"
+			};
+			text = names[min(linesCleared, 3)];
+			color = Color::LIGHTMAGENTA;
+		} else if (isMiniTSpin) {
+			text = "MINI T-SPIN";
+			color = Color::MAGENTA;
+		} else if (isTetris) {
+			text = "TETRIS!";
+			color = Color::YELLOW;
+		}
+
+		if (!text.empty()) {
+			if (isB2B)
+				text = "B2B " + text;
+			state.lineClear.notificationText = text;
+			state.lineClear.notificationColor = color;
+		}
+
+		if (state.stats.currentCombo >= 0) {
+			state.lineClear.comboText = "COMBO x" + to_string(state.stats.currentCombo + 1);
+			state.lineClear.comboColor = Color::LIGHTCYAN;
+		}
+
 		state.phase = GamePhase::Iterate;
 	} else {
 		// No lines cleared — still need to run scoring for combo reset
@@ -62,6 +102,8 @@ void LineClear::stepEliminate(GameState& state) const {
 	eliminateRows(state, state.lineClear.rows);
 	awardScore(state, linesCleared);
 	state.lineClear.rows.clear();
+	state.lineClear.notificationText.clear();
+	state.lineClear.comboText.clear();
 
 	if (auto cascaded = detectFullRows(state); !cascaded.empty()) {
 		state.lineClear.rows = std::move(cascaded);
