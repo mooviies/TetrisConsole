@@ -5,6 +5,7 @@
 
 #include "Tetris.h"
 #include "Constants.h"
+#include "HelpDisplay.h"
 #include "HighScoreDisplay.h"
 #include "Input.h"
 #include "SoundEngine.h"
@@ -52,6 +53,7 @@ int main() {
     Menu gameOver("GAME OVER", "New High Score!");
 
     HighScoreDisplay highScores;
+    HelpDisplay help;
     Tetris tetris(pause, gameOver, highScores);
 
     Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
@@ -136,6 +138,7 @@ int main() {
         tetris.saveOptions();
     });
     main.addOptionAction("High Scores", [&]() { highScores.open(tetris.highscores()); });
+    main.addOptionAction("Help", [&]() { help.open(); });
     main.addOption("Exit", &quit);
 
     // --- Pause menu ---
