@@ -169,8 +169,7 @@ bool Tetrimino::checkPositionValidity(const Vector2i& position, const ROTATION r
 // Mini T-spin: C and D both occupied, plus at least one of A or B,
 //              AND a wall kick was used (rotation point >= 2).
 // Special case: the 5th SRS kick (TST kick) always promotes a mini to full.
-bool Tetrimino::checkTSpin()
-{
+bool Tetrimino::checkTSpin() const {
 	if (!_hasTSpin)
 		return false;
 

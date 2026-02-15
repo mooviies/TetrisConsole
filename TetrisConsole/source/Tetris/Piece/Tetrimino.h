@@ -27,7 +27,7 @@ public:
 	[[nodiscard]] const std::string& getPreviewLine2() const { return _previewLine2; }
 	[[nodiscard]] Vector2i getStartingPosition() const { return _startingPosition; }
 	[[nodiscard]] bool canTSpin() const { return _hasTSpin; }
-	bool checkTSpin();
+	bool checkTSpin() const;
 	bool checkMiniTSpin() const;
 
 private:
