@@ -1,5 +1,7 @@
 #include "PlayfieldDisplay.h"
 
+#include <algorithm>
+
 #include "Color.h"
 #include "GameState.h"
 #include "Constants.h"
@@ -38,6 +40,19 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
         return;
 
     const int line = MATRIX_START + rowIndex;
+
+    // Line-clear flash: draw entire row as white blocks when flashing on
+    if (_state->phase == GamePhase::Animate && _state->lineClear.flashOn) {
+        const auto& rows = _state->lineClear.rows;
+        if (std::find(rows.begin(), rows.end(), line) != rows.end()) {
+            for (int i = 0; i < TETRIS_WIDTH; i++) {
+                ctx.setColor(Color::WHITE);
+                ctx.print("██");
+            }
+            return;
+        }
+    }
+
     const auto* tetrimino = _state->pieces.current;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;

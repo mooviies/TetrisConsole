@@ -12,6 +12,12 @@
 enum class GameStep { Idle, MoveLeft, MoveRight, HardDrop };
 enum class StepResult { Continue, PauseRequested, GameOver };
 enum class GameSound { Click, Lock, HardDrop, LineClear, Tetris };
+enum class GamePhase { Generation, Falling, Pattern, Iterate, Animate, Eliminate, Completion };
+
+struct LineClearState {
+	std::vector<int> rows;   // matrix-row indices of detected full rows
+	bool flashOn{};
+};
 
 struct HighScoreRecord {
 	int64_t score{};
@@ -125,6 +131,8 @@ public:
 	PieceState pieces;
 	FrameFlags flags;
 	GameMatrix matrix;
+	GamePhase phase = GamePhase::Falling;
+	LineClearState lineClear;
 
 private:
 	bool _isDirty{};

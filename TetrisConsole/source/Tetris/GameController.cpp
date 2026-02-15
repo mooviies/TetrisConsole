@@ -11,10 +11,15 @@ static constexpr const char* FALL             = "fall";
 static constexpr const char* AUTOREPEAT_LEFT  = "autorepeatleft";
 static constexpr const char* AUTOREPEAT_RIGHT = "autorepeatright";
 static constexpr const char* LOCK_DOWN        = "lockdown";
+static constexpr const char* GENERATION       = "generation";
+static constexpr const char* ANIMATE          = "animate";
 
 static constexpr double AUTOREPEAT_DELAY = 0.25;
 static constexpr double AUTOREPEAT_SPEED = 0.01;
 static constexpr double LOCK_DOWN_DELAY  = 0.5;
+static constexpr double GENERATION_DELAY = 0.2;
+static constexpr double ANIMATE_DURATION = 0.4;
+static constexpr double FLASH_INTERVAL   = 0.1;
 
 GameController::GameController(Timer& timer)
     : _timer(timer),
@@ -31,6 +36,8 @@ void GameController::configurePolicies(MODE mode) {
 void GameController::start(GameState& state) const {
     reset(state);
     state.flags.isStarted = true;
+    state.phase = GamePhase::Generation;
+    _timer.resetTimer(GENERATION, GENERATION_DELAY);
 }
 
 StepResult GameController::step(GameState& state, const InputSnapshot& input) {
@@ -40,11 +47,14 @@ StepResult GameController::step(GameState& state, const InputSnapshot& input) {
     if (!state.flags.isStarted)
         return StepResult::Continue;
 
-    switch (state.flags.stepState) {
-        case GameStep::Idle:      stepIdle(state, input); break;
-        case GameStep::MoveLeft:  stepMoveLeft(state, input); break;
-        case GameStep::MoveRight: stepMoveRight(state, input); break;
-        case GameStep::HardDrop:  stepHardDrop(state); break;
+    switch (state.phase) {
+        case GamePhase::Generation:  stepGeneration(state); break;
+        case GamePhase::Falling:     stepFalling(state, input); break;
+        case GamePhase::Pattern:     stepPattern(state); break;
+        case GamePhase::Iterate:     state.phase = GamePhase::Animate; break;
+        case GamePhase::Animate:     stepAnimate(state); break;
+        case GamePhase::Eliminate:   stepEliminate(state); break;
+        case GamePhase::Completion:  stepCompletion(state); break;
     }
 
     auto result = StepResult::Continue;
@@ -53,7 +63,7 @@ StepResult GameController::step(GameState& state, const InputSnapshot& input) {
         result = StepResult::GameOver;
     } else if (input.pause) {
         result = StepResult::PauseRequested;
-    } else {
+    } else if (state.phase == GamePhase::Falling) {
         if (!state.flags.didRotate) {
             if (input.rotateCW)
                 rotate(state, RIGHT);
@@ -119,16 +129,6 @@ void GameController::fall(GameState& state, const InputSnapshot& input) const {
 }
 
 void GameController::stepIdle(GameState& state, const InputSnapshot& input) {
-    if (state.pieces.current == nullptr) {
-        popTetrimino(state);
-        if (!state.pieces.current->setPosition(state.pieces.current->getStartingPosition())) {
-            state.flags.isGameOver = true;
-            return;
-        }
-        _timer.startTimer(FALL);
-        state.markDirty();
-    }
-
     fall(state, input);
     if (state.flags.isGameOver) return;
 
@@ -147,6 +147,10 @@ void GameController::stepIdle(GameState& state, const InputSnapshot& input) {
             }
             _timer.startTimer(FALL);
             state.markDirty();
+        } else {
+            // Held piece was empty; need to go through generation to spawn next
+            state.phase = GamePhase::Generation;
+            _timer.resetTimer(GENERATION, GENERATION_DELAY);
         }
         state.pieces.isNewHold = true;
     }
@@ -299,6 +303,8 @@ void GameController::reset(GameState& state) const {
     state.stats.level = state.config.startingLevel;
     state.lockDown = {};
     state.flags = {};
+    state.phase = GamePhase::Falling;
+    state.lineClear = {};
     state.setPlayerName("");
 
     for (auto& row : state.matrix) row.fill(0);
@@ -317,6 +323,8 @@ void GameController::reset(GameState& state) const {
     _timer.stopTimer(FALL);
     _timer.stopTimer(AUTOREPEAT_LEFT);
     _timer.stopTimer(AUTOREPEAT_RIGHT);
+    _timer.stopTimer(GENERATION);
+    _timer.stopTimer(ANIMATE);
 }
 
 void GameController::lock(GameState& state) const {
@@ -349,34 +357,34 @@ void GameController::lock(GameState& state) const {
 
     _timer.stopTimer(LOCK_DOWN);
 
-    const int linesCleared = clearLines(state);
-    awardScore(state, linesCleared);
-
+    state.phase = GamePhase::Pattern;
     state.flags.stepState = GameStep::Idle;
     state.markDirty();
 }
 
-int GameController::clearLines(GameState& state) {
-    int linesCleared = 0;
+vector<int> GameController::detectFullRows(const GameState& state) {
+    vector<int> rows;
     for (int i = MATRIX_END; i >= MATRIX_START; i--) {
-        bool fullLine = true;
+        bool full = true;
         for (int j = 0; j < TETRIS_WIDTH; j++) {
             if (state.matrix[i][j] == 0) {
-                fullLine = false;
+                full = false;
                 break;
             }
         }
-
-        if (fullLine) {
-            linesCleared++;
-            state.matrix.erase(state.matrix.begin() + i);
-        }
+        if (full)
+            rows.push_back(i);
     }
+    return rows;
+}
 
-    for (int i = 0; i < linesCleared; i++)
+void GameController::eliminateRows(GameState& state, const vector<int>& rows) {
+    // rows are sorted descending (highest index first) from detectFullRows
+    for (int r : rows)
+        state.matrix.erase(state.matrix.begin() + r);
+
+    for (size_t i = 0; i < rows.size(); i++)
         state.matrix.push_front(MatrixRow{});
-
-    return linesCleared;
 }
 
 void GameController::awardScore(GameState& state, const int linesCleared) const {
@@ -406,16 +414,98 @@ void GameController::awardScore(GameState& state, const int linesCleared) const 
 
     state.stats.lines += linesCleared;
     state.stats.goal += result.awardedLines;
+}
 
+void GameController::stepGeneration(GameState& state) {
+    if (_timer.getSeconds(GENERATION) >= GENERATION_DELAY) {
+        _timer.stopTimer(GENERATION);
+        popTetrimino(state);
+        if (!state.pieces.current->setPosition(state.pieces.current->getStartingPosition())) {
+            state.flags.isGameOver = true;
+            return;
+        }
+        _timer.startTimer(FALL);
+        state.phase = GamePhase::Falling;
+        state.markDirty();
+    }
+}
+
+void GameController::stepFalling(GameState& state, const InputSnapshot& input) {
+    switch (state.flags.stepState) {
+        case GameStep::Idle:      stepIdle(state, input); break;
+        case GameStep::MoveLeft:  stepMoveLeft(state, input); break;
+        case GameStep::MoveRight: stepMoveRight(state, input); break;
+        case GameStep::HardDrop:  stepHardDrop(state); break;
+    }
+}
+
+void GameController::stepPattern(GameState& state) {
+    auto rows = detectFullRows(state);
+    if (!rows.empty()) {
+        state.lineClear.rows = std::move(rows);
+        const int linesCleared = static_cast<int>(state.lineClear.rows.size());
+        if (linesCleared == 4)
+            state.queueSound(GameSound::Tetris);
+        else
+            state.queueSound(GameSound::LineClear);
+        state.phase = GamePhase::Iterate;
+    } else {
+        // No lines cleared — still need to run scoring for combo reset
+        awardScore(state, 0);
+        state.phase = GamePhase::Completion;
+    }
+}
+
+void GameController::stepAnimate(GameState& state) {
+    if (!_timer.exist(ANIMATE)) {
+        _timer.startTimer(ANIMATE);
+        state.lineClear.flashOn = true;
+        state.markDirty();
+    }
+
+    const double elapsed = _timer.getSeconds(ANIMATE);
+
+    if (elapsed >= ANIMATE_DURATION) {
+        _timer.stopTimer(ANIMATE);
+        state.lineClear.flashOn = false;
+        state.phase = GamePhase::Eliminate;
+        state.markDirty();
+        return;
+    }
+
+    const bool shouldBeOn = (static_cast<int>(elapsed / FLASH_INTERVAL) % 2) == 0;
+    if (shouldBeOn != state.lineClear.flashOn) {
+        state.lineClear.flashOn = shouldBeOn;
+        state.markDirty();
+    }
+}
+
+void GameController::stepEliminate(GameState& state) {
+    const int linesCleared = static_cast<int>(state.lineClear.rows.size());
+    eliminateRows(state, state.lineClear.rows);
+    awardScore(state, linesCleared);
+    state.lineClear.rows.clear();
+
+    // Check for cascading clears
+    auto cascaded = detectFullRows(state);
+    if (!cascaded.empty()) {
+        state.lineClear.rows = std::move(cascaded);
+        // Stay in Eliminate for the cascade
+    } else {
+        state.phase = GamePhase::Completion;
+    }
+    state.markDirty();
+}
+
+void GameController::stepCompletion(GameState& state) {
     if (state.stats.goal >= state.stats.level * 5) {
         state.stats.level++;
         state.stats.goal = 0;
     }
 
-    if (linesCleared == 4)
-        state.queueSound(GameSound::Tetris);
-    else if (linesCleared >= 1)
-        state.queueSound(GameSound::LineClear);
+    _timer.startTimer(GENERATION);
+    state.phase = GamePhase::Generation;
+    state.markDirty();
 }
 
 void GameController::shuffle(GameState& state, size_t start) {

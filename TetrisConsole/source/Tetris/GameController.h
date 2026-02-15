@@ -24,8 +24,18 @@ public:
 	void configurePolicies(MODE mode);
 
 private:
+	// Phase dispatchers
+	void stepGeneration(GameState& state);
+	void stepFalling(GameState& state, const InputSnapshot& input);
+	void stepPattern(GameState& state);
+	void stepAnimate(GameState& state);
+	void stepEliminate(GameState& state);
+	void stepCompletion(GameState& state);
+
+	static std::vector<int> detectFullRows(const GameState& state);
+	static void eliminateRows(GameState& state, const std::vector<int>& rows);
+
 	void lock(GameState& state) const;
-	static int clearLines(GameState& state);
 	void awardScore(GameState& state, int linesCleared) const;
 	static void shuffle(GameState& state, size_t start);
 	static void popTetrimino(GameState& state);
