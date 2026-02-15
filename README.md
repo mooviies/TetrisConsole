@@ -8,27 +8,36 @@ All media (music and sound effects) are embedded into the binary at compile time
 
 Requires CMake 3.16+ and a C++17 compiler. Python 3 is needed for media embedding.
 
+**Linux / macOS:**
+```
+cmake -B cmake-build-debug
+cmake --build cmake-build-debug
+./cmake-build-debug/tetris
+```
+
+**Windows (Visual Studio):**
 ```
 cmake -B build
 cmake --build build
-./build/tetris
+build\TetrisConsole.exe
 ```
 
 The terminal should be at least 80 columns wide and 29 rows tall.
 
 ## Controls
 
-| Key              | Action                  |
-|------------------|-------------------------|
-| Left / Right     | Move piece              |
-| Down             | Soft drop               |
-| Space            | Hard drop               |
-| Up / X           | Rotate clockwise        |
-| Z                | Rotate counter-clockwise|
-| C                | Hold piece              |
-| M                | Cycle mute              |
-| Escape           | Pause                   |
-| Enter            | Select (menus)          |
+| Action     | Arrows/Keys | Letters | Numpad      |
+|------------|-------------|---------|-------------|
+| Move left  | Left        | A       | 4           |
+| Move right | Right       | D       | 6           |
+| Soft drop  | Down        | S       | 2           |
+| Hard drop  | Space       |         | 8           |
+| Rotate CW  | Up          | X       | 1, 5, 9     |
+| Rotate CCW |             | Z       | 3, 7        |
+| Hold piece |             | C       | 0           |
+| Pause      | Escape, F1  |         |             |
+| Cycle mute |             | M       |             |
+| Select     | Enter       |         |             |
 
 ## Game Modes
 
@@ -69,6 +78,23 @@ All base points are multiplied by the current level. Consecutive Tetrises or T-s
 | Mini T-Spin      | 100    |
 | Soft drop        | 1/line |
 | Hard drop        | 2/line |
+
+## Project Structure
+
+```
+TetrisConsole/source/
+  Konsole/                  # Static library — platform abstraction & UI primitives
+    Platform/               # OS abstraction (console init, keyboard input)
+    UI/                     # Panel rendering, menus, colors
+    Util/                   # Timer, RNG, audio engine, helpers
+  Tetris/                   # Executable — game logic (links against Konsole)
+    Core/                   # MVC triad, facade, entry point
+    Piece/                  # Tetrimino geometry, SRS rotation data
+    Rules/                  # Pluggable gameplay policies (scoring, gravity, lock-down)
+    Display/                # HUD and modal display components
+```
+
+Konsole is built as a static library that the Tetris executable links against, enforcing a clean dependency boundary.
 
 ## Platform Support
 
