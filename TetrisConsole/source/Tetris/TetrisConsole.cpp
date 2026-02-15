@@ -8,6 +8,7 @@
 #include "HelpDisplay.h"
 #include "HighScoreDisplay.h"
 #include "Input.h"
+#include "InputSnapshot.h"
 #include "SoundEngine.h"
 #include "Utility.h"
 #include "GameRenderer.h"
@@ -19,7 +20,45 @@ using namespace std;
 
 int main() {
     Platform::initConsole();
-    Input::init();
+    Input::init(static_cast<int>(Action::Count));
+
+    // Default key bindings
+    auto A = [](Action a) { return static_cast<int>(a); };
+
+    Input::bind(A(Action::Left), KeyCode::ArrowLeft);
+    Input::bind(A(Action::Left), KeyCode(static_cast<int>('A')));
+    Input::bind(A(Action::Left), KeyCode::Numpad4);
+
+    Input::bind(A(Action::Right), KeyCode::ArrowRight);
+    Input::bind(A(Action::Right), KeyCode(static_cast<int>('D')));
+    Input::bind(A(Action::Right), KeyCode::Numpad6);
+
+    Input::bind(A(Action::SoftDrop), KeyCode::ArrowDown);
+    Input::bind(A(Action::SoftDrop), KeyCode(static_cast<int>('S')));
+    Input::bind(A(Action::SoftDrop), KeyCode::Numpad2);
+
+    Input::bind(A(Action::HardDrop), KeyCode(static_cast<int>(' ')));
+    Input::bind(A(Action::HardDrop), KeyCode::Numpad8);
+
+    Input::bind(A(Action::RotateCW), KeyCode::ArrowUp);
+    Input::bind(A(Action::RotateCW), KeyCode(static_cast<int>('X')));
+    Input::bind(A(Action::RotateCW), KeyCode::Numpad1);
+    Input::bind(A(Action::RotateCW), KeyCode::Numpad5);
+    Input::bind(A(Action::RotateCW), KeyCode::Numpad9);
+
+    Input::bind(A(Action::RotateCCW), KeyCode(static_cast<int>('Z')));
+    Input::bind(A(Action::RotateCCW), KeyCode::Numpad3);
+    Input::bind(A(Action::RotateCCW), KeyCode::Numpad7);
+
+    Input::bind(A(Action::Hold), KeyCode(static_cast<int>('C')));
+    Input::bind(A(Action::Hold), KeyCode::Numpad0);
+
+    Input::bind(A(Action::Pause), KeyCode::Escape);
+    Input::bind(A(Action::Pause), KeyCode::F1);
+
+    Input::bind(A(Action::Mute), KeyCode(static_cast<int>('M')));
+
+    Input::bind(A(Action::Select), KeyCode::Enter);
 
     if (!SoundEngine::init()) {
         Input::cleanup();
@@ -187,15 +226,15 @@ int main() {
             }
 
             InputSnapshot snapshot;
-            snapshot.left     = Input::left();
-            snapshot.right    = Input::right();
-            snapshot.softDrop = Input::softDrop();
-            snapshot.hardDrop = Input::hardDrop();
-            snapshot.rotateCW  = Input::rotateClockwise();
-            snapshot.rotateCCW = Input::rotateCounterClockwise();
-            snapshot.hold     = Input::hold();
-            snapshot.pause    = Input::pause();
-            snapshot.mute     = Input::mute();
+            snapshot.left     = Input::action(A(Action::Left));
+            snapshot.right    = Input::action(A(Action::Right));
+            snapshot.softDrop = Input::action(A(Action::SoftDrop));
+            snapshot.hardDrop = Input::action(A(Action::HardDrop));
+            snapshot.rotateCW  = Input::action(A(Action::RotateCW));
+            snapshot.rotateCCW = Input::action(A(Action::RotateCCW));
+            snapshot.hold     = Input::action(A(Action::Hold));
+            snapshot.pause    = Input::action(A(Action::Pause));
+            snapshot.mute     = Input::action(A(Action::Mute));
 
             tetris.step(snapshot);
             tetris.render();
