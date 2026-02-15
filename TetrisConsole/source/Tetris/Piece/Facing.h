@@ -37,7 +37,7 @@ struct RotationPoint
 		return _exist;
 	}
 
-	[[nodiscard]] Vector2i const & getTranslation(DIRECTION direction) const
+	[[nodiscard]] Vector2i const & getTranslation(const DIRECTION direction) const
 	{
 		return _translations[direction];
 	}

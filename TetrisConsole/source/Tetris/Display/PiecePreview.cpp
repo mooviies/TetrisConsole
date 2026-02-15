@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void PiecePreview::drawRow(int rowIndex, RowDrawContext& ctx) const {
+void PiecePreview::drawRow(const int rowIndex, RowDrawContext& ctx) const {
     if (_hasPiece) {
         ctx.setColor(_color);
         ctx.print(rowIndex == 0 ? _line1 : _line2);

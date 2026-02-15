@@ -5,7 +5,7 @@
 std::vector<std::vector<KeyCode>> Input::s_bindings;
 std::vector<bool> Input::s_actions;
 
-void Input::init(int actionCount) {
+void Input::init(const int actionCount) {
 	s_bindings.assign(static_cast<size_t>(actionCount), {});
 	s_actions.assign(static_cast<size_t>(actionCount), false);
 }
@@ -13,21 +13,21 @@ void Input::init(int actionCount) {
 void Input::cleanup() {
 }
 
-bool Input::action(int action) {
+bool Input::action(const int action) {
 	return s_actions[static_cast<size_t>(action)];
 }
 
-void Input::bind(int action, KeyCode key) {
+void Input::bind(const int action, const KeyCode key) {
 	auto& keys = s_bindings[static_cast<size_t>(action)];
 	if (std::find(keys.begin(), keys.end(), key) == keys.end())
 		keys.push_back(key);
 }
 
-void Input::clearBindings(int action) {
+void Input::clearBindings(const int action) {
 	s_bindings[static_cast<size_t>(action)].clear();
 }
 
-const std::vector<KeyCode>& Input::getBindings(int action) {
+const std::vector<KeyCode>& Input::getBindings(const int action) {
 	return s_bindings[static_cast<size_t>(action)];
 }
 

@@ -110,7 +110,7 @@ RLUTIL_INLINE int kbhit(void) {
 #ifndef gotoxy
 /// Function: gotoxy
 /// Same as <rlutil.locate>.
-RLUTIL_INLINE void gotoxy(int x, int y) {
+RLUTIL_INLINE void gotoxy(const int x, const int y) {
 	#ifdef __cplusplus
 	rlutil::
 	#endif
@@ -566,7 +566,7 @@ RLUTIL_INLINE void cls(void) {
 
 /// Function: locate
 /// Sets the cursor position to 1-based x,y.
-RLUTIL_INLINE void locate(int x, int y) {
+RLUTIL_INLINE void locate(const int x, const int y) {
 #if defined(_WIN32) && !defined(RLUTIL_USE_ANSI)
 	COORD coord;
 	// TODO: clamping/assert for x/y <= 0?
@@ -615,7 +615,7 @@ RLUTIL_INLINE void setString(RLUTIL_STRING_T str) {
 
 /// Function: setChar
 /// Sets the character at the cursor without advancing the cursor
-RLUTIL_INLINE void setChar(char ch) {
+RLUTIL_INLINE void setChar(const char ch) {
 	const char buf[] = {ch, 0};
 	setString(buf);
 }

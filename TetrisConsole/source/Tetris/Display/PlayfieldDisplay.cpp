@@ -22,7 +22,7 @@ private:
     int _ghostDropDistance = 0;
 };
 
-void PlayfieldElement::update(const GameState& state, bool visible) {
+void PlayfieldElement::update(const GameState& state, const bool visible) {
     _state = &state;
     _visible = visible;
 
@@ -35,7 +35,7 @@ void PlayfieldElement::update(const GameState& state, bool visible) {
     markDirty();
 }
 
-void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
+void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
     if (_state == nullptr)
         return;
 
@@ -101,6 +101,6 @@ void PlayfieldDisplay::update(const GameState& state, const bool visible) const 
     _element->update(state, visible);
 }
 
-void PlayfieldDisplay::setPosition(int x, int y) { _panel.setPosition(x, y); }
+void PlayfieldDisplay::setPosition(const int x, const int y) { _panel.setPosition(x, y); }
 void PlayfieldDisplay::invalidate() { _panel.invalidate(); }
 void PlayfieldDisplay::render() { _panel.render(); }

@@ -25,9 +25,9 @@ public:
 	void clearBackToMenu() { _backToMenu = false; }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
 	void setMode(const MODE mode) { _state.config.mode = mode; }
-	void setGhostEnabled(bool v) { _state.config.ghostEnabled = v; }
-	void setHoldEnabled(bool v) { _state.config.holdEnabled = v; }
-	void setPreviewCount(int n) { _state.config.previewCount = n; }
+	void setGhostEnabled(const bool v) { _state.config.ghostEnabled = v; }
+	void setHoldEnabled(const bool v) { _state.config.holdEnabled = v; }
+	void setPreviewCount(const int n) { _state.config.previewCount = n; }
 	[[nodiscard]] int startingLevel() const { return _state.config.startingLevel; }
 	[[nodiscard]] MODE mode() const { return _state.config.mode; }
 	[[nodiscard]] bool ghostEnabled() const { return _state.config.ghostEnabled; }

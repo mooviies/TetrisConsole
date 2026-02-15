@@ -89,7 +89,7 @@ public:
 	[[nodiscard]] Tetrimino* peekTetrimino() const;
 	[[nodiscard]] std::vector<const Tetrimino*> peekTetriminos(size_t count) const;
 
-	void setShouldExit(bool v) { _shouldExit = v; }
+	void setShouldExit(const bool v) { _shouldExit = v; }
 	void setStartingLevel(int level);
 	void setPlayerName(const std::string& n) { _playerName = n; }
 
@@ -113,7 +113,7 @@ public:
 
 	void updateHighscore();
 	void activateHighscore();
-	void queueSound(GameSound s) { _pendingSounds.push_back(s); }
+	void queueSound(const GameSound s) { _pendingSounds.push_back(s); }
 
 	// Public sub-structs
 	GameConfig config;

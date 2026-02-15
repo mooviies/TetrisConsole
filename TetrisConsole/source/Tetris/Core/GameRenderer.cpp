@@ -21,7 +21,7 @@ GameRenderer::GameRenderer()
 
 GameRenderer::~GameRenderer() = default;
 
-void GameRenderer::configure(int previewCount, bool holdEnabled) {
+void GameRenderer::configure(const int previewCount, const bool holdEnabled) {
     if (previewCount != _previewCount) {
         _next.clear();
         _previewCount = previewCount;

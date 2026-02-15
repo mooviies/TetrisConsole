@@ -4,17 +4,17 @@
 
 #include "rlutil.h"
 
-RowDrawContext::RowDrawContext(int x, int y, int width)
+RowDrawContext::RowDrawContext(const int x, const int y, const int width)
     : _width(width)
 {
     rlutil::locate(x, y);
 }
 
-void RowDrawContext::setColor(int color) {
+void RowDrawContext::setColor(const int color) {
     rlutil::setColor(color);
 }
 
-void RowDrawContext::setBackgroundColor(int color) {
+void RowDrawContext::setBackgroundColor(const int color) {
     rlutil::setBackgroundColor(color);
 }
 

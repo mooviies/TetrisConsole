@@ -165,7 +165,7 @@ int main() {
 
         // Apply values back to tetris
         auto values = options.generateValues();
-        MODE mode = MODE::CLASSIC;
+        auto mode = MODE::CLASSIC;
         if (values["Lock Down"] == "Extended") mode = MODE::EXTENDED;
         else if (values["Lock Down"] == "Infinite") mode = MODE::EXTENDED_INFINITY;
         tetris.setMode(mode);

@@ -179,7 +179,7 @@ Tetrimino* GameState::peekTetrimino() const
 	return pieces.bag[pieces.bagIndex].get();
 }
 
-vector<const Tetrimino*> GameState::peekTetriminos(size_t count) const
+vector<const Tetrimino*> GameState::peekTetriminos(const size_t count) const
 {
 	vector<const Tetrimino*> result;
 	result.reserve(count);
@@ -245,7 +245,7 @@ void GameState::saveOptions() const {
 	out.write(reinterpret_cast<const char*>(&magic), 4);
 	out.write(reinterpret_cast<const char*>(&version), 4);
 
-	auto write32 = [&](int32_t v) {
+	auto write32 = [&](const int32_t v) {
 		out.write(reinterpret_cast<const char*>(&v), 4);
 	};
 	write32(static_cast<int32_t>(config.startingLevel));
@@ -255,7 +255,7 @@ void GameState::saveOptions() const {
 	write32(static_cast<int32_t>(config.previewCount));
 }
 
-void GameState::setStartingLevel(int level) {
+void GameState::setStartingLevel(const int level) {
 	config.startingLevel = std::clamp(level, 1, 15);
 }
 

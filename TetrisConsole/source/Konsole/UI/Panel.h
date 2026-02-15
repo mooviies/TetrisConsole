@@ -16,7 +16,7 @@ struct Cell {
     int width = 0;  // 0 = auto
 
     Cell() = default;
-    Cell(std::string t, Align a = Align::LEFT, int c = 15, int w = 0)
+    Cell(std::string t, const Align a = Align::LEFT, const int c = 15, const int w = 0)
         : text(std::move(t)), align(a), color(c), width(w) {}
 };
 

@@ -56,6 +56,6 @@ void ScoreDisplay::updateTimer(const GameState& state) {
     _panel.setCell(_lpmRow, 1, Utility::valueToString(state.lpm(), 6));
 }
 
-void ScoreDisplay::setPosition(int x, int y) { _panel.setPosition(x, y); }
+void ScoreDisplay::setPosition(const int x, const int y) { _panel.setPosition(x, y); }
 void ScoreDisplay::invalidate() { _panel.invalidate(); }
 void ScoreDisplay::render() { _panel.render(); }

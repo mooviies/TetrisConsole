@@ -9,10 +9,10 @@
 
 using namespace std;
 
-Panel::Panel(int interiorWidth)
+Panel::Panel(const int interiorWidth)
     : _interiorWidth(interiorWidth), _widthComputed(interiorWidth > 0) {}
 
-size_t Panel::addRow(const string& text, Align align, int color) {
+size_t Panel::addRow(const string& text, const Align align, const int color) {
     RowData row;
     row.type = RowData::Type::TEXT;
     row.cells.push_back(Cell(text, align, color, 0));
@@ -188,7 +188,7 @@ string Panel::renderTextRow(const RowData& row) const {
     return result;
 }
 
-string Panel::renderSeparator(size_t rowIndex) const {
+string Panel::renderSeparator(const size_t rowIndex) const {
     // Junction characters adapt to column boundaries of neighboring TEXT rows
     set<int> aboveBounds, belowBounds;
 
@@ -227,7 +227,7 @@ string Panel::renderSeparator(size_t rowIndex) const {
     return result;
 }
 
-void Panel::drawColoredRow(int x, int y, const RowData& row) const {
+void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
     vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
     rlutil::setColor(rlutil::WHITE);
@@ -285,7 +285,7 @@ void Panel::drawColoredRow(int x, int y, const RowData& row) const {
     cout << "║";
 }
 
-void Panel::setPosition(int x, int y) {
+void Panel::setPosition(const int x, const int y) {
     _x = x;
     _y = y;
 }
@@ -379,7 +379,7 @@ void Panel::drawFull() {
     }
 }
 
-void Panel::drawSingleRow(size_t row) const {
+void Panel::drawSingleRow(const size_t row) const {
     if (row >= _rows.size())
         return;
 
@@ -413,7 +413,7 @@ void Panel::clear() const {
     }
 }
 
-void Panel::setCell(size_t row, size_t col, const string& text) {
+void Panel::setCell(const size_t row, const size_t col, const string& text) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         if (_rows[row].cells[col].text == text) return;
         _rows[row].cells[col].text = text;
@@ -422,7 +422,7 @@ void Panel::setCell(size_t row, size_t col, const string& text) {
     }
 }
 
-void Panel::setCellColor(size_t row, size_t col, int color) {
+void Panel::setCellColor(const size_t row, const size_t col, const int color) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         if (_rows[row].cells[col].color == color) return;
         _rows[row].cells[col].color = color;

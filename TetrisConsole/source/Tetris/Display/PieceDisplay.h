@@ -18,7 +18,7 @@ public:
 	void setPosition(int x, int y);
 	void invalidate();
 	void render();
-	void clear();
+	void clear() const;
 	void rebuild(size_t size);
 
 private:

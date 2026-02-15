@@ -32,7 +32,7 @@ static string s_musicPlayingName;
 static float s_musicVolume = 0.1f;
 static float s_effectVolume = 0.5f;
 
-static MuteState s_muteState = MuteState::UNMUTED;
+static auto s_muteState = MuteState::UNMUTED;
 static float s_savedMusicVolume = 0.1f;
 static float s_savedEffectVolume = 0.5f;
 
@@ -48,7 +48,7 @@ struct EmbeddedVFS {
 	ma_vfs_callbacks cb;
 };
 
-static ma_result embeddedVFS_onOpen(ma_vfs* pVFS, const char* pFilePath, ma_uint32 openMode, ma_vfs_file* pFile)
+static ma_result embeddedVFS_onOpen(ma_vfs* pVFS, const char* pFilePath, const ma_uint32 openMode, ma_vfs_file* pFile)
 {
 	(void)pVFS;
 	if (openMode & MA_OPEN_MODE_WRITE)
@@ -67,20 +67,20 @@ static ma_result embeddedVFS_onOpen(ma_vfs* pVFS, const char* pFilePath, ma_uint
 	return MA_SUCCESS;
 }
 
-static ma_result embeddedVFS_onOpenW(ma_vfs* pVFS, const wchar_t* pFilePath, ma_uint32 openMode, ma_vfs_file* pFile)
+static ma_result embeddedVFS_onOpenW(ma_vfs* pVFS, const wchar_t* pFilePath, const ma_uint32 openMode, ma_vfs_file* pFile)
 {
 	(void)pVFS; (void)pFilePath; (void)openMode; (void)pFile;
 	return MA_NOT_IMPLEMENTED;
 }
 
-static ma_result embeddedVFS_onClose(ma_vfs* pVFS, ma_vfs_file file)
+static ma_result embeddedVFS_onClose(ma_vfs* pVFS, const ma_vfs_file file)
 {
 	(void)pVFS;
 	delete static_cast<EmbeddedFile *>(file);
 	return MA_SUCCESS;
 }
 
-static ma_result embeddedVFS_onRead(ma_vfs* pVFS, ma_vfs_file file, void* pDst, size_t sizeInBytes, size_t* pBytesRead)
+static ma_result embeddedVFS_onRead(ma_vfs* pVFS, const ma_vfs_file file, void* pDst, const size_t sizeInBytes, size_t* pBytesRead)
 {
 	(void)pVFS;
 	auto* ef = static_cast<EmbeddedFile *>(file);
@@ -96,13 +96,13 @@ static ma_result embeddedVFS_onRead(ma_vfs* pVFS, ma_vfs_file file, void* pDst, 
 	return MA_SUCCESS;
 }
 
-static ma_result embeddedVFS_onWrite(ma_vfs* pVFS, ma_vfs_file file, const void* pSrc, size_t sizeInBytes, size_t* pBytesWritten)
+static ma_result embeddedVFS_onWrite(ma_vfs* pVFS, const ma_vfs_file file, const void* pSrc, const size_t sizeInBytes, size_t* pBytesWritten)
 {
 	(void)pVFS; (void)file; (void)pSrc; (void)sizeInBytes; (void)pBytesWritten;
 	return MA_NOT_IMPLEMENTED;
 }
 
-static ma_result embeddedVFS_onSeek(ma_vfs* pVFS, ma_vfs_file file, ma_int64 offset, ma_seek_origin origin)
+static ma_result embeddedVFS_onSeek(ma_vfs* pVFS, const ma_vfs_file file, const ma_int64 offset, const ma_seek_origin origin)
 {
 	(void)pVFS;
 	const auto ef = static_cast<EmbeddedFile *>(file);
@@ -119,7 +119,7 @@ static ma_result embeddedVFS_onSeek(ma_vfs* pVFS, ma_vfs_file file, ma_int64 off
 	return MA_SUCCESS;
 }
 
-static ma_result embeddedVFS_onTell(ma_vfs* pVFS, ma_vfs_file file, ma_int64* pCursor)
+static ma_result embeddedVFS_onTell(ma_vfs* pVFS, const ma_vfs_file file, ma_int64* pCursor)
 {
 	(void)pVFS;
 	const auto ef = static_cast<EmbeddedFile *>(file);
@@ -127,7 +127,7 @@ static ma_result embeddedVFS_onTell(ma_vfs* pVFS, ma_vfs_file file, ma_int64* pC
 	return MA_SUCCESS;
 }
 
-static ma_result embeddedVFS_onInfo(ma_vfs* pVFS, ma_vfs_file file, ma_file_info* pInfo)
+static ma_result embeddedVFS_onInfo(ma_vfs* pVFS, const ma_vfs_file file, ma_file_info* pInfo)
 {
 	(void)pVFS;
 	const auto ef = static_cast<EmbeddedFile *>(file);
@@ -140,7 +140,7 @@ static ma_resource_manager g_resourceManager;
 
 // --- End Embedded VFS ---
 
-static MaSoundPtr createStreamSound(ma_engine* engine, const char* file, bool looping)
+static MaSoundPtr createStreamSound(ma_engine* engine, const char* file, const bool looping)
 {
 	auto* raw = new ma_sound();
 	if (const ma_result result = ma_sound_init_from_file(engine, file, MA_SOUND_FLAG_STREAM, nullptr, nullptr, raw); result != MA_SUCCESS)

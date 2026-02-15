@@ -4,15 +4,15 @@
 
 #include "rlutil.h"
 
-Icon::Icon(std::string symbol, int color)
+Icon::Icon(std::string symbol, const int color)
     : _symbol(std::move(symbol)), _color(color) {}
 
-void Icon::setPosition(int x, int y) {
+void Icon::setPosition(const int x, const int y) {
     _x = x;
     _y = y;
 }
 
-void Icon::setColor(int color) {
+void Icon::setColor(const int color) {
     _color = color;
 }
 

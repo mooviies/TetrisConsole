@@ -271,7 +271,7 @@ void Menu::setValueChoice(const string& name, const string& value) {
     }
 }
 
-void Menu::select(int choice) {
+void Menu::select(const int choice) {
     string name = _options[choice];
 
     if (auto it = _actions.find(name); it != _actions.end() && it->second) {
