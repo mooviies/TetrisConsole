@@ -16,6 +16,8 @@ static constexpr double AUTOREPEAT_DELAY = 0.25;
 static constexpr double AUTOREPEAT_SPEED = 0.01;
 static constexpr double LOCK_DOWN_DELAY  = 0.5;
 static constexpr double GENERATION_DELAY = 0.2;
+static constexpr int SOFT_DROP_SCORE = 1;
+static constexpr int HARD_DROP_SCORE = 2;
 
 PieceMovement::PieceMovement(Timer& timer, LockDownPolicy* lockDown, GravityPolicy* gravity)
     : _timer(timer), _lockDown(lockDown), _gravity(gravity) {}
@@ -25,10 +27,10 @@ void PieceMovement::stepFalling(GameState& state, const InputSnapshot& input) {
 		case GameStep::Idle:      stepIdle(state, input); break;
 		case GameStep::MoveLeft:  stepMoveLeft(state, input); break;
 		case GameStep::MoveRight: stepMoveRight(state, input); break;
-		case GameStep::HardDrop:  stepHardDrop(state); break;
+		case GameStep::HardDrop:  stepIdle(state, {}); break;
 	}
 
-	if (state.flags.isGameOver)
+	if (state.flags.isGameOver || state.flags.stepState == GameStep::HardDrop)
 		return;
 
 	if (!state.flags.didRotate) {
@@ -53,14 +55,22 @@ void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
 	if (state.pieces.current == nullptr)
 		return;
 
-	const double interval = _gravity->fallInterval(state.stats.level, input.softDrop);
-	const bool isSoftDropping = input.softDrop;
+	if (input.hardDrop && state.flags.stepState != GameStep::HardDrop) {
+		state.queueSound(GameSound::HardDrop);
+		state.flags.stepState = GameStep::HardDrop;
+	}
 
-	if (_timer.getSeconds(FALL) >= interval) {
+	DROP_TYPE dropType = input.softDrop ? DROP_TYPE::SOFT : DROP_TYPE::NORMAL;
+	if (state.flags.stepState == GameStep::HardDrop) dropType = DROP_TYPE::HARD;
+
+	if (const double interval = _gravity->fallInterval(state.stats.level, dropType);
+		_timer.getSeconds(FALL) >= interval) {
 		_timer.resetTimer(FALL);
 		if (moveDown(state)) {
-			if (isSoftDropping)
-				state.stats.score++;
+			if (dropType == DROP_TYPE::SOFT)
+				state.stats.score += SOFT_DROP_SCORE;
+			else if (dropType == DROP_TYPE::HARD)
+				state.stats.score += HARD_DROP_SCORE;
 
 			if (state.lockDown.active) {
 				if (const int currentLine = state.pieces.current->getPosition().row; currentLine > state.lockDown.lowestLine) {
@@ -70,6 +80,11 @@ void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
 				}
 			}
 		}
+	}
+
+	if (state.flags.stepState == GameStep::HardDrop) {
+		lock(state);
+		return;
 	}
 
 	if (!state.pieces.current->simulateMove(Vector2i(1, 0)) && !_timer.exist(LOCK_DOWN)) {
@@ -82,18 +97,8 @@ void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
 		if (state.flags.isGameOver) return;
 	}
 
-	const int limit = _lockDown->moveLimit();
-	if (limit >= 0 && state.lockDown.moveCount >= limit) {
+	if (const int limit = _lockDown->moveLimit(); limit >= 0 && state.lockDown.moveCount >= limit) {
 		lock(state);
-		if (state.flags.isGameOver) return;
-	}
-
-	if (input.hardDrop && !state.flags.shouldIgnoreHardDrop) {
-		state.queueSound(GameSound::HardDrop);
-		state.flags.stepState = GameStep::HardDrop;
-		state.flags.shouldIgnoreHardDrop = true;
-	} else if (!input.hardDrop && state.flags.shouldIgnoreHardDrop) {
-		state.flags.shouldIgnoreHardDrop = false;
 	}
 }
 
@@ -193,6 +198,9 @@ void PieceMovement::resetLockDown(const GameState& state) const {
 
 void PieceMovement::moveLeft(GameState& state) const {
 	if (state.pieces.current == nullptr)
+		return;
+
+	if (state.flags.stepState == GameStep::HardDrop)
 		return;
 
 	if (state.pieces.current->move(Vector2i(0, -1))) {

@@ -1,11 +1,17 @@
 #include "GravityPolicy.h"
 
 #include <algorithm>
+#include <cmath>
 
-double GuidelineGravity::fallInterval(const int level, const bool softDrop) const {
-	const int idx = std::clamp(level, 1, 15);
-	const auto& arr = softDrop ? kFast : kNormal;
-	return arr[static_cast<size_t>(idx)];
+#include "Constants.h"
+
+double GuidelineGravity::fallInterval(const int level, const DROP_TYPE dropType) const {
+	switch (dropType) {
+		case DROP_TYPE::NORMAL: return GRAVITY_EQUATION(level);
+		case DROP_TYPE::SOFT: return GRAVITY_EQUATION(level) / kSoftDropFactor;
+		case DROP_TYPE::HARD: return kHardDropSpeed;
+		default: return 1.0;
+	}
 }
 
 std::unique_ptr<GravityPolicy> makeDefaultGravityPolicy() {

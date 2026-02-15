@@ -69,7 +69,6 @@ struct PieceState {
 struct FrameFlags {
 	GameStep stepState = GameStep::Idle;
 	bool didRotate{};
-	bool shouldIgnoreHardDrop{};
 	bool lastMoveIsTSpin{};
 	bool lastMoveIsMiniTSpin{};
 	bool isGameOver{};
