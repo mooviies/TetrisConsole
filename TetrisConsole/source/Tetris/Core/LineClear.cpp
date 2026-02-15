@@ -50,8 +50,8 @@ void LineClear::stepAnimate(GameState& state) const {
 		return;
 	}
 
-	const bool shouldBeOn = (static_cast<int>(elapsed / FLASH_INTERVAL) % 2) == 0;
-	if (shouldBeOn != state.lineClear.flashOn) {
+	if (const bool shouldBeOn = static_cast<int>(elapsed / FLASH_INTERVAL) % 2 == 0;
+		shouldBeOn != state.lineClear.flashOn) {
 		state.lineClear.flashOn = shouldBeOn;
 		state.markDirty();
 	}
@@ -63,10 +63,8 @@ void LineClear::stepEliminate(GameState& state) const {
 	awardScore(state, linesCleared);
 	state.lineClear.rows.clear();
 
-	// Check for cascading clears
 	if (auto cascaded = detectFullRows(state); !cascaded.empty()) {
 		state.lineClear.rows = std::move(cascaded);
-		// Stay in Eliminate for the cascade
 	} else {
 		state.phase = GamePhase::Completion;
 	}
@@ -104,12 +102,13 @@ void LineClear::awardScore(GameState& state, const int linesCleared) const {
 	if (state.flags.lastMoveIsTSpin || state.flags.lastMoveIsMiniTSpin)
 		state.stats.tSpins++;
 
-	auto result = _scoringRule->compute(linesCleared,
-	    state.flags.lastMoveIsTSpin, state.flags.lastMoveIsMiniTSpin,
-	    state.stats.backToBackBonus, state.stats.level);
+	auto [points, awardedLines, continuesBackToBack] =
+		_scoringRule->compute(linesCleared,
+	state.flags.lastMoveIsTSpin, state.flags.lastMoveIsMiniTSpin,
+	state.stats.backToBackBonus, state.stats.level);
 
-	state.stats.score += result.points;
-	state.stats.backToBackBonus = result.continuesBackToBack;
+	state.stats.score += points;
+	state.stats.backToBackBonus = continuesBackToBack;
 	state.flags.lastMoveIsTSpin = false;
 	state.flags.lastMoveIsMiniTSpin = false;
 
@@ -124,5 +123,5 @@ void LineClear::awardScore(GameState& state, const int linesCleared) const {
 	}
 
 	state.stats.lines += linesCleared;
-	state.stats.goal += result.awardedLines;
+	state.stats.goal += awardedLines;
 }

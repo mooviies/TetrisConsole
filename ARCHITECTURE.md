@@ -1,6 +1,6 @@
 # Architecture
 
-Cross-platform console Tetris in C++17. Two layers: a platform abstraction (`source/Konsole/`) and game logic (`source/Tetris/`). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`).
+Cross-platform console Tetris in C++17. Two layers: a platform abstraction library (`source/Konsole/`, built as a static library) and game logic (`source/Tetris/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`).
 
 ---
 
@@ -24,7 +24,7 @@ Cross-platform console Tetris in C++17. Two layers: a platform abstraction (`sou
 
 ## 1. Main Loop & Tetris Facade
 
-**Files:** `Tetris.h`, `Tetris.cpp`, `TetrisConsole.cpp`
+**Files:** `Tetris/Core/Tetris.h`, `Tetris/Core/Tetris.cpp`, `Tetris/Core/TetrisConsole.cpp`
 
 ### Entry Point
 
@@ -108,12 +108,14 @@ The quit menu callback calls `tetris.exit()`, which sets `_state.setShouldExit(t
 
 ## 2. MVC: GameController, GameState, GameRenderer
 
-**Files:** `GameController.h/.cpp`, `GameState.h/.cpp`, `GameRenderer.h/.cpp`
+**Files:** `Tetris/Core/GameController.h/.cpp`, `Tetris/Core/PieceMovement.h/.cpp`, `Tetris/Core/LineClear.h/.cpp`, `Tetris/Core/GameState.h/.cpp`, `Tetris/Core/GameRenderer.h/.cpp`
 
 ### Separation of Concerns
 
 ```
-GameController (logic)
+GameController (orchestrator)
+    |-- PieceMovement (falling phase: movement, rotation, DAS, lock-down)
+    |-- LineClear (pattern/animate/eliminate phases: row detection, scoring)
     |
     | reads/writes via friend access
     v
@@ -125,7 +127,11 @@ GameState (model) ---const getters---> GameRenderer (view)
 Tetris (facade) owns all three, dispatches StepResult
 ```
 
-**GameController** never touches the renderer or menus. It operates on `GameState` through `friend class GameController` access to private members and returns a `StepResult` enum. The `Tetris` facade dispatches the result.
+**GameController** is the orchestrator. It owns `PieceMovement`, `LineClear`, and the three pluggable policy objects (`LockDownPolicy`, `ScoringRule`, `GravityPolicy`). It dispatches game phases, handles Generation/Completion phases directly, manages the double-bag randomizer, and coordinates setup/reset. Never touches the renderer or menus. Returns a `StepResult` enum; the `Tetris` facade dispatches the result.
+
+**PieceMovement** handles everything during `GamePhase::Falling`: gravity, DAS autorepeat, left/right/down movement, SRS rotation, hard drop, hold swap, and lock-down. When a piece locks, it transitions to `GamePhase::Pattern`. Takes non-owning pointers to `LockDownPolicy` and `GravityPolicy` (owned by GameController).
+
+**LineClear** handles the Pattern → Iterate → Animate → Eliminate cycle: full-row detection, flash animation, row elimination, and scoring (delegates to `ScoringRule`). Takes a non-owning pointer to `ScoringRule`.
 
 **GameState** holds all game data: matrix, bag, current/hold tetriminos, score, level, lines, flags. Members are private. The controller has friend access; the renderer reads through `const` public getters.
 
@@ -135,13 +141,27 @@ Tetris (facade) owns all three, dispatches StepResult
 
 `GameState` has a dirty flag (`markDirty()` / `isDirty()` / `clearDirty()`). The controller calls `markDirty()` whenever state changes that affect the display (piece moved, lines cleared, score updated). The facade only calls `_renderer.render()` when dirty, then clears the flag.
 
-### State Machine
+### Game Phases
 
-The controller uses a `GameStep` enum for the per-frame state machine:
+The controller dispatches based on `GamePhase`:
+
+| Phase | Handler | Description |
+|-------|---------|-------------|
+| `Generation` | GameController | Wait for generation delay, pop piece from bag, spawn |
+| `Falling` | PieceMovement | Player input, gravity, movement, rotation, lock-down |
+| `Pattern` | LineClear | Detect full rows, queue sounds |
+| `Iterate` | GameController | Immediate transition to Animate |
+| `Animate` | LineClear | Flash animation on cleared rows |
+| `Eliminate` | LineClear | Remove rows, award score, check cascades |
+| `Completion` | GameController | Level up if needed, start generation timer |
+
+### Movement State Machine
+
+Within the Falling phase, `PieceMovement` uses a `GameStep` enum:
 
 | State | Behavior |
 |-------|----------|
-| `Idle` | Spawn piece if needed, gravity fall, check left/right autorepeat, check hold |
+| `Idle` | Gravity fall, check left/right autorepeat, check hold |
 | `MoveLeft` | Continue autorepeat left movement + fall |
 | `MoveRight` | Continue autorepeat right movement + fall |
 | `HardDrop` | Move piece down until collision, lock immediately |
@@ -150,7 +170,7 @@ The controller uses a `GameStep` enum for the per-frame state machine:
 
 ## 3. Piece Generation (Double-Bag Randomizer)
 
-**Files:** `GameState.h/.cpp`, `GameController.cpp`
+**Files:** `Tetris/Core/GameState.h/.cpp`, `Tetris/Core/GameController.cpp`
 
 ### The Double-Bag (14 Objects)
 
@@ -197,7 +217,7 @@ This guarantees the Tetris Guideline's **7-bag randomizer**: every piece type ap
 
 ## 4. Tetrimino, Facing & SRS Rotation
 
-**Files:** `Tetrimino.h/.cpp`, `Facing.h/.cpp`, `PieceData.h/.cpp`, `Vector2i.h`
+**Files:** `Tetris/Piece/Tetrimino.h/.cpp`, `Tetris/Piece/Facing.h/.cpp`, `Tetris/Piece/PieceData.h/.cpp`, `Konsole/Util/Vector2i.h`
 
 ### Piece Data (Static Table)
 
@@ -274,7 +294,7 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ## 5. Scoring, Leveling & Lock-Down
 
-**File:** `GameController.cpp` (primarily `lock()`, `clearLines()`, `awardScore()`, and `fall()`)
+**Files:** `Tetris/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Tetris/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Tetris/Rules/ScoringRule.h/.cpp`, `Tetris/Rules/LockDownPolicy.h/.cpp`, `Tetris/Rules/GravityPolicy.h/.cpp`
 
 ### Lock-Down Mechanics
 
@@ -294,9 +314,9 @@ In all modes, if the piece reaches a new lowest row during gravity fall while in
 
 When the timer expires or (in Extended mode only) the move limit is reached, `lock()` is called.
 
-### The `lock()` Method
+### The `lock()` Method (in PieceMovement)
 
-`lock()` orchestrates the transition from an active piece to a committed piece in the matrix. It delegates the heavy work to `clearLines()` and `awardScore()`:
+`lock()` orchestrates the transition from an active piece to a committed piece in the matrix. After locking, the game transitions to `GamePhase::Pattern` where `LineClear` takes over for line detection and scoring:
 
 ```
 lock()
@@ -316,16 +336,16 @@ lock()
 ├─ Reset lock-down state
 │  (clear flags, stop timer, null out currentTetrimino)
 │
-├─ clearLines(state) → linesCleared
-│
-├─ awardScore(state, linesCleared)
-│
-└─ stepState = Idle, markDirty
+└─ phase = Pattern, stepState = Idle, markDirty
 ```
 
-### `clearLines()`
+### Line Clear Pipeline (in LineClear)
 
-Scans visible rows from bottom (`MATRIX_END = 39`) to top (`MATRIX_START = 20`). Each full row is erased from the deque, then that many empty rows are pushed at the front to maintain the 40-row matrix height. Returns the number of lines cleared.
+After lock, the game enters a multi-phase pipeline handled by `LineClear`:
+
+1. **Pattern** (`stepPattern`): scans visible rows from bottom to top. If full rows found, queues sound and transitions to Iterate/Animate. If none, runs `awardScore(0)` for combo reset and transitions to Completion.
+2. **Animate** (`stepAnimate`): flashes cleared rows on/off for 0.4s.
+3. **Eliminate** (`stepEliminate`): erases full rows from the deque, pushes empty rows at front to maintain 40-row height, awards score, checks for cascading clears.
 
 ### Hard Drop
 
@@ -386,7 +406,7 @@ Left/right movement uses Delayed Auto Shift:
 
 ### High Score Persistence
 
-**File:** `GameState.cpp` (persistence) + `GameState.h` (`HighScoreRecord` struct)
+**File:** `Tetris/Core/GameState.cpp` (persistence) + `Tetris/Core/GameState.h` (`HighScoreRecord` struct)
 
 A flat top-10 leaderboard stored as a binary file (`score.bin`). Each record stores both game stats and the options used during that game:
 
@@ -426,7 +446,7 @@ Magic: `0x53484354` ("TCHS" little-endian), version 3.
 
 ## 6. Input System
 
-**Files:** `Input.h`, `InputLinux.cpp`, `InputWin32.cpp`
+**Files:** `Konsole/Platform/Input.h`, `Konsole/Platform/Input.cpp`, `Konsole/Platform/InputLinux.cpp`, `Konsole/Platform/InputWin32.cpp`
 
 ### Public Interface
 
@@ -476,7 +496,7 @@ Key queries return the cached static flags. `init()` and `cleanup()` are no-ops 
 
 ## 7. Platform Abstraction
 
-**Files:** `Platform.h`, `PlatformLinux.cpp`, `PlatformWin32.cpp`
+**Files:** `Konsole/Platform/Platform.h`, `Konsole/Platform/PlatformLinux.cpp`, `Konsole/Platform/PlatformWin32.cpp`
 
 ### Interface
 
@@ -528,7 +548,7 @@ Registers a `SIGWINCH` handler to detect terminal resizes.
 
 ## 8. Panel Rendering System
 
-**Files:** `Panel.h/.cpp`, `RowDrawContext.h/.cpp`, `PiecePreview.h/.cpp`, `PieceDisplay.h/.cpp`, `PlayfieldDisplay.h/.cpp`, `ScoreDisplay.h/.cpp`, `HighScoreDisplay.h/.cpp`, `Icon.h/.cpp`, `Color.h`
+**Files:** `Konsole/UI/Panel.h/.cpp`, `Konsole/UI/RowDrawContext.h/.cpp`, `Konsole/UI/Icon.h/.cpp`, `Konsole/UI/Color.h`, `Tetris/Display/PiecePreview.h/.cpp`, `Tetris/Display/PieceDisplay.h/.cpp`, `Tetris/Display/PlayfieldDisplay.h/.cpp`, `Tetris/Display/ScoreDisplay.h/.cpp`, `Tetris/Display/HighScoreDisplay.h/.cpp`
 
 ### Color
 
@@ -614,7 +634,7 @@ Standalone single-character display (not a PanelElement). Used for the mute indi
 
 ## 9. Sound Engine
 
-**Files:** `SoundEngine.h/.cpp`
+**Files:** `Konsole/Util/SoundEngine.h/.cpp`
 
 ### Overview
 
@@ -660,7 +680,7 @@ Saved volumes are restored when cycling back to UNMUTED.
 
 ## 10. Timer
 
-**Files:** `Timer.h/.cpp`
+**Files:** `Konsole/Util/Timer.h/.cpp`
 
 ### Design
 
@@ -691,7 +711,7 @@ Elapsed time is computed on-the-fly from `steady_clock::now() - start_time` — 
 
 ## 11. Random
 
-**Files:** `Random.h/.cpp`
+**Files:** `Konsole/Util/Random.h/.cpp`
 
 ### Design
 
@@ -709,7 +729,7 @@ Creates a fresh `uniform_int_distribution` for each call. Used by the bag shuffl
 
 ## 12. Menu System
 
-**Files:** `Menu.h/.cpp`
+**Files:** `Konsole/UI/Menu.h/.cpp`
 
 ### Structure
 
@@ -780,7 +800,17 @@ Game Over Menu
 
 - C++17 standard, required
 - `CMAKE_EXPORT_COMPILE_COMMANDS ON` for clangd
+- Two build targets: `konsole` (static library) and `tetris`/`TetrisConsole` (executable)
 - Binary name: `tetris` (Linux/macOS), `TetrisConsole.exe` (Windows)
+- Sources gathered with `file(GLOB_RECURSE ...)` to pick up files in subfolders automatically
+
+### Build Targets
+
+**`konsole`** — static library from `Konsole/**/*.cpp`. Its include directories and link dependencies are `PUBLIC`, so they propagate automatically to the executable via `target_link_libraries`.
+
+**`tetris`** — executable from `Tetris/**/*.cpp` + `media_data.cpp`. Links against `konsole` with `PRIVATE` visibility.
+
+A `media_embed` custom target ensures `media_data.h` is generated before `konsole` compiles (SoundEngine needs it).
 
 ### Platform Source Exclusion
 
@@ -796,12 +826,16 @@ No `#ifdef` in game logic — the wrong platform's files are excluded at configu
 
 ### Compiler Flags
 
+Shared via `add_compile_options()` (applies to both targets):
+
 - **GCC/Clang**: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`
 - **MSVC**: `/W3 /sdl`
 
 Vendored headers in `TetrisConsole/include/` use `-isystem` to suppress their warnings.
 
 ### Platform Linking
+
+Attached to `konsole` with `PUBLIC` visibility (propagates to the executable):
 
 | Platform | Libraries |
 |----------|-----------|

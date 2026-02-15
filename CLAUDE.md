@@ -35,44 +35,65 @@ ln -s cmake-build-debug/compile_commands.json .
 
 The project is a cross-platform console Tetris built in C++17, split into two layers. See `ARCHITECTURE.md` for full details.
 
+### Build Targets
+
+Konsole is built as a **static library** (`libkonsole.a` / `konsole.lib`) that the Tetris executable links against. This enforces a clean dependency direction: Tetris depends on Konsole, never the reverse. The final output is still a single executable.
+
+### Source Layout
+
+```
+TetrisConsole/source/
+  Konsole/                  # Static library — platform abstraction & UI primitives
+    Platform/               # OS abstraction (console, keyboard)
+    UI/                     # Panel, Menu, Icon, Color, RowDrawContext
+    Util/                   # Timer, Random, SoundEngine, Utility, Vector2i
+  Tetris/                   # Executable — game logic
+    Core/                   # MVC triad, facade, entry point, shared types
+    Piece/                  # Tetrimino, PieceData, Facing (geometry & SRS)
+    Rules/                  # Pluggable policies (ScoringRule, GravityPolicy, LockDownPolicy)
+    Display/                # Panel-based display components (HUD & modals)
+```
+
 ### MVC Pattern
 
 ```
-GameController (logic) --friend access--> GameState (model) <--const getters-- GameRenderer (view)
-                                                ^
-                                                |
-                                 Tetris (facade) owns all three
+GameController (orchestrator)
+    |-- PieceMovement (falling phase: movement, rotation, DAS, lock-down)
+    |-- LineClear (pattern/animate/eliminate phases: row detection, scoring)
+    |
+    | reads/writes via friend access
+    v
+GameState (model) ---const getters---> GameRenderer (view)
+    ^                                       |
+    |                                       | reads via public API
+    +---------------------------------------+
+
+Tetris (facade) owns all three, dispatches StepResult
 ```
 
-- **GameController** — Pure game logic. Returns `StepResult` enum (`Continue`, `PauseRequested`, `GameOver`). Never touches renderer or menus.
+- **GameController** — Orchestrator. Owns `PieceMovement` and `LineClear` helpers, dispatches game phases, handles generation/completion, bag management. Returns `StepResult` enum. Never touches renderer or menus.
+- **PieceMovement** — Handles the Falling phase: gravity, DAS autorepeat, left/right/down movement, SRS rotation, hard drop, hold swap, lock-down. Transitions to Pattern phase on lock.
+- **LineClear** — Handles Pattern/Iterate/Animate/Eliminate phases: full-row detection, flash animation, row elimination, scoring (delegates to `ScoringRule`), combo tracking.
 - **GameState** — All game data (matrix, bag, score, level, highscores, flags). Members private; `friend class GameController` for write access, public `const` getters for views.
 - **GameRenderer** — Owns display components: `ScoreDisplay`, `PieceDisplay` (next + hold), `PlayfieldDisplay`, `Icon` (mute). Calls `update()` then `render()` on each.
 - **Tetris** — Facade that owns the above three plus `Menu&` references. Dispatches `StepResult`, handles pause/game-over flow, cycles music.
 
 Dirty flag (`markDirty`/`isDirty`/`clearDirty`) on `GameState` controls when rendering happens.
 
-### Platform Abstraction (`source/Konsole/`)
+### Konsole Layer (`source/Konsole/`)
 
 OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FILTER ... EXCLUDE)` to exclude the wrong platform's files at configure time — no `#ifdef` in game logic.
 
-- **Platform.h** — Console init/cleanup/flush/getKey. Linux uses termios raw mode (VMIN=1, OPOST|ONLCR), terminal resize via ANSI `\033[8;rows;colst`, and a custom `getKey()` that does blocking reads with `select()`-based ANSI escape sequence parsing. Windows uses Console API and delegates `getKey()` to `rlutil::getkey()`.
-- **Input.h** — Keyboard polling. Linux: non-blocking `select()` + `read()` from stdin parsing ANSI escape sequences. Windows: `GetKeyState()`. The game loop calls `Input::pollKeys()` once per frame, then queries individual key states via `left()`, `right()`, etc.
-- **Panel** — Core UI rendering primitive. Box-drawn frame with rows of cells (text with alignment/color), separators with smart junctions, and `PanelElement` subclasses for custom content. Row-level dirty tracking for efficient redraws.
-- **Menu** — Hierarchical menu system using `Platform::getKey()` for blocking input. Panel-based rendering. Supports option values (cycled with LEFT/RIGHT), callbacks, submenus, and per-option/per-value hint text.
-- **SoundEngine** — Wraps miniaudio. Manages streamed music (A/B/C cycle) and decoded sound effects.
-- **Timer** — Meyers singleton named-timer using `steady_clock`. Drives fall speed, autorepeat, and lock-down delays.
-- **Random** — Static utility using `std::mt19937` with Meyers singleton pattern (static local generator).
+- **Platform/** — `Platform.h` (console init/cleanup/flush/getKey), `Input.h`/`.cpp` (keyboard polling). Linux uses termios raw mode + `select()`; Windows uses Console API + `GetKeyState()`.
+- **UI/** — `Panel` (box-drawn frame rendering primitive with row-level dirty tracking), `Menu` (hierarchical menu system), `Icon` (standalone indicator), `Color.h` (16 ANSI constants), `RowDrawContext` (element rendering helper).
+- **Util/** — `Timer` (Meyers singleton named-timer), `Random` (mt19937 utility), `SoundEngine` (miniaudio wrapper with embedded VFS), `Utility`, `Vector2i`.
 
-### Game Logic (`source/Tetris/`)
+### Tetris Layer (`source/Tetris/`)
 
-- **TetrisConsole.cpp** — Entry point. Sets up menus (main, new game, options, pause, confirmations, game over), initializes subsystems, runs the main loop: `pollKeys() → step() → render()`.
-- **Tetris** — Facade class (see MVC above). Owns `GameState`, `GameRenderer`, `GameController`, and `Menu&` references. Coordinates game flow, sound playback, and music cycling.
-- **GameController** — Per-frame state machine (`GameStep`: Idle, MoveLeft, MoveRight, HardDrop). Handles gravity, SRS rotation, autorepeat (DAS), lock-down, line clearing, and scoring. Operates on `GameState` through friend access.
-- **Tetrimino** — Live game piece. Holds position, rotation state, SRS wall kick data. `PieceData` provides static per-type data (color, preview strings, 4 facings, T-spin corner positions).
-- **ScoreDisplay** — Panel showing Score, Time, TPM, LPM, Level, Lines, Tetris, Combos, T-Spins. Has `updateTimer()` for smooth TPM/LPM updates without full redraws.
-- **HighScoreDisplay** — Standalone two-panel viewer (not a game HUD element). Left panel: ranked top-10 list. Right panel: detailed stats + game options for the selected entry. UP/DOWN navigation, ENTER/ESC to close.
-- **PlayfieldDisplay** — 10x20 visible grid using a `PanelElement` subclass.
-- **PieceDisplay** — Next queue (configurable 0-6 slots) and Hold piece preview panels.
+- **Core/** — `TetrisConsole.cpp` (entry point, main loop), `Tetris` (facade), `GameController` (phase orchestrator), `PieceMovement` (falling-phase logic), `LineClear` (line-clear pipeline), `GameState` (model), `GameRenderer` (view), `GameTypes.h`, `Constants.h`, `InputSnapshot.h`.
+- **Piece/** — `Tetrimino` (live game piece), `PieceData` (static per-type data), `Facing` (rotation states + SRS wall kick data).
+- **Rules/** — `ScoringRule` (Guideline scoring), `GravityPolicy` (speed table), `LockDownPolicy` (Extended/Infinite/Classic).
+- **Display/** — `ScoreDisplay`, `PlayfieldDisplay`, `PieceDisplay`, `PiecePreview`, `HighScoreDisplay`, `HelpDisplay`.
 
 ### Dependencies (header-only, vendored in `include/`)
 
