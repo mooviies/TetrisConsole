@@ -121,8 +121,8 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 
 		_rightPanel.setCell(_startRow, 1, Utility::valueToString(rec.startingLevel, 2));
 		string modeStr = "Extended";
-		if (rec.mode == CLASSIC) modeStr = "Classic";
-		else if (rec.mode == EXTENDED_INFINITY) modeStr = "Infinite";
+		if (rec.mode == MODE::CLASSIC) modeStr = "Classic";
+		else if (rec.mode == MODE::EXTENDED_INFINITY) modeStr = "Infinite";
 		_rightPanel.setCell(_modeRow,    1, modeStr);
 		_rightPanel.setCell(_ghostRow,   1, rec.ghostEnabled ? "On" : "Off");
 		_rightPanel.setCell(_holdRow,    1, rec.holdEnabled  ? "On" : "Off");

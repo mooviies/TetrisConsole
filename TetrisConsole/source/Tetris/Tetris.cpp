@@ -18,8 +18,8 @@ Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu)
 Tetris::~Tetris() = default;
 
 void Tetris::start() {
-    _renderer.configure(_state.previewCount(), _state.holdEnabled());
-    _controller.configurePolicies(_state.mode());
+    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
+    _controller.configurePolicies(_state.config.mode);
     _controller.start(_state);
     _renderer.invalidate();
     _renderer.render(_state);
@@ -82,7 +82,7 @@ void Tetris::handlePause() {
     if (selected == "Restart") {
         SoundEngine::stopMusic();
         _controller.reset(_state);
-        _renderer.configure(_state.previewCount(), _state.holdEnabled());
+        _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
         _renderer.invalidate();
         _renderer.render(_state);
         _state.clearDirty();
@@ -107,11 +107,11 @@ void Tetris::handlePause() {
 void Tetris::handleGameOver() {
     _state.pauseGameTimer();
     SoundEngine::stopMusic();
-    if (_state.hasBetterHighscore())
+    if (_state.stats.hasBetterHighscore)
         _state.setPlayerName(promptPlayerName());
     _state.saveHighscore();
 
-    const OptionChoice choices = _gameOverMenu.open(_state.hasBetterHighscore());
+    const OptionChoice choices = _gameOverMenu.open(_state.stats.hasBetterHighscore);
     const auto& selected = choices.options[choices.selected];
 
     if (selected == "Main Menu") {
@@ -120,7 +120,7 @@ void Tetris::handleGameOver() {
     }
 
     _controller.reset(_state);
-    _renderer.configure(_state.previewCount(), _state.holdEnabled());
+    _renderer.configure(_state.config.previewCount, _state.config.holdEnabled);
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();

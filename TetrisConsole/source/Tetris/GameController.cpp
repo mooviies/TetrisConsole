@@ -7,15 +7,14 @@
 
 using namespace std;
 
-#define FALL "fall"
-#define AUTOREPEAT_LEFT "autorepeatleft"
-#define AUTOREPEAT_RIGHT "autorepeatright"
-#define LOCK_DOWN "lockdown"
+static constexpr const char* FALL             = "fall";
+static constexpr const char* AUTOREPEAT_LEFT  = "autorepeatleft";
+static constexpr const char* AUTOREPEAT_RIGHT = "autorepeatright";
+static constexpr const char* LOCK_DOWN        = "lockdown";
 
-#define AUTOREPEAT_DELAY 0.25
-#define AUTOREPEAT_SPEED 0.01
-#define LOCK_DOWN_DELAY 0.5
-#define LOCK_DOWN_SMALL_DELAY 0.2
+static constexpr double AUTOREPEAT_DELAY = 0.25;
+static constexpr double AUTOREPEAT_SPEED = 0.01;
+static constexpr double LOCK_DOWN_DELAY  = 0.5;
 
 GameController::GameController(Timer& timer)
     : _timer(timer),

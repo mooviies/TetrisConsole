@@ -25,8 +25,8 @@ void PlayfieldElement::update(const GameState& state, bool visible) {
     _visible = visible;
 
     _ghostDropDistance = 0;
-    if (state.ghostEnabled() && state.currentTetrimino() != nullptr) {
-        while (state.currentTetrimino()->simulateMove(Vector2i(_ghostDropDistance + 1, 0)))
+    if (state.config.ghostEnabled && state.pieces.current != nullptr) {
+        while (state.pieces.current->simulateMove(Vector2i(_ghostDropDistance + 1, 0)))
             _ghostDropDistance++;
     }
 
@@ -38,7 +38,7 @@ void PlayfieldElement::drawRow(int rowIndex, RowDrawContext& ctx) const {
         return;
 
     const int line = MATRIX_START + rowIndex;
-    const auto* tetrimino = _state->currentTetrimino();
+    const auto* tetrimino = _state->pieces.current;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;
         bool ghostHere = false;

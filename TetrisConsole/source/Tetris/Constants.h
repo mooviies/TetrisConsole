@@ -12,5 +12,7 @@
 #define SKYLINE_START 18
 #define NEXT_PIECE_QUEUE_SIZE 6
 
+enum class MODE { EXTENDED, EXTENDED_INFINITY, CLASSIC };
+
 using MatrixRow = std::array<int, TETRIS_WIDTH>;
 using GameMatrix = std::deque<MatrixRow>;

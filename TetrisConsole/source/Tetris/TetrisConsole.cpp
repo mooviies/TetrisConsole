@@ -113,8 +113,8 @@ int main() {
     main.addOptionAction("Options", [&]() {
         // Sync menu values from current tetris state
         string modeStr = "Extended";
-        if (tetris.mode() == CLASSIC) modeStr = "Classic";
-        else if (tetris.mode() == EXTENDED_INFINITY) modeStr = "Infinite";
+        if (tetris.mode() == MODE::CLASSIC) modeStr = "Classic";
+        else if (tetris.mode() == MODE::EXTENDED_INFINITY) modeStr = "Infinite";
         options.setValueChoice("Lock Down", modeStr);
         options.setValueChoice("Ghost Piece", tetris.ghostEnabled() ? "On" : "Off");
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
@@ -124,9 +124,9 @@ int main() {
 
         // Apply values back to tetris
         auto values = options.generateValues();
-        MODE mode = CLASSIC;
-        if (values["Lock Down"] == "Extended") mode = EXTENDED;
-        else if (values["Lock Down"] == "Infinite") mode = EXTENDED_INFINITY;
+        MODE mode = MODE::CLASSIC;
+        if (values["Lock Down"] == "Extended") mode = MODE::EXTENDED;
+        else if (values["Lock Down"] == "Infinite") mode = MODE::EXTENDED_INFINITY;
         tetris.setMode(mode);
         tetris.setGhostEnabled(values["Ghost Piece"] != "Off");
         tetris.setHoldEnabled(values["Hold Piece"] != "Off");

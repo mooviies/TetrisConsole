@@ -59,7 +59,7 @@ void GameRenderer::render(const GameState& state, const bool playfieldVisible) {
     if (_previewCount > 0)
         _next.update(state.peekTetriminos(static_cast<size_t>(_previewCount)));
     if (_holdEnabled)
-        _hold.update({state.holdTetrimino()});
+        _hold.update({state.pieces.hold});
     _score.update(state);
     drawMuteIndicator();
 

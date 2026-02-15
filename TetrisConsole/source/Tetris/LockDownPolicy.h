@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "GameState.h"
+#include "Constants.h"
 
 class LockDownPolicy {
 public:

@@ -37,17 +37,17 @@ ScoreDisplay::ScoreDisplay()
 }
 
 void ScoreDisplay::update(const GameState& state) {
-    const int scoreColor = state.backToBackBonus() ? Color::LIGHTGREEN : Color::WHITE;
-    _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state.score(), 10));
+    const int scoreColor = state.stats.backToBackBonus ? Color::LIGHTGREEN : Color::WHITE;
+    _panel.setCell(_scoreValueRow, 0, Utility::valueToString(state.stats.score, 10));
     _panel.setCellColor(_scoreValueRow, 0, scoreColor);
     _panel.setCell(_timeValueRow, 0, Utility::timeToString(state.gameElapsed()));
-    _panel.setCell(_levelRow, 1, Utility::valueToString(state.level(), 2));
+    _panel.setCell(_levelRow, 1, Utility::valueToString(state.stats.level, 2));
     _panel.setCell(_tpmRow, 1, Utility::valueToString(state.tpm(), 6));
     _panel.setCell(_lpmRow, 1, Utility::valueToString(state.lpm(), 6));
-    _panel.setCell(_linesRow, 1, Utility::valueToString(state.lines(), 6));
-    _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.tetris(), 6));
-    _panel.setCell(_combosRow, 1, Utility::valueToString(state.combos(), 6));
-    _panel.setCell(_tSpinsRow, 1, Utility::valueToString(state.tSpins(), 6));
+    _panel.setCell(_linesRow, 1, Utility::valueToString(state.stats.lines, 6));
+    _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.stats.tetris, 6));
+    _panel.setCell(_combosRow, 1, Utility::valueToString(state.stats.combos, 6));
+    _panel.setCell(_tSpinsRow, 1, Utility::valueToString(state.stats.tSpins, 6));
 }
 
 void ScoreDisplay::updateTimer(const GameState& state) {

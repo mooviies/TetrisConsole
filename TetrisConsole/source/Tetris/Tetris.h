@@ -3,7 +3,6 @@
 #include "GameState.h"
 #include "GameRenderer.h"
 #include "GameController.h"
-#include "InputSnapshot.h"
 
 class Menu;
 
@@ -24,15 +23,15 @@ public:
 	[[nodiscard]] bool backToMenu() const { return _backToMenu; }
 	void clearBackToMenu() { _backToMenu = false; }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
-	void setMode(const MODE mode) { _state.setMode(mode); }
-	void setGhostEnabled(bool v) { _state.setGhostEnabled(v); }
-	void setHoldEnabled(bool v) { _state.setHoldEnabled(v); }
-	void setPreviewCount(int n) { _state.setPreviewCount(n); }
-	[[nodiscard]] int startingLevel() const { return _state.startingLevel(); }
-	[[nodiscard]] MODE mode() const { return _state.mode(); }
-	[[nodiscard]] bool ghostEnabled() const { return _state.ghostEnabled(); }
-	[[nodiscard]] bool holdEnabled() const { return _state.holdEnabled(); }
-	[[nodiscard]] int previewCount() const { return _state.previewCount(); }
+	void setMode(const MODE mode) { _state.config.mode = mode; }
+	void setGhostEnabled(bool v) { _state.config.ghostEnabled = v; }
+	void setHoldEnabled(bool v) { _state.config.holdEnabled = v; }
+	void setPreviewCount(int n) { _state.config.previewCount = n; }
+	[[nodiscard]] int startingLevel() const { return _state.config.startingLevel; }
+	[[nodiscard]] MODE mode() const { return _state.config.mode; }
+	[[nodiscard]] bool ghostEnabled() const { return _state.config.ghostEnabled; }
+	[[nodiscard]] bool holdEnabled() const { return _state.config.holdEnabled; }
+	[[nodiscard]] int previewCount() const { return _state.config.previewCount; }
 	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _state.highscores(); }
 	void setPlayerName(const std::string& n) { _state.setPlayerName(n); }
 	void saveOptions() const { _state.saveOptions(); }
