@@ -51,8 +51,8 @@ int main() {
     Menu quit("Quit game?");
     Menu gameOver("GAME OVER", "New High Score!");
 
-    Tetris tetris(pause, gameOver);
     HighScoreDisplay highScores;
+    Tetris tetris(pause, gameOver, highScores);
 
     Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
     Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };

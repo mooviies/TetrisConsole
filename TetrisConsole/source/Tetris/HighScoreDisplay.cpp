@@ -1,5 +1,6 @@
 #include "HighScoreDisplay.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include "Menu.h"
@@ -203,4 +204,86 @@ void HighScoreDisplay::open(const vector<HighScoreRecord>& highscores) {
 
 	_leftPanel.clear();
 	_rightPanel.clear();
+}
+
+string HighScoreDisplay::openForNewEntry(const vector<HighScoreRecord>& highscores,
+                                         const HighScoreRecord& newRecord) {
+	constexpr int kMaxName = 10;
+
+	// Build merged list: insert new record at correct sorted position
+	auto merged = highscores;
+	auto it = lower_bound(merged.begin(), merged.end(), newRecord,
+	                       [](const HighScoreRecord& a, const HighScoreRecord& b) {
+		                       return a.score > b.score;
+	                       });
+	int rank = static_cast<int>(it - merged.begin());
+	merged.insert(it, newRecord);
+	if (merged.size() > 10)
+		merged.resize(10);
+
+	_selected = rank;
+	reposition();
+	_leftPanel.invalidate();
+	_rightPanel.invalidate();
+	updateDisplay(merged);
+
+	// Highlight the new entry row in yellow
+	auto rankIdx = static_cast<size_t>(rank);
+	_leftPanel.setCellColor(_listRows[rankIdx], 0, rlutil::YELLOW);
+
+	Platform::flushInput();
+
+	string name;
+
+	while (true) {
+		// Update name display in both panels
+		string display = name;
+		for (int i = static_cast<int>(name.size()); i < kMaxName; i++)
+			display += '_';
+
+		string prefix = "> ";
+		string rankStr = Utility::valueToString(rank + 1, 2) + ". ";
+		string scoreStr = Utility::valueToString(newRecord.score, 10);
+		_leftPanel.setCell(_listRows[rankIdx], 0,
+		                   prefix + rankStr + display + " " + scoreStr);
+		_rightPanel.setCell(_nameRow, 0, name.empty() ? "__________" : name);
+
+		if (!Platform::isTerminalTooSmall()) {
+			_leftPanel.render();
+			_rightPanel.render();
+			cout << flush;
+		}
+
+		int key = Platform::getKey();
+
+		if (key == rlutil::KEY_ENTER) {
+			break;
+		} else if (key == rlutil::KEY_ESCAPE) {
+			name.clear();
+			break;
+		} else if (key == 8 || key == 127) {
+			if (!name.empty())
+				name.pop_back();
+		} else if (key >= 32 && key <= 126 && static_cast<int>(name.size()) < kMaxName) {
+			name += static_cast<char>(key);
+		}
+
+		if (Platform::wasResized()) {
+			if (!Platform::isTerminalTooSmall()) {
+				if (Menu::onResize)
+					Menu::onResize();
+				reposition();
+				_leftPanel.invalidate();
+				_rightPanel.invalidate();
+			}
+			continue;
+		}
+
+		if (Menu::shouldExitGame && Menu::shouldExitGame())
+			break;
+	}
+
+	_leftPanel.clear();
+	_rightPanel.clear();
+	return name;
 }

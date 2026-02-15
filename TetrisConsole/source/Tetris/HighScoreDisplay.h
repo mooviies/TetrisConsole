@@ -12,6 +12,8 @@ public:
 	HighScoreDisplay();
 
 	void open(const std::vector<HighScoreRecord>& highscores);
+	std::string openForNewEntry(const std::vector<HighScoreRecord>& highscores,
+	                            const HighScoreRecord& newRecord);
 
 private:
 	void updateDisplay(const std::vector<HighScoreRecord>& hs);

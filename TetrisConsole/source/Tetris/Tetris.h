@@ -4,12 +4,13 @@
 #include "GameRenderer.h"
 #include "GameController.h"
 
+class HighScoreDisplay;
 class Menu;
 
 class Tetris
 {
 public:
-	Tetris(Menu& pauseMenu, Menu& gameOverMenu);
+	Tetris(Menu& pauseMenu, Menu& gameOverMenu, HighScoreDisplay& highScoreDisplay);
 	~Tetris();
 
 	void start();
@@ -40,13 +41,13 @@ private:
 	void handlePause();
 	void handleGameOver();
 	void playPendingSounds();
-	std::string promptPlayerName();
 
 	GameState _state;
 	GameRenderer _renderer;
 	GameController _controller;
 	Menu& _pauseMenu;
 	Menu& _gameOverMenu;
+	HighScoreDisplay& _highScoreDisplay;
 	bool _backToMenu{};
 	bool _wasMutePressed{};
 };
