@@ -16,6 +16,10 @@
 #include "Platform.h"
 #include "rlutil.h"
 
+#ifdef TETRIS_DEBUG
+#include "TestRunner.h"
+#endif
+
 using namespace std;
 
 int main() {
@@ -197,6 +201,16 @@ int main() {
     });
     main.addOptionAction("High Scores", [&]() { highScores.open(tetris.allHighscores(), tetris.variant()); });
     main.addOptionAction("Help", [&]() { help.open(); });
+#ifdef TETRIS_DEBUG
+    main.addOptionAction("Test", [&]() {
+        rlutil::cls();
+        GameRenderer::renderTitle("Test Runner");
+        TestRunner runner;
+        runner.run();
+        rlutil::cls();
+        GameRenderer::renderTitle("A classic in console!");
+    });
+#endif
     main.addOption("Exit", &quit);
 
     // --- Pause menu ---

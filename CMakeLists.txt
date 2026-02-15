@@ -82,6 +82,11 @@ target_include_directories(${TARGET_NAME} PRIVATE
     TetrisConsole/source/Tetris/Piece
     TetrisConsole/source/Tetris/Rules
     TetrisConsole/source/Tetris/Display
+    TetrisConsole/source/Tetris/Test
+)
+
+target_compile_definitions(${TARGET_NAME} PRIVATE
+    $<$<CONFIG:Debug>:TETRIS_DEBUG>
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE konsole)
