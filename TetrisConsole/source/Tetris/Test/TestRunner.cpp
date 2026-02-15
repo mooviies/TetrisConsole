@@ -147,8 +147,9 @@ void TestRunner::runScenario(const TestScenario& scenario) {
 	_renderer.configure(0, false, false);
 	_controller.start(_state);
 
-	// Set level
+	// Set level and prevent level-ups during tests
 	_state.stats.level = scenario.startingLevel;
+	_state.stats.goal = 999;
 
 	// Fill matrix
 	for (const auto& [row, col, color] : scenario.matrixCells)
@@ -225,6 +226,38 @@ void TestRunner::runScenario(const TestScenario& scenario) {
 	// Render final state
 	renderAndDelay(400);
 
+	// Extra drops (for multi-piece scenarios like B2B and Combo)
+	for (const auto& drop : scenario.extraDrops) {
+		for (const auto& [row, col, color] : drop.matrixCells)
+			_state.matrix[static_cast<size_t>(row)][static_cast<size_t>(col)] = color;
+
+		ensurePieceType(drop.pieceType);
+		spawnPiece();
+
+		if (drop.preRotations > 0)
+			applyPreRotations(drop.preRotations);
+
+		if (!_state.pieces.current->setPosition(drop.prePosition)) {
+			TestResult result;
+			result.name = scenario.name;
+			result.passed = false;
+			result.detail = "Failed to teleport extra drop piece";
+			result.expected = "Valid position";
+			_results.push_back(result);
+			return;
+		}
+
+		renderAndDelay(200);
+
+		if (_state.phase == GamePhase::Falling)
+			forceHardDrop();
+
+		if (_state.phase != GamePhase::Falling)
+			fastForwardToCompletion();
+
+		renderAndDelay(200);
+	}
+
 	// Record results
 	int64_t scoreAfter = _state.stats.score;
 	int linesAfter = _state.stats.lines;
@@ -282,6 +315,20 @@ void TestRunner::runScenario(const TestScenario& scenario) {
 		detail << "Pos: (" << piecePositionAfter.row << "," << piecePositionAfter.column << ")";
 		expect << "Pos: (" << expectedPos.row << "," << expectedPos.column << ")";
 		if (!(piecePositionAfter == expectedPos)) result.passed = false;
+	}
+
+	if (scenario.expected.backToBackActive) {
+		if (!detail.str().empty()) { detail << ", "; expect << ", "; }
+		detail << "B2B: " << (_state.stats.backToBackBonus ? "Yes" : "No");
+		expect << "B2B: " << (*scenario.expected.backToBackActive ? "Yes" : "No");
+		if (_state.stats.backToBackBonus != *scenario.expected.backToBackActive) result.passed = false;
+	}
+
+	if (scenario.expected.maxCombo) {
+		if (!detail.str().empty()) { detail << ", "; expect << ", "; }
+		detail << "Combo: " << _state.stats.combos;
+		expect << "Combo: " << *scenario.expected.maxCombo;
+		if (_state.stats.combos != *scenario.expected.maxCombo) result.passed = false;
 	}
 
 	result.detail = detail.str();
@@ -477,6 +524,7 @@ vector<TestScenario> TestRunner::buildScenarios() {
 		addRow(s.matrixCells, 36, "X.XXXXXXXX");
 		addRow(s.matrixCells, 37, "..XXXXXXXX");
 		addRow(s.matrixCells, 38, "X.XXXXXXXX");
+		addRow(s.matrixCells, 39, "X.XXXXXXXX");
 		s.preRotations = 2; // NORTH → EAST → SOUTH
 		s.prePosition = {35, 1};
 		s.actions = {{makeRotateCW()}};
@@ -707,6 +755,65 @@ vector<TestScenario> TestRunner::buildScenarios() {
 		s.prePosition = {37, 7};
 		s.expected.scoreChange = 800;
 		s.expected.linesCleared = 4;
+		scenarios.push_back(s);
+	}
+
+	// ===================================================================
+	// BACK-TO-BACK & COMBO SCENARIOS
+	// ===================================================================
+
+	// Back-to-Back Tetris: Two consecutive Tetrises. Second gets 50% bonus.
+	// 8 rows with gap at col 9. First I EAST fills rows 36-39 → 800.
+	// Rows 32-35 shift down. Second I EAST fills again → 1200 (B2B).
+	{
+		TestScenario s;
+		s.name = "Back-to-Back Tetris";
+		s.description = "Two Tetrises in a row, second gets 50% B2B bonus";
+		s.pieceType = PieceType::I;
+		s.preRotations = 1; // EAST (vertical)
+		for (int row = 32; row <= 39; row++)
+			addRow(s.matrixCells, row, "XXXXXXXXX.");
+		s.prePosition = {37, 8};
+
+		DropSpec drop2;
+		drop2.pieceType = PieceType::I;
+		drop2.preRotations = 1;
+		drop2.prePosition = {37, 8};
+		s.extraDrops.push_back(drop2);
+
+		s.expected.scoreChange = 2000;
+		s.expected.linesCleared = 8;
+		s.expected.backToBackActive = true;
+		scenarios.push_back(s);
+	}
+
+	// Combo: 3 consecutive clears. Combo counter reaches 2.
+	// 4 rows with 4-col gap (cols 6-9). Drops 1,2: I NORTH fills cols 6-9.
+	// Drop 3: Add cols 6,7 to row 39 → 2-col gap. J WEST fills cols 8,9.
+	{
+		TestScenario s;
+		s.name = "Combo";
+		s.description = "3 consecutive line clears, combo counter reaches 2";
+		s.pieceType = PieceType::I;
+		for (int row = 36; row <= 39; row++)
+			addRow(s.matrixCells, row, "XXXXXX....");
+		s.prePosition = {39, 7};
+
+		DropSpec drop2;
+		drop2.pieceType = PieceType::I;
+		drop2.prePosition = {39, 7};
+		s.extraDrops.push_back(drop2);
+
+		DropSpec drop3;
+		drop3.pieceType = PieceType::J;
+		drop3.preRotations = 3; // WEST
+		drop3.prePosition = {38, 9};
+		addRow(drop3.matrixCells, 39, "......XX..");
+		s.extraDrops.push_back(drop3);
+
+		s.expected.scoreChange = 300;
+		s.expected.linesCleared = 3;
+		s.expected.maxCombo = 2;
 		scenarios.push_back(s);
 	}
 

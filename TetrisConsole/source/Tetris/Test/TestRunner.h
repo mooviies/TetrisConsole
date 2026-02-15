@@ -19,12 +19,23 @@ struct TestAction {
 	InputSnapshot input;
 };
 
+// Additional piece drop within a single scenario (for B2B and Combo tests)
+struct DropSpec {
+	PieceType pieceType = PieceType::I;
+	int preRotations = 0;
+	Vector2i prePosition{20, 4};
+	// Matrix cells to add before this drop
+	std::vector<std::tuple<int, int, int>> matrixCells;
+};
+
 struct TestExpectation {
 	std::optional<int64_t> scoreChange;
 	std::optional<int> linesCleared;
 	std::optional<bool> tSpin;
 	std::optional<bool> miniTSpin;
 	std::optional<Vector2i> piecePosition;
+	std::optional<bool> backToBackActive;
+	std::optional<int> maxCombo;
 };
 
 struct TestScenario {
@@ -43,6 +54,8 @@ struct TestScenario {
 	// Whether to hard drop after the action sequence (locks piece)
 	bool hardDropAfterActions = true;
 	TestExpectation expected;
+	// Additional drops after the main piece (for multi-piece scenarios)
+	std::vector<DropSpec> extraDrops;
 };
 
 struct TestResult {
