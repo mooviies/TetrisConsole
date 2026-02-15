@@ -10,8 +10,9 @@
 using namespace std;
 
 static constexpr int kLabelWidth    = 14;
-static constexpr int kKeyColWidth   = 9;
-static constexpr int kLeftInterior  = kLabelWidth + HelpDisplay::kMaxKeyCols * kKeyColWidth;
+static constexpr int kKeyColWidth   = 6;
+static constexpr int kSeparators    = HelpDisplay::kMaxKeyCols; // one between each of the 4 cells
+static constexpr int kLeftInterior  = kLabelWidth + HelpDisplay::kMaxKeyCols * kKeyColWidth + kSeparators;
 static constexpr int kRightInterior = 22;
 static constexpr int kWindowWidth   = 80;
 static constexpr int kWindowHeight  = 28;
@@ -54,16 +55,45 @@ HelpDisplay::HelpDisplay()
 	reposition();
 }
 
+// Column assignment: 0 = control keys, 1 = letters/digits, 2 = numpad
+static int keyColumn(KeyCode key) {
+	int k = static_cast<int>(key);
+	if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9'))
+		return 1;
+	if (key >= KeyCode::Numpad0 && key <= KeyCode::NumpadDel)
+		return 2;
+	return 0;
+}
+
 void HelpDisplay::refreshBindings() {
 	for (int i = 0; i < kControlCount; i++) {
 		const auto& keys = Input::getBindings(kActions[i]);
 		size_t row = _controlRows[static_cast<size_t>(i)];
-		for (int col = 0; col < kMaxKeyCols; col++) {
-			string name;
-			if (static_cast<size_t>(col) < keys.size())
-				name = Input::keyName(keys[static_cast<size_t>(col)]);
-			_leftPanel.setCell(row, col + 1, name);
+
+		string cols[kMaxKeyCols];
+		vector<KeyCode> overflow;
+
+		// First pass: place each key in its preferred column
+		for (auto key : keys) {
+			int col = keyColumn(key);
+			if (col < kMaxKeyCols && cols[col].empty())
+				cols[col] = Input::keyName(key);
+			else
+				overflow.push_back(key);
 		}
+
+		// Second pass: place overflow keys in any empty column
+		for (auto key : overflow) {
+			for (int c = 0; c < kMaxKeyCols; c++) {
+				if (cols[c].empty()) {
+					cols[c] = Input::keyName(key);
+					break;
+				}
+			}
+		}
+
+		for (int col = 0; col < kMaxKeyCols; col++)
+			_leftPanel.setCell(row, static_cast<size_t>(col + 1), cols[col]);
 	}
 }
 
