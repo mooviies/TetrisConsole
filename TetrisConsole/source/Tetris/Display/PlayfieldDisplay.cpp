@@ -1,11 +1,13 @@
 #include "PlayfieldDisplay.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include "Color.h"
 #include "GameState.h"
 #include "Constants.h"
 #include "Vector2i.h"
+#include "rlutil.h"
 
 using namespace std;
 
@@ -97,10 +99,45 @@ PlayfieldDisplay::PlayfieldDisplay()
 
 PlayfieldDisplay::~PlayfieldDisplay() = default;
 
-void PlayfieldDisplay::update(const GameState& state, const bool visible) const {
+void PlayfieldDisplay::update(const GameState& state, const bool visible) {
     _element->update(state, visible);
+
+    _skylineColors.fill(0);
+    if (visible) {
+        const auto* tetrimino = state.pieces.current;
+        for (int i = 0; i < TETRIS_WIDTH; i++) {
+            if (tetrimino != nullptr && tetrimino->isMino(BUFFER_END, i))
+                _skylineColors[i] = tetrimino->getColor();
+            else if (state.matrix[BUFFER_END][i])
+                _skylineColors[i] = state.matrix[BUFFER_END][i];
+        }
+    }
 }
 
-void PlayfieldDisplay::setPosition(const int x, const int y) { _panel.setPosition(x, y); }
+void PlayfieldDisplay::setPosition(const int x, const int y) {
+    _x = x;
+    _y = y;
+    _panel.setPosition(x, y);
+}
 void PlayfieldDisplay::invalidate() { _panel.invalidate(); }
-void PlayfieldDisplay::render() { _panel.render(); }
+
+void PlayfieldDisplay::render() {
+    _panel.render();
+    drawSkylineBorder();
+}
+
+void PlayfieldDisplay::drawSkylineBorder() const {
+    rlutil::locate(_x, _y);
+    rlutil::setColor(Color::WHITE);
+    std::cout << "╔";
+
+    for (int i = 0; i < TETRIS_WIDTH; i++) {
+        if (_skylineColors[i])
+            rlutil::setColor(_skylineColors[i]);
+        std::cout << "══";
+        if (_skylineColors[i])
+            rlutil::setColor(Color::WHITE);
+    }
+
+    std::cout << "╗";
+}
