@@ -20,7 +20,6 @@ Tetrimino::Tetrimino(PieceType type, GameMatrix& matrix)
 
 	_currentRotation = NORTH;
 	_lastRotationPoint = -1;
-	_didTSpinWith5 = false;
 }
 
 Tetrimino::~Tetrimino()
@@ -107,7 +106,6 @@ bool Tetrimino::lock()
 	_currentRotation = NORTH;
 	_lastRotationPoint = -1;
 
-	onLock();
 	return !gameOver;
 }
 
@@ -168,9 +166,9 @@ bool Tetrimino::checkPositionValidity(const Vector2i& position, const ROTATION r
 // (relative to the current facing), and C and D are the two "behind" it.
 //
 // Full T-spin: A and B both occupied, plus at least one of C or D.
-// The special case: if the 5th SRS kick was used, a mini T-spin is promoted to full.
-//
-// Mini T-spin: C and D both occupied, plus at least one of A or B.
+// Mini T-spin: C and D both occupied, plus at least one of A or B,
+//              AND a wall kick was used (rotation point >= 2).
+// Special case: the 5th SRS kick (TST kick) always promotes a mini to full.
 bool Tetrimino::checkTSpin()
 {
 	if (!_hasTSpin)
@@ -182,43 +180,27 @@ bool Tetrimino::checkTSpin()
 	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
 
 	if (const Vector2i position = getPosition(); getMino(position + tspinPos.A) && getMino(position + tspinPos.B) && (getMino(position + tspinPos.C) || getMino(position + tspinPos.D)))
-	{
-		if (getLastRotationPoint() == 5)
-			_didTSpinWith5 = true;
-
 		return true;
-	}
 
+	// TST kick (point 5) promotes mini to full
 	if (checkMiniTSpin())
-	{
-		if (_didTSpinWith5)
-			return true;
-
 		return getLastRotationPoint() == 5;
-	}
 
 	return false;
 }
 
-bool Tetrimino::checkMiniTSpin()
-{
+bool Tetrimino::checkMiniTSpin() const {
 	if (!_hasTSpin)
 		return false;
 
-	if (getLastRotationPoint() < 0)
+	// Must be a wall kick (point >= 2); basic rotation (point 1) doesn't qualify
+	if (getLastRotationPoint() <= 1)
 		return false;
 
 	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
 
 	if (const Vector2i position = getPosition(); getMino(position + tspinPos.C) && getMino(position + tspinPos.D) && (getMino(position + tspinPos.A) || getMino(position + tspinPos.B)))
-	{
 		return true;
-	}
 
 	return false;
-}
-
-void Tetrimino::onLock()
-{
-	_didTSpinWith5 = false;
 }

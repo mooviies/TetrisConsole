@@ -28,11 +28,9 @@ public:
 	[[nodiscard]] Vector2i getStartingPosition() const { return _startingPosition; }
 	[[nodiscard]] bool canTSpin() const { return _hasTSpin; }
 	bool checkTSpin();
-	bool checkMiniTSpin();
+	bool checkMiniTSpin() const;
 
 private:
-	void onLock();
-
 	[[nodiscard]] int getMino(int row, int column) const;
 	[[nodiscard]] int getMino(const Vector2i& position) const;
 	[[nodiscard]] bool checkPositionValidity(const Vector2i &position, ROTATION rotation) const;
@@ -56,5 +54,4 @@ private:
 	// T-spin data (only meaningful for T piece)
 	bool _hasTSpin;
 	std::array<TSpinPositions, 4> _tSpinPositions;
-	bool _didTSpinWith5 = false;
 };
