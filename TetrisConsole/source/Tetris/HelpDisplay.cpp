@@ -9,10 +9,10 @@
 
 using namespace std;
 
-static constexpr int kLeftInterior  = 28;
-static constexpr int kRightInterior = 22;
 static constexpr int kLabelWidth    = 14;
-static constexpr int kKeyWidth      = kLeftInterior - kLabelWidth;
+static constexpr int kKeyColWidth   = 9;
+static constexpr int kLeftInterior  = kLabelWidth + HelpDisplay::kMaxKeyCols * kKeyColWidth;
+static constexpr int kRightInterior = 22;
 static constexpr int kWindowWidth   = 80;
 static constexpr int kWindowHeight  = 28;
 static constexpr int kTitleHeight   = 5;
@@ -22,52 +22,49 @@ HelpDisplay::HelpDisplay()
     : _leftPanel(kLeftInterior), _rightPanel(kRightInterior)
 {
 	// --- Left panel: Controls ---
+	auto makeRow = [](const string& label) {
+		vector<Cell> cells;
+		cells.emplace_back(label, Align::LEFT, 15, kLabelWidth);
+		for (int k = 0; k < kMaxKeyCols; k++)
+			cells.emplace_back("", Align::LEFT, 15, kKeyColWidth);
+		return cells;
+	};
+
 	_leftPanel.addRow("CONTROLS", Align::CENTER);
 	_leftPanel.addSeparator();
-	_controlRows[0] = _leftPanel.addRow({Cell("Move Left",   Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[1] = _leftPanel.addRow({Cell("Move Right",  Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[2] = _leftPanel.addRow({Cell("Soft Drop",   Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[3] = _leftPanel.addRow({Cell("Hard Drop",   Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[4] = _leftPanel.addRow({Cell("Rotate CW",   Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[5] = _leftPanel.addRow({Cell("Rotate CCW",  Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[6] = _leftPanel.addRow({Cell("Hold Piece",  Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[7] = _leftPanel.addRow({Cell("Pause",       Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
-	_controlRows[8] = _leftPanel.addRow({Cell("Mute",        Align::LEFT, 15, kLabelWidth), Cell("", Align::CENTER)});
+	_controlRows[0] = _leftPanel.addRow(makeRow("Move Left"));
+	_controlRows[1] = _leftPanel.addRow(makeRow("Move Right"));
+	_controlRows[2] = _leftPanel.addRow(makeRow("Soft Drop"));
+	_controlRows[3] = _leftPanel.addRow(makeRow("Hard Drop"));
+	_controlRows[4] = _leftPanel.addRow(makeRow("Rotate CW"));
+	_controlRows[5] = _leftPanel.addRow(makeRow("Rotate CCW"));
+	_controlRows[6] = _leftPanel.addRow(makeRow("Hold Piece"));
+	_controlRows[7] = _leftPanel.addRow(makeRow("Pause"));
+	_controlRows[8] = _leftPanel.addRow(makeRow("Mute"));
 
 	// --- Right panel: About / Credits ---
 	_rightPanel.addRow("ABOUT", Align::CENTER);
 	_rightPanel.addSeparator();
 	_rightPanel.addRow("Console Tetris", Align::CENTER);
-	_rightPanel.addRow("with SRS, T-Spins,", Align::CENTER);
-	_rightPanel.addRow("combos and more!", Align::CENTER);
+	_rightPanel.addRow("with official score", Align::CENTER);
+	_rightPanel.addRow("system!", Align::CENTER);
 	_rightPanel.addSeparator();
-	_rightPanel.addRow("CREDITS", Align::CENTER);
-	_rightPanel.addSeparator();
-	_rightPanel.addRow("mooviies", Align::CENTER);
+	_rightPanel.addRow("by mooviies", Align::CENTER);
 
 	reposition();
 }
 
-string HelpDisplay::formatKeys(int action, int maxWidth) {
-	const auto& keys = Input::getBindings(action);
-	string result;
-	for (const auto& key : keys) {
-		string name = Input::keyName(key);
-		if (result.empty()) {
-			result = name;
-		} else {
-			string candidate = result + " / " + name;
-			if (static_cast<int>(candidate.size()) > maxWidth)
-				break;
-			result = candidate;
+void HelpDisplay::refreshBindings() {
+	for (int i = 0; i < kControlCount; i++) {
+		const auto& keys = Input::getBindings(kActions[i]);
+		size_t row = _controlRows[static_cast<size_t>(i)];
+		for (int col = 0; col < kMaxKeyCols; col++) {
+			string name;
+			if (static_cast<size_t>(col) < keys.size())
+				name = Input::keyName(keys[static_cast<size_t>(col)]);
+			_leftPanel.setCell(row, col + 1, name);
 		}
 	}
-	return result;
-}
-
-void HelpDisplay::refreshBindings() {
-	for (int i = 0; i < kControlCount; i++)
-		_leftPanel.setCell(_controlRows[static_cast<size_t>(i)], 1, formatKeys(kActions[i], kKeyWidth));
 }
 
 void HelpDisplay::reposition() {

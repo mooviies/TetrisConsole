@@ -11,11 +11,11 @@ public:
 
 	void open();
 
+	static constexpr int kMaxKeyCols = 3;
+
 private:
 	void reposition();
 	void refreshBindings();
-
-	static std::string formatKeys(int action, int maxWidth);
 
 	Panel _leftPanel;
 	Panel _rightPanel;
