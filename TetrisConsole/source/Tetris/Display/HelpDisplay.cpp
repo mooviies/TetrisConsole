@@ -108,8 +108,7 @@ void HelpDisplay::reposition() {
 	int lh = _leftPanel.height();
 	int rh = _rightPanel.height();
 
-	int cx = Platform::offsetX() + (kWindowWidth / 2);
-	int lx = cx - (totalW / 2);
+	int lx = Platform::offsetX() + 1 + (kWindowWidth - totalW) / 2;
 	int rx = lx + lw + kGap;
 
 	int ly = Platform::offsetY() + availableTop + (availableHeight - lh) / 2;

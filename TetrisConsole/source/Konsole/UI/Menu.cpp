@@ -171,8 +171,8 @@ void Menu::generate() {
 
     constexpr int windowWidth = 80;
     constexpr int windowHeight = 28;
-    _x = Platform::offsetX() + (windowWidth / 2) - (_width / 2);
-    _y = Platform::offsetY() + (windowHeight / 2) - (_height / 2);
+    _x = Platform::offsetX() + 1 + (windowWidth - _width) / 2;
+    _y = Platform::offsetY() + 1 + (windowHeight - _height) / 2;
     _panel.setPosition(_x, _y);
 
     if (_hasHints) {
@@ -180,7 +180,7 @@ void Menu::generate() {
         _hintPanel = Panel(static_cast<int>(hintWidth));
         _hintRow = _hintPanel.addRow("", Align::CENTER, Color::GREY);
         int hintPanelWidth = _hintPanel.width();
-        int hx = Platform::offsetX() + (windowWidth / 2) - (hintPanelWidth / 2);
+        int hx = Platform::offsetX() + 1 + (windowWidth - hintPanelWidth) / 2;
         int hy = _y + _height;
         _hintPanel.setPosition(hx, hy);
     }
@@ -225,8 +225,7 @@ void Menu::draw() {
         const string& name = _options[static_cast<size_t>(_choice)];
 
         // Check value-specific hint first
-        auto valHintIt = _optionValueHints.find(name);
-        if (valHintIt != _optionValueHints.end()) {
+        if (auto valHintIt = _optionValueHints.find(name); valHintIt != _optionValueHints.end()) {
             auto valIt = _optionsValues.find(name);
             if (valIt != _optionsValues.end()) {
                 const string& currentValue = valIt->second[static_cast<size_t>(_optionsValuesChoices[name])];
@@ -238,8 +237,7 @@ void Menu::draw() {
 
         // Fall back to generic hint
         if (hint.empty()) {
-            auto it = _optionHints.find(name);
-            if (it != _optionHints.end())
+            if (const auto it = _optionHints.find(name); it != _optionHints.end())
                 hint = it->second;
         }
 
