@@ -3,6 +3,9 @@
 ###############################################################################
 * text=auto
 
+# Mark vendored headers so GitHub Linguist excludes them from language stats
+TetrisConsole/include/** linguist-vendored
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
