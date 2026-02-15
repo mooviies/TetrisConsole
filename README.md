@@ -56,17 +56,33 @@ All options are persisted across sessions.
 
 **Preview** (0–6) — Number of next pieces shown in the queue.
 
+**Variant** — Game mode:
+- **Marathon** (default) — Classic Tetris. Level up every time you clear the goal, scoring as much as possible.
+- **Sprint** — Clear 40 lines as fast as you can.
+- **Ultra** — Score as many points as possible in 2 minutes.
+
+## Game Modes
+
+**Marathon** — The classic Tetris experience. Clear lines to advance through levels, with gravity increasing at each level. The goal increases per level (level × 5 lines). Your score is the primary measure of success.
+
+**Sprint** — A race against the clock. Clear 40 lines as quickly as possible. The level stays fixed at your starting level (no level-ups). The game ends as soon as 40 lines are cleared.
+
+**Ultra** — A timed challenge. Score as many points as possible within a 2-minute time limit. The level stays fixed at your starting level. A countdown timer replaces the elapsed time display.
+
 ## Features
 
+- Three game modes: Marathon, Sprint (40-line race), and Ultra (2-minute time attack)
 - 10x20 playfield with standard 7-bag piece randomization
 - SRS (Super Rotation System) wall kicks with 5 test points per rotation
 - Hold piece and configurable next piece preview (0-6 pieces)
 - T-spin and mini T-spin detection with bonus scoring
 - Back-to-back bonus (50% extra) for consecutive Tetrises or T-spins
-- Combo (Ren) tracking
+- Combo (Ren) tracking with text notifications for impressive moves
 - 15 levels with Guideline gravity speeds
-- In-game stats: score, time, TPM, LPM, level, lines, Tetrises, combos, T-spins
-- Top-10 high score leaderboard with detailed stats and game options per entry
+- In-game stats: score, time, TPM, LPM, level, lines, goal, Tetrises, combos, T-spins
+- Per-variant high score leaderboards (top 10 each) with detailed stats and game options per entry
+- Confetti animation on new high scores
+- Help screen showing all key bindings (accessible from the main menu)
 - Options menu: lock-down mode, ghost piece, hold piece, preview count — persisted across sessions
 - Mute toggle (M key): cycles unmuted (white ♪) → music muted (yellow ♪) → all muted (red ♪)
 - Streamed music (three tracks that cycle A/B/C) and sound effects via miniaudio
@@ -101,8 +117,9 @@ TetrisConsole/source/
   Tetris/                   # Executable — game logic (links against Konsole)
     Core/                   # MVC triad, facade, entry point
     Piece/                  # Tetrimino geometry, SRS rotation data
-    Rules/                  # Pluggable gameplay policies (scoring, gravity, lock-down)
+    Rules/                  # Pluggable gameplay policies (scoring, gravity, lock-down, goals, variants)
     Display/                # HUD and modal display components
+    Test/                   # Debug-only test runner
 ```
 
 Konsole is built as a static library that the Tetris executable links against, enforcing a clean dependency boundary.

@@ -31,26 +31,29 @@ Cross-platform console Tetris in C++17. Two layers: a platform abstraction libra
 `main()` in `TetrisConsole.cpp` bootstraps the application:
 
 1. `Platform::initConsole()` — terminal raw mode, alternate screen buffer, colors
-2. `Input::init()` — input subsystem
-3. `SoundEngine::init()` — miniaudio engine with embedded VFS
-4. Wait for terminal to reach minimum size (80x29)
-5. Build the menu tree (main, newGame, options, pause, restartConfirm, backToMenuConfirm, quit, gameOver) with option hints
-6. Create the `Tetris` facade and `HighScoreDisplay`, wire menu callbacks via lambdas
-7. `main.open()` — blocking main menu (includes New Game, Options, High Scores, Exit)
-8. `tetris.start()` — initialize game state, configure renderer, begin music
-9. Enter the main loop
+2. `Input::init(actionCount)` — initialize action-based input system with `Action::Count` (10) actions
+3. Bind default keys to actions (arrows, WASD, numpad, etc.) via `Input::bind(action, key)`
+4. `SoundEngine::init()` — miniaudio engine with embedded VFS
+5. Wait for terminal to reach minimum size (80x29)
+6. Build the menu tree (main, newGame, options, pause, restartConfirm, backToMenuConfirm, quit, gameOver) with option hints
+7. Create `HighScoreDisplay`, `HelpDisplay`, and the `Tetris` facade; wire menu callbacks via lambdas
+8. `main.open()` — blocking main menu (includes New Game, Options, High Scores, Help, Exit; plus Test in debug builds)
+9. `tetris.start()` — initialize game state, configure renderer, begin music
+10. Enter the main loop
 
 ### Main Loop
 
 ```
 while (!tetris.doExit() && !tetris.backToMenu()) {
     frameStart = now()
-    Input::pollKeys()           // 1. gather input
-    Platform::wasResized()?     // 2. handle terminal resize
-    Platform::isTerminalTooSmall()?  // 3. pause if terminal too small
-    tetris.step()               // 4. game logic + sound dispatch
-    tetris.render()             // 5. draw (dirty → full render, else timer-only)
-    sleep(16ms - elapsed)       // 6. ~60 FPS frame cap
+    Input::pollKeys()                    // 1. gather input
+    Platform::wasResized()?              // 2. handle terminal resize
+    Platform::isTerminalTooSmall()?      // 3. pause if terminal too small
+    snapshot = InputSnapshot from        // 4. capture action states
+               Input::action() queries
+    tetris.step(snapshot)                // 5. game logic + sound dispatch
+    tetris.render()                      // 6. draw (dirty → full render, else timer-only)
+    sleep(16ms - elapsed)                // 7. ~60 FPS frame cap
 }
 ```
 
@@ -62,8 +65,9 @@ The `Tetris` class owns all core components and wires them together:
 - `GameRenderer _renderer` — view
 - `GameController _controller` — pure logic
 - `Menu& _pauseMenu`, `Menu& _gameOverMenu` — references to menu system
+- `HighScoreDisplay& _highScoreDisplay` — reference to high score viewer (for new-entry prompts)
 
-**`step()`** dispatches the controller's `StepResult`:
+**`step(snapshot)`** takes an `InputSnapshot` and dispatches the controller's `StepResult`:
 
 | Result | Action |
 |--------|--------|
@@ -117,7 +121,7 @@ GameController (orchestrator)
     |-- PieceMovement (falling phase: movement, rotation, DAS, lock-down)
     |-- LineClear (pattern/animate/eliminate phases: row detection, scoring)
     |
-    | reads/writes via friend access
+    | reads/writes public sub-structs
     v
 GameState (model) ---const getters---> GameRenderer (view)
     ^                                       |
@@ -127,15 +131,25 @@ GameState (model) ---const getters---> GameRenderer (view)
 Tetris (facade) owns all three, dispatches StepResult
 ```
 
-**GameController** is the orchestrator. It owns `PieceMovement`, `LineClear`, and the three pluggable policy objects (`LockDownPolicy`, `ScoringRule`, `GravityPolicy`). It dispatches game phases, handles Generation/Completion phases directly, manages the double-bag randomizer, and coordinates setup/reset. Never touches the renderer or menus. Returns a `StepResult` enum; the `Tetris` facade dispatches the result.
+**GameController** is the orchestrator. It owns `PieceMovement`, `LineClear`, and five pluggable policy objects (`LockDownPolicy`, `ScoringRule`, `GravityPolicy`, `GoalPolicy`, `VariantRule`). It dispatches game phases, handles Generation/Completion phases directly, manages the double-bag randomizer, and coordinates setup/reset. `configureVariant(variant, state)` sets variant-specific policies (goal, leveling, time limit) and updates `GameConfig`. Never touches the renderer or menus. Returns a `StepResult` enum; the `Tetris` facade dispatches the result.
 
 **PieceMovement** handles everything during `GamePhase::Falling`: gravity, DAS autorepeat, left/right/down movement, SRS rotation, hard drop, hold swap, and lock-down. When a piece locks, it transitions to `GamePhase::Pattern`. Takes non-owning pointers to `LockDownPolicy` and `GravityPolicy` (owned by GameController).
 
 **LineClear** handles the Pattern → Iterate → Animate → Eliminate cycle: full-row detection, flash animation, row elimination, and scoring (delegates to `ScoringRule`). Takes a non-owning pointer to `ScoringRule`.
 
-**GameState** holds all game data: matrix, bag, current/hold tetriminos, score, level, lines, flags. Members are private. The controller has friend access; the renderer reads through `const` public getters.
+**GameState** holds all game data via public sub-structs:
 
-**GameRenderer** owns the display components (`ScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`, `Icon` for mute). It calls `update()` on each display with data from `GameState`, then `render()` to draw. Has `configure(previewCount, holdEnabled)` to adjust the UI based on game options, and `renderTimer()` to update only the time/TPM/LPM without full redraws.
+- `GameConfig config` — variant, lock-down mode, ghost, hold, preview count, starting level, time limit, showGoal
+- `Stats stats` — score, level, lines, goal, tetris count, combos, T-spins, back-to-back, highscore threshold
+- `LockDownState lockDown` — active flag, move count, lowest line
+- `PieceState pieces` — bag (14 `unique_ptr<Tetrimino>`), bag index, current/hold pointers, isNewHold
+- `FrameFlags flags` — step state, rotation/T-spin flags, game-over/started flags
+- `GameMatrix matrix` — the 40-row deque
+- `LineClearState lineClear` — cleared rows, flash state, notification/combo text
+
+High scores are per-variant: `HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>`. Private members include the dirty flag, sound queue, game timer, and player name.
+
+**GameRenderer** owns the display components (`ScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`, `Icon` for mute). It calls `update()` on each display with data from `GameState`, then `render()` to draw. Has `configure(previewCount, holdEnabled, showGoal)` to adjust the UI based on game options (showGoal controls whether the goal/lines-remaining display appears in `ScoreDisplay`), and `renderTimer()` to update only the time/TPM/LPM without full redraws.
 
 ### Dirty Flag
 
@@ -179,7 +193,7 @@ The bag holds 14 `Tetrimino` objects — two copies of each of the 7 piece types
 - **Indices 0-6**: the "current" bag (being consumed)
 - **Indices 7-13**: the "next" bag (pre-shuffled, ready to go)
 
-This exists because the next-piece preview needs to peek up to 4 pieces ahead. When `_bagIndex` is near the end (e.g. 5), peeking 4 ahead means reading indices 5, 6, 7, 8 — which crosses the single-bag boundary. The second half makes this safe. Worst case: `_bagIndex(6) + 4 = 10 < 14`.
+This exists because the next-piece preview needs to peek up to 6 pieces ahead (default preview count). When `_bagIndex` is near the end (e.g. 5), peeking 6 ahead means reading indices 5, 6, 7, 8, 9, 10 — which crosses the single-bag boundary. The second half makes this safe. Worst case: `_bagIndex(6) + 6 = 12 < 14`.
 
 ### Shuffle (Fisher-Yates on a Subrange)
 
@@ -294,7 +308,7 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ## 5. Scoring, Leveling & Lock-Down
 
-**Files:** `Tetris/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Tetris/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Tetris/Rules/ScoringRule.h/.cpp`, `Tetris/Rules/LockDownPolicy.h/.cpp`, `Tetris/Rules/GravityPolicy.h/.cpp`
+**Files:** `Tetris/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Tetris/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Tetris/Rules/ScoringRule.h/.cpp`, `Tetris/Rules/LockDownPolicy.h/.cpp`, `Tetris/Rules/GravityPolicy.h/.cpp`, `Tetris/Rules/GoalPolicy.h/.cpp`, `Tetris/Rules/VariantRule.h/.cpp`
 
 ### Lock-Down Mechanics
 
@@ -391,6 +405,22 @@ After scoring, `awardScore()` advances leveling, tracks stats, and queues sounds
 - `_nbMinos` increments per piece locked (feeds TPM calculation: `_nbMinos / minutesElapsed`)
 - 4 lines → Tetris sound; 1-3 lines → LineClear sound
 
+### Game Variants
+
+Three game modes are supported, configured via `VariantRule` and `GoalPolicy`:
+
+| Variant | Goal | Level Up | Time Limit | GoalPolicy |
+|---------|------|----------|------------|------------|
+| **Marathon** | Score as high as possible | Yes (level × 5 lines per level) | None | `VariableGoal` |
+| **Sprint** | Clear 40 lines | No (fixed starting level) | None | `FixedGoal` (40 lines total) |
+| **Ultra** | Highest score in 2 min | No (fixed starting level) | 120 seconds | `VariableGoal` |
+
+`VariantRule` is an abstract interface with `linesGoal()`, `levelUp()`, `timeLimit()`, and `showGoal()`. Concrete subclasses: `MarathonVariant`, `SprintVariant`, `UltraVariant`.
+
+`GoalPolicy` is an abstract interface governing how level-up goals work: `goalValue(level)` returns lines needed for a level, `startingGoalValue(level)` handles non-level-1 starts, and `useAwardedLines()` controls whether awarded lines (from T-spins, etc.) count. `VariableGoal` (Marathon/Ultra) scales per level; `FixedGoal` (Sprint) uses a flat 40-line total.
+
+`GameController::configureVariant()` instantiates the appropriate `VariantRule` and `GoalPolicy`, and writes the derived settings (`timeLimit`, `showGoal`) into `GameState::config`.
+
 ### Gravity
 
 Gravity speed is looked up from `kSpeedNormal[level]` (or `kSpeedFast` during soft drop). Speeds are capped at level 15.
@@ -408,7 +438,7 @@ Left/right movement uses Delayed Auto Shift:
 
 **File:** `Tetris/Core/GameState.cpp` (persistence) + `Tetris/Core/GameState.h` (`HighScoreRecord` struct)
 
-A flat top-10 leaderboard stored as a binary file (`score.bin`). Each record stores both game stats and the options used during that game:
+Per-variant top-10 leaderboards stored as a binary file (`score.bin`). `HighScoreTable` is `std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>` — one sorted vector per variant (Marathon, Sprint, Ultra). Each record stores both game stats and the options used during that game:
 
 ```
 Header: magic(4) + version(4) + count(4) = 12 bytes
@@ -446,51 +476,92 @@ Magic: `0x53484354` ("TCHS" little-endian), version 3.
 
 ## 6. Input System
 
-**Files:** `Konsole/Platform/Input.h`, `Konsole/Platform/Input.cpp`, `Konsole/Platform/InputLinux.cpp`, `Konsole/Platform/InputWin32.cpp`
+**Files:** `Konsole/Platform/Input.h`, `Konsole/Platform/Input.cpp`, `Konsole/Platform/InputLinux.cpp`, `Konsole/Platform/InputWin32.cpp`, `Tetris/Core/InputSnapshot.h`
+
+### Architecture
+
+The input system uses an **action-based binding model**. Rather than hardcoding key-to-action mappings, the caller declares how many actions exist, then binds one or more `KeyCode` values to each action. At runtime, `pollKeys()` determines which keys are pressed and sets the corresponding action flags.
+
+### KeyCode Enum (in `Input.h`)
+
+Identifies all supported keys:
+
+- **Printable ASCII** (0–255): stored as raw char codes (uppercase letters `'A'`–`'Z'`, digits `'0'`–`'9'`, `' '`)
+- **Special keys** (256+): `ArrowUp`, `ArrowDown`, `ArrowLeft`, `ArrowRight`, `Enter`, `Escape`, `Tab`, `Backspace`, `Shift`, `Control`, `F1`–`F12`, `Insert`, `Delete`, `Home`, `End`, `PageUp`, `PageDown`, `Numpad0`–`Numpad9`, `NumpadDel`
+
+### Action Enum (in `InputSnapshot.h`)
+
+Defines the game's logical actions:
+
+```
+Left, Right, SoftDrop, HardDrop, RotateCW, RotateCCW, Hold, Pause, Mute, Select, Count
+```
+
+`InputSnapshot` is a plain struct with a `bool` field for each action (except Select, which is menu-only). It is populated each frame from `Input::action()` queries and passed to `Tetris::step()`.
 
 ### Public Interface
 
 ```cpp
-static void pollKeys();              // poll all pending keyboard events
-static bool left();                  // query individual key states
-static bool right();
-static bool softDrop();
-static bool hardDrop();
-static bool rotateClockwise();
-static bool rotateCounterClockwise();
-static bool hold();
-static bool pause();
-static bool mute();
-static bool select();                // menu enter/confirm
+static void init(int actionCount);                    // allocate binding/action arrays
+static void cleanup();                                // release resources
+static void pollKeys();                               // poll hardware, set action flags
+static void bind(int action, KeyCode key);            // add key→action binding
+static void clearBindings(int action);                // remove all bindings for action
+static bool action(int action);                       // true if action is active this frame
+static const std::vector<KeyCode>& getBindings(int action);  // all keys bound to action
+static std::string keyName(KeyCode key);              // human-readable key name (for HelpDisplay)
 ```
 
-The game loop calls `pollKeys()` once per frame, then queries individual key states.
+The game loop calls `pollKeys()` once per frame, then queries `action()` for each game action to build an `InputSnapshot`.
 
-### Linux Implementation
+### Default Key Bindings
+
+Set up in `TetrisConsole.cpp` after `Input::init()`:
+
+| Action | Keys |
+|--------|------|
+| Left | ArrowLeft, A, Numpad4 |
+| Right | ArrowRight, D, Numpad6 |
+| SoftDrop | ArrowDown, S, Numpad2 |
+| HardDrop | Space, Numpad8 |
+| RotateCW | ArrowUp, X, Numpad1, Numpad5, Numpad9 |
+| RotateCCW | Z, Numpad3, Numpad7 |
+| Hold | C, Numpad0 |
+| Pause | Escape, F1 |
+| Mute | M |
+| Select | Enter |
+
+### Linux Implementation (`InputLinux.cpp`)
 
 **Polling model**: event-driven batch processing.
 
-`pollKeys()` resets all 10 static bool flags to `false`, then drains all pending input from stdin using `::select()` with **zero timeout** (non-blocking). It reads up to 64 bytes per iteration and parses:
+`pollKeys()` resets all action flags to `false`, then drains all pending input from stdin using `::select()` with **zero timeout** (non-blocking). It reads up to 64 bytes per iteration into a buffer and resolves each byte (or escape sequence) into `KeyCode` values:
 
-- **ANSI escape sequences** (`ESC [ A/B/C/D`): arrow keys
-- **Single characters**: space (hard drop), z/x (rotate), c (hold), m (mute), escape (pause), enter (select)
+- **ANSI escape sequences**: `ESC [ A/B/C/D` → arrow keys; `ESC [ number ~` → Insert/Delete/Home/End/PageUp/PageDown/F5–F12; `ESC O P/Q/R/S` → F1–F4
+- **Control sequences**: bytes `0x01`–`0x1A` → emits `KeyCode::Control` + the corresponding letter
+- **Single bytes**: letters (case-insensitive, stored uppercase), digits (emit both ASCII digit and Numpad equivalent since terminals can't distinguish), space, enter, tab, backspace, standalone escape
 
-Key queries return the cached static flags. `init()` and `cleanup()` are no-ops (terminal setup is handled by `Platform`).
+After collecting all pressed `KeyCode`s, it iterates over all actions and sets `s_actions[a] = true` if any bound key was pressed.
 
-### Windows Implementation
+`init()` and `cleanup()` are no-ops (terminal setup is handled by `Platform`).
 
-**Polling model**: direct state queries.
+### Windows Implementation (`InputWin32.cpp`)
 
-`pollKeys()` is an empty stub. Each key query method calls `GetKeyState(vKey) & 0x8000` directly, checking multiple virtual keys per action (e.g. `rotateClockwise()` checks `VK_UP`, `X`, and numpad 1/5/9). No caching — Windows reports current key state synchronously.
+**Polling model**: direct state queries per action.
 
-### Key Differences
+`pollKeys()` iterates over all actions. For each action, it checks every bound `KeyCode` by converting it to a Windows virtual key code via `toVK()` and calling `GetKeyState(vk) & 0x8000`. If any bound key is held, the action is active.
+
+`toVK()` maps `KeyCode` values to Windows VK codes: uppercase letters and digits map directly, special keys use a switch table (`ArrowUp → VK_UP`, `F1 → VK_F1`, `Numpad0 → VK_NUMPAD0`, etc.).
+
+### Comparison
 
 | Aspect | Linux | Windows |
 |--------|-------|---------|
-| Polling | Batch drain + cache flags | No-op (lazy query) |
-| Key query | Return cached flag | Direct `GetKeyState()` |
+| Polling | Batch drain stdin + cache flags | Iterate actions, query `GetKeyState()` |
+| Key resolution | Parse raw bytes → KeyCode → action | KeyCode → VK → `GetKeyState()` |
 | Arrow keys | Manual ANSI escape parsing | OS-provided virtual keys |
-| Numpad | Not supported | Full numpad support |
+| Numpad | Emits both digit + Numpad KeyCode | Distinct VK codes |
+| F-keys | ANSI sequences (`ESC O P`, `ESC [ 15~`, etc.) | Direct VK codes |
 
 ---
 
@@ -548,7 +619,7 @@ Registers a `SIGWINCH` handler to detect terminal resizes.
 
 ## 8. Panel Rendering System
 
-**Files:** `Konsole/UI/Panel.h/.cpp`, `Konsole/UI/RowDrawContext.h/.cpp`, `Konsole/UI/Icon.h/.cpp`, `Konsole/UI/Color.h`, `Tetris/Display/PiecePreview.h/.cpp`, `Tetris/Display/PieceDisplay.h/.cpp`, `Tetris/Display/PlayfieldDisplay.h/.cpp`, `Tetris/Display/ScoreDisplay.h/.cpp`, `Tetris/Display/HighScoreDisplay.h/.cpp`
+**Files:** `Konsole/UI/Panel.h/.cpp`, `Konsole/UI/RowDrawContext.h/.cpp`, `Konsole/UI/Icon.h/.cpp`, `Konsole/UI/Color.h`, `Tetris/Display/PiecePreview.h/.cpp`, `Tetris/Display/PieceDisplay.h/.cpp`, `Tetris/Display/PlayfieldDisplay.h/.cpp`, `Tetris/Display/ScoreDisplay.h/.cpp`, `Tetris/Display/HighScoreDisplay.h/.cpp`, `Tetris/Display/HelpDisplay.h/.cpp`, `Tetris/Display/Confetti.h/.cpp`
 
 ### Color
 
@@ -611,20 +682,35 @@ The 10x20 visible game field. Its `PlayfieldElement` (PanelElement subclass, hei
 
 ### ScoreDisplay
 
-Panel (interior width 18) showing Score, Time, TPM, LPM, Level, Lines, Tetris, Combos, and T-Spins. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths. Has two update paths:
+Panel (interior width 18) showing Score, Time, TPM, LPM, Level, Goal (optional), Lines, Tetris, Combos, and T-Spins. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths. `configure(showGoal)` controls whether the Goal row appears (shown in Marathon, hidden in Sprint/Ultra). Has two update paths:
 
 - `update(state)` — full update of all fields (called when dirty)
 - `updateTimer(state)` — updates only Time, TPM, and LPM (called every frame for smooth display)
 
 ### HighScoreDisplay
 
-Standalone two-panel viewer (not a game HUD element — opened from the main menu). Takes `const vector<HighScoreRecord>&` and blocks until the user presses ENTER or ESC.
+Standalone two-panel viewer (not a game HUD element). Has two entry points:
+
+- `open(allHighscores, initialVariant)` — browse mode, opened from the main menu
+- `openForNewEntry(allHighscores, newRecord, variant)` — new high score mode, returns the player name. Shows confetti animation.
+
+Takes `const HighScoreTable&` (per-variant scores) and a `VARIANT`. Blocks until the user presses ENTER or ESC.
 
 **Left panel** (interior width 28): title "HIGH SCORES", separator, 10 ranked entries. Each entry shows cursor indicator, rank, name (10 chars), and score (10 digits). UP/DOWN arrows move the selection cursor.
 
-**Right panel** (interior width 22): shows details for the selected entry. Three header rows (score, time, name), a separator, seven stat rows (Level, TPM, LPM, Lines, Tetris, Combos, T-Spins), a separator, and five option rows (Start, Mode, Ghost, Hold, Preview) showing the settings used during that game. Empty slots show dashes.
+**Right panel** (interior width 22): variant tabs at top (Marathon / Sprint / Ultra, switchable with LEFT/RIGHT). Three header rows (score, time, name), a separator, seven stat rows (Level, TPM, LPM, Lines, Tetris, Combos, T-Spins), a separator, and five option rows (Start, Mode, Ghost, Hold, Preview) showing the settings used during that game. Empty slots show dashes.
 
 Both panels are centered side-by-side with a 1-char gap, positioned relative to the window center.
+
+### HelpDisplay
+
+Standalone two-panel key bindings reference, accessible from the main menu. Reads the current bindings from `Input::getBindings()` for each action (except Select).
+
+**Layout**: two panels side-by-side. Each panel lists actions with their bound keys (up to `kMaxKeyCols = 3` keys per action). `refreshBindings()` updates the displayed key names via `Input::keyName()`. Blocks until the user presses ENTER or ESC.
+
+### Confetti
+
+Particle animation system for celebrating new high scores. `start(screenW, screenH, offsetX, offsetY, exclusionZones)` spawns colored particles that fall across the screen. `update()` advances particle positions each frame. Particles avoid exclusion zones (the panels) to prevent overdrawing UI elements. `stop()` clears all particles and terminates the animation.
 
 ### Icon
 
@@ -775,9 +861,11 @@ Menu callbacks use lambdas that capture the `Tetris` reference. The menu tree:
 
 ```
 Main Menu
-├── New Game → Level (1-15) + Start
+├── New Game → Level (1-15), Variant (Marathon/Sprint/Ultra) + Start
 ├── Options → Lock Down, Ghost Piece, Hold Piece, Preview (0-6), Reset Defaults, Back
-├── High Scores → HighScoreDisplay (standalone two-panel viewer)
+├── High Scores → HighScoreDisplay (per-variant two-panel viewer)
+├── Help → HelpDisplay (two-panel key bindings reference)
+├── Test → TestRunner (debug builds only, TETRIS_DEBUG)
 └── Exit → Quit confirmation
 Pause Menu
 ├── Resume
