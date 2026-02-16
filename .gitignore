@@ -28,3 +28,6 @@ TetrisConsole.exe
 
 # User data
 score.bin
+
+# Local notes
+/notes/
