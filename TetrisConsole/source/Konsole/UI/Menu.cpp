@@ -147,6 +147,7 @@ void Menu::generate() {
 
     _optionRows.clear();
     for (const auto &option : _options) {
+        // cppcheck-suppress useStlAlgorithm
         _optionRows.push_back(_panel.addRow("  " + option, Align::Left));
     }
 

@@ -81,6 +81,7 @@ void HelpDisplay::refreshBindings() {
         // Second pass: place overflow keys in any empty column
         for (auto key : overflow) {
             for (auto &col : cols) {
+                // cppcheck-suppress useStlAlgorithm
                 if (col.empty()) {
                     col = Input::keyName(key);
                     break;

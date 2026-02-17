@@ -2,6 +2,7 @@
 
 #include "TestRunner.h"
 
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -27,19 +28,6 @@ TestRunner::TestRunner() : _controller(Timer::instance()) {
 }
 
 // ---------------------------------------------------------------------------
-// Matrix helper: parse a 10-char string into a matrix row
-// 'X' = Color::GREY, '.' = empty
-// ---------------------------------------------------------------------------
-void TestRunner::parseRow(GameState &state, int row, const string &pattern) {
-    for (int col = 0; col < TETRIS_WIDTH && col < static_cast<int>(pattern.size()); col++) {
-        if (pattern[static_cast<size_t>(col)] == 'X')
-            state.matrix[static_cast<size_t>(row)][static_cast<size_t>(col)] = Color::GREY;
-        else
-            state.matrix[static_cast<size_t>(row)][static_cast<size_t>(col)] = 0;
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Ensure the piece at the current bag index is the desired type
 // ---------------------------------------------------------------------------
 void TestRunner::ensurePieceType(PieceType type) {
@@ -49,11 +37,11 @@ void TestRunner::ensurePieceType(PieceType type) {
 
     if (bag[idx]->getColor() == targetColor) return;
 
-    for (size_t i = idx + 1; i < bag.size(); i++) {
-        if (bag[i]->getColor() == targetColor) {
-            bag[idx].swap(bag[i]);
-            return;
-        }
+    auto it = std::find_if(bag.begin() + static_cast<ptrdiff_t>(idx) + 1, bag.end(),
+                           [targetColor](const auto &p) { return p->getColor() == targetColor; });
+    if (it != bag.end()) {
+        bag[idx].swap(*it);
+        return;
     }
 }
 
@@ -122,9 +110,7 @@ void TestRunner::renderAndDelay(int ms) {
 
 // ---------------------------------------------------------------------------
 void TestRunner::printProgress() const {
-    int passed = 0;
-    for (const auto &r : _results)
-        if (r.passed) passed++;
+    auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
 
     rlutil::locate(1, 4);
     cout << "  Progress: " << _results.size() << " tests run, " << passed << " passed, "
@@ -356,9 +342,7 @@ void TestRunner::run() {
 
     // Show summary and wait for keypress
     rlutil::locate(1, 6);
-    int passed = 0;
-    for (const auto &r : _results)
-        if (r.passed) passed++;
+    auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
 
     cout << "  Results: " << passed << "/" << _results.size() << " passed" << endl;
 

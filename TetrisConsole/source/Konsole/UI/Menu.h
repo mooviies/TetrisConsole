@@ -10,12 +10,8 @@
 
 struct OptionChoice {
     OptionChoice(const int s, const std::vector<std::string> &o, const std::map<std::string, std::string> &v,
-                 const bool e = false) {
-        selected = s;
-        options = o;
-        values = v;
-        exitAllMenus = e;
-    }
+                 const bool e = false)
+        : selected(s), exitAllMenus(e), options(o), values(v) {}
 
     int selected;
     bool exitAllMenus;

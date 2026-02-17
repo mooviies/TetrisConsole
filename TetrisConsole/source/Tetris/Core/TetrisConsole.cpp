@@ -104,21 +104,21 @@ int main() {
     HelpDisplay help;
     Tetris tetris(pause, gameOver, highScores);
 
-    Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); };
+    Menu::shouldExitGame = [&tetris]() { return tetris.doExit(); }; // NOLINT(dangling) — both live in main
     Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };
 
     // --- New Game menu (Level + Start) ---
-    newGame.addOptionCloseAllMenu("Start", [&tetris](OptionChoice oc) {
+    newGame.addOptionCloseAllMenu("Start", [&tetris](const OptionChoice &oc) {
         int level = 1;
         try {
-            level = stoi(oc.values["Level"]);
+            level = stoi(oc.values.at("Level"));
         } catch (...) {}
         tetris.setStartingLevel(level);
 
         auto v = GameVariant::Marathon;
-        if (oc.values["Variant"] == "Sprint")
+        if (oc.values.at("Variant") == "Sprint")
             v = GameVariant::Sprint;
-        else if (oc.values["Variant"] == "Ultra")
+        else if (oc.values.at("Variant") == "Ultra")
             v = GameVariant::Ultra;
         tetris.setVariant(v);
 
@@ -296,6 +296,8 @@ int main() {
         GameRenderer::renderTitle("A classic in console!");
     }
 
+    Menu::shouldExitGame = nullptr;
+    Menu::onResize = nullptr;
     SoundEngine::cleanup();
     Input::cleanup();
     Platform::cleanupConsole();

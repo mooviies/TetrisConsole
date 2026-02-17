@@ -17,6 +17,7 @@ void RowDrawContext::setBackgroundColor(const int color) {
     rlutil::setBackgroundColor(color);
 }
 
+// cppcheck-suppress functionStatic
 void RowDrawContext::print(const std::string &text) {
     std::cout << text;
 }

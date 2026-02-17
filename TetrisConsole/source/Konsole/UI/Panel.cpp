@@ -128,58 +128,6 @@ vector<int> Panel::columnBoundaries(const vector<Cell> &cells) const {
     return boundaries;
 }
 
-string Panel::renderTextRow(const RowData &row) const {
-    vector<int> widths = computeColumnWidths(row.cells);
-    string result = "║";
-
-    for (size_t i = 0; i < row.cells.size(); i++) {
-        if (i > 0) result += "║";
-
-        const Cell &cell = row.cells[i];
-        int w = widths[i];
-        int textLen = static_cast<int>(cell.text.length());
-        int padding = w - textLen;
-
-        if (padding < 0) {
-            result += cell.text.substr(0, static_cast<size_t>(w));
-        } else {
-            switch (cell.align) {
-                case Align::Left: {
-                    result += " ";
-                    result += cell.text;
-                    for (int p = 0; p < padding - 1; p++)
-                        result += " ";
-                    break;
-                }
-                case Align::Center: {
-                    int left = padding / 2;
-                    int right = padding - left;
-                    for (int p = 0; p < left; p++)
-                        result += " ";
-                    result += cell.text;
-                    for (int p = 0; p < right; p++)
-                        result += " ";
-                    break;
-                }
-                case Align::Right: {
-                    for (int p = 0; p < padding - 1; p++)
-                        result += " ";
-                    result += cell.text;
-                    result += " ";
-                    break;
-                }
-                case Align::Fill: {
-                    result += cell.text;
-                    break;
-                }
-            }
-        }
-    }
-
-    result += "║";
-    return result;
-}
-
 string Panel::renderSeparator(const size_t rowIndex) const {
     // Junction characters adapt to column boundaries of neighboring TEXT rows
     set<int> aboveBounds, belowBounds;
@@ -194,6 +142,7 @@ string Panel::renderSeparator(const size_t rowIndex) const {
     }
 
     for (size_t i = rowIndex + 1; i < _rows.size(); i++) {
+        // cppcheck-suppress useStlAlgorithm
         if (_rows[i].type == RowData::Type::TEXT) {
             for (int b : columnBoundaries(_rows[i].cells))
                 belowBounds.insert(b);
@@ -322,6 +271,7 @@ void Panel::drawFull() {
         string top = "╔";
         set<int> firstBounds;
         for (const auto &row : _rows) {
+            // cppcheck-suppress useStlAlgorithm
             if (row.type == RowData::Type::TEXT) {
                 for (int b : columnBoundaries(row.cells))
                     firstBounds.insert(b);
@@ -353,6 +303,7 @@ void Panel::drawFull() {
         string bottom = "╚";
         set<int> lastBounds;
         for (auto it = _rows.rbegin(); it != _rows.rend(); ++it) {
+            // cppcheck-suppress useStlAlgorithm
             if (it->type == RowData::Type::TEXT) {
                 for (int b : columnBoundaries(it->cells))
                     lastBounds.insert(b);

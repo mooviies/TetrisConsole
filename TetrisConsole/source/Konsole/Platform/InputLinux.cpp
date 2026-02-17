@@ -115,14 +115,8 @@ void Input::pollKeys() {
 
     // Map pressed keys to actions
     for (size_t a = 0; a < s_bindings.size(); a++) {
-        for (KeyCode key : s_bindings[a]) {
-            for (KeyCode p : pressed) {
-                if (p == key) {
-                    s_actions[a] = true;
-                    break;
-                }
-            }
-            if (s_actions[a]) break;
-        }
+        s_actions[a] = std::any_of(s_bindings[a].begin(), s_bindings[a].end(), [&pressed](KeyCode key) {
+            return std::any_of(pressed.begin(), pressed.end(), [key](KeyCode p) { return p == key; });
+        });
     }
 }

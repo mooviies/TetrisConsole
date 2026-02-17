@@ -90,7 +90,6 @@ private:
     void printProgress() const;
 
     static std::vector<TestScenario> buildScenarios();
-    static void parseRow(GameState &state, int row, const std::string &pattern);
 
     GameState _state;
     GameController _controller;

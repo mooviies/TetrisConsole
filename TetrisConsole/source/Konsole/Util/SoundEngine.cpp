@@ -132,7 +132,7 @@ static ma_result embeddedVFS_onTell(ma_vfs *pVFS, const ma_vfs_file file, ma_int
 
 static ma_result embeddedVFS_onInfo(ma_vfs *pVFS, const ma_vfs_file file, ma_file_info *pInfo) {
     (void)pVFS;
-    const auto ef = static_cast<EmbeddedFile *>(file);
+    const auto *ef = static_cast<const EmbeddedFile *>(file);
     pInfo->sizeInBytes = ef->size;
     return MA_SUCCESS;
 }

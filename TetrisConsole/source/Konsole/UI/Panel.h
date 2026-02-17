@@ -16,7 +16,7 @@ struct Cell {
     int width = 0;  // 0 = auto
 
     Cell() = default;
-    Cell(std::string t, const Align a = Align::Left, const int c = 15, const int w = 0)
+    explicit Cell(std::string t, const Align a = Align::Left, const int c = 15, const int w = 0)
         : text(std::move(t)), align(a), color(c), width(w) {}
 };
 
@@ -72,7 +72,6 @@ private:
 
     void ensureWidth() const;
     std::vector<int> computeColumnWidths(const std::vector<Cell> &cells) const;
-    std::string renderTextRow(const RowData &row) const;
     std::string renderSeparator(size_t rowIndex) const;
     void drawColoredRow(int x, int y, const RowData &row) const;
     std::vector<int> columnBoundaries(const std::vector<Cell> &cells) const;
