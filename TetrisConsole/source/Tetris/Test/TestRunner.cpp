@@ -33,11 +33,11 @@ TestRunner::TestRunner() : _controller(Timer::instance()) {
 void TestRunner::ensurePieceType(PieceType type) {
     const int targetColor = getPieceData(type).color;
     auto &bag = _state.pieces.bag;
-    auto idx = _state.pieces.bagIndex;
+    const auto idx = _state.pieces.bagIndex;
 
     if (bag[idx]->getColor() == targetColor) return;
 
-    auto it = std::find_if(bag.begin() + static_cast<ptrdiff_t>(idx) + 1, bag.end(),
+    const auto it = std::find_if(bag.begin() + static_cast<ptrdiff_t>(idx) + 1, bag.end(),
                            [targetColor](const auto &p) { return p->getColor() == targetColor; });
     if (it != bag.end()) {
         bag[idx].swap(*it);
@@ -110,7 +110,7 @@ void TestRunner::renderAndDelay(int ms) {
 
 // ---------------------------------------------------------------------------
 void TestRunner::printProgress() const {
-    auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
+    const auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
 
     rlutil::locate(1, 4);
     cout << "  Progress: " << _results.size() << " tests run, " << passed << " passed, "
@@ -334,7 +334,7 @@ void TestRunner::run() {
     rlutil::cls();
     GameRenderer::renderTitle("Test Runner");
 
-    auto scenarios = buildScenarios();
+    const auto scenarios = buildScenarios();
     for (const auto &scenario : scenarios)
         runScenario(scenario);
 
@@ -342,7 +342,7 @@ void TestRunner::run() {
 
     // Show summary and wait for keypress
     rlutil::locate(1, 6);
-    auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
+    const auto passed = std::count_if(_results.begin(), _results.end(), [](const auto &r) { return r.passed; });
 
     cout << "  Results: " << passed << "/" << _results.size() << " passed" << endl;
 
@@ -369,8 +369,8 @@ void TestRunner::writeReport() const {
     ofstream out(path);
     if (!out.is_open()) return;
 
-    auto now = chrono::system_clock::now();
-    auto time = chrono::system_clock::to_time_t(now);
+    const auto now = chrono::system_clock::now();
+    const auto time = chrono::system_clock::to_time_t(now);
     out << "TetrisConsole Test Report — " << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << "\n";
     out << "================================================\n\n";
 
@@ -400,7 +400,7 @@ void TestRunner::writeReport() const {
 static vector<tuple<int, int, int>> rowCells(int row, const string &pattern) {
     vector<tuple<int, int, int>> cells;
     for (int col = 0; col < TETRIS_WIDTH && col < static_cast<int>(pattern.size()); col++) {
-        char ch = pattern[static_cast<size_t>(col)];
+        const char ch = pattern[static_cast<size_t>(col)];
         if (ch == 'X') cells.emplace_back(row, col, Color::GREY);
     }
     return cells;

@@ -18,6 +18,8 @@ static constexpr int kWindowWidth = 80;
 static constexpr int kWindowHeight = 28;
 static constexpr int kTitleHeight = 5;
 static constexpr int kGap = 1;
+static constexpr int kAvailableTop = kTitleHeight + 1;
+static constexpr int kAvailableHeight = kWindowHeight - kAvailableTop;
 
 HighScoreDisplay::HighScoreDisplay() : _leftPanel(kLeftInterior), _rightPanel(kRightInterior) {
     // --- Left panel: tab row + 10 list rows ---
@@ -50,21 +52,18 @@ HighScoreDisplay::HighScoreDisplay() : _leftPanel(kLeftInterior), _rightPanel(kR
 }
 
 void HighScoreDisplay::reposition() {
-    int lw = _leftPanel.width();
-    int rw = _rightPanel.width();
-    int totalW = lw + kGap + rw;
+    const int lw = _leftPanel.width();
+    const int rw = _rightPanel.width();
+    const int totalW = lw + kGap + rw;
 
-    int availableTop = kTitleHeight + 1;
-    int availableHeight = kWindowHeight - availableTop;
+    const int lh = _leftPanel.height();
+    const int rh = _rightPanel.height();
 
-    int lh = _leftPanel.height();
-    int rh = _rightPanel.height();
+    const int lx = Platform::offsetX() + 1 + (kWindowWidth - totalW) / 2;
+    const int rx = lx + lw + kGap;
 
-    int lx = Platform::offsetX() + 1 + (kWindowWidth - totalW) / 2;
-    int rx = lx + lw + kGap;
-
-    int ly = Platform::offsetY() + availableTop + (availableHeight - lh) / 2;
-    int ry = Platform::offsetY() + availableTop + (availableHeight - rh) / 2;
+    const int ly = Platform::offsetY() + kAvailableTop + (kAvailableHeight - lh) / 2;
+    const int ry = Platform::offsetY() + kAvailableTop + (kAvailableHeight - rh) / 2;
 
     _leftPanel.setPosition(lx, ly);
     _rightPanel.setPosition(rx, ry);
@@ -89,7 +88,7 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord> &hs) {
             if (name.size() > 10) name.resize(10);
             while (name.size() < 10)
                 name += ' ';
-            string score = Utility::valueToString(rec.score, 10);
+            const string score = Utility::valueToString(rec.score, 10);
             string entry = prefix;
             entry += rank;
             entry += name;
@@ -179,7 +178,7 @@ void HighScoreDisplay::open(const HighScoreTable &allHighscores, GameVariant ini
                 }
                 break;
             case rlutil::KEY_LEFT: {
-                auto idx = static_cast<size_t>(_activeTab);
+                const auto idx = static_cast<size_t>(_activeTab);
                 _activeTab = static_cast<GameVariant>(idx == 0 ? VARIANT_COUNT - 1 : idx - 1);
                 _selected = 0;
                 updateTabRow();
@@ -187,7 +186,7 @@ void HighScoreDisplay::open(const HighScoreTable &allHighscores, GameVariant ini
                 break;
             }
             case rlutil::KEY_RIGHT: {
-                auto idx = static_cast<size_t>(_activeTab);
+                const auto idx = static_cast<size_t>(_activeTab);
                 _activeTab = static_cast<GameVariant>((idx + 1) % VARIANT_COUNT);
                 _selected = 0;
                 updateTabRow();
@@ -233,9 +232,9 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable &allHighscores, co
 
     // Build merged list: insert new record at correct sorted position
     auto merged = allHighscores[static_cast<size_t>(variant)];
-    auto it = lower_bound(merged.begin(), merged.end(), newRecord,
+    const auto it = lower_bound(merged.begin(), merged.end(), newRecord,
                           [](const HighScoreRecord &a, const HighScoreRecord &b) { return a.score > b.score; });
-    int rank = static_cast<int>(it - merged.begin());
+    const int rank = static_cast<int>(it - merged.begin());
     merged.insert(it, newRecord);
     if (merged.size() > 10) merged.resize(10);
 
@@ -247,12 +246,12 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable &allHighscores, co
     updateDisplay(merged);
 
     // Highlight the new entry row in yellow
-    auto rankIdx = static_cast<size_t>(rank);
+    const auto rankIdx = static_cast<size_t>(rank);
     _leftPanel.setCellColor(_listRows[rankIdx], 0, rlutil::YELLOW);
 
     // Start confetti animation
-    int ox = Platform::offsetX();
-    int oy = Platform::offsetY();
+    const int ox = Platform::offsetX();
+    const int oy = Platform::offsetY();
     _confetti.start(kWindowWidth, kWindowHeight, ox, oy, buildExclusionZones(ox, oy, _leftPanel, _rightPanel));
 
     Platform::flushInput();
@@ -265,9 +264,9 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable &allHighscores, co
         for (int i = static_cast<int>(name.size()); i < kMaxName; i++)
             display += '_';
 
-        string prefix = "> ";
-        string rankStr = Utility::valueToString(rank + 1, 2) + ". ";
-        string scoreStr = Utility::valueToString(newRecord.score, 10);
+        const string prefix = "> ";
+        const string rankStr = Utility::valueToString(rank + 1, 2) + ". ";
+        const string scoreStr = Utility::valueToString(newRecord.score, 10);
         string entry = prefix;
         entry += rankStr;
         entry += display;
@@ -282,7 +281,7 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable &allHighscores, co
             cout << flush;
         }
 
-        int key = Platform::getKeyTimeout(50);
+        const int key = Platform::getKeyTimeout(50);
 
         if (key == -1) {
             if (!Platform::isTerminalTooSmall()) {
@@ -307,8 +306,8 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable &allHighscores, co
                 _leftPanel.invalidate();
                 _rightPanel.invalidate();
                 _confetti.stop();
-                int newOx = Platform::offsetX();
-                int newOy = Platform::offsetY();
+                const int newOx = Platform::offsetX();
+                const int newOy = Platform::offsetY();
                 _confetti.start(kWindowWidth, kWindowHeight, newOx, newOy,
                                 buildExclusionZones(newOx, newOy, _leftPanel, _rightPanel));
             }

@@ -161,12 +161,12 @@ void Menu::generate() {
     _panel.setPosition(_x, _y);
 
     if (_hasHints) {
-        size_t hintWidth = max(_longestHint + 2, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
+        const size_t hintWidth = max(_longestHint + 2, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
         _hintPanel = Panel(static_cast<int>(hintWidth));
         _hintRow = _hintPanel.addRow("", Align::Center, Color::GREY);
-        int hintPanelWidth = _hintPanel.width();
-        int hx = Platform::offsetX() + 1 + (windowWidth - hintPanelWidth) / 2;
-        int hy = _y + _height;
+        const int hintPanelWidth = _hintPanel.width();
+        const int hx = Platform::offsetX() + 1 + (windowWidth - hintPanelWidth) / 2;
+        const int hy = _y + _height;
         _hintPanel.setPosition(hx, hy);
     }
 
@@ -196,7 +196,7 @@ void Menu::draw() {
         text += _options[i];
 
         if (_optionsValues.find(_options[i]) != _optionsValues.end()) {
-            size_t namePad = _longestOptionWithChoice - _options[i].length();
+            const size_t namePad = _longestOptionWithChoice - _options[i].length();
             text.append(namePad, ' ');
             text += " : ";
             text += _optionsValues[_options[i]][_optionsValuesChoices[_options[i]]];
@@ -210,11 +210,11 @@ void Menu::draw() {
         const string &name = _options[static_cast<size_t>(_choice)];
 
         // Check value-specific hint first
-        if (auto valHintIt = _optionValueHints.find(name); valHintIt != _optionValueHints.end()) {
-            auto valIt = _optionsValues.find(name);
+        if (const auto valHintIt = _optionValueHints.find(name); valHintIt != _optionValueHints.end()) {
+            const auto valIt = _optionsValues.find(name);
             if (valIt != _optionsValues.end()) {
                 const string &currentValue = valIt->second[static_cast<size_t>(_optionsValuesChoices[name])];
-                auto it = valHintIt->second.find(currentValue);
+                const auto it = valHintIt->second.find(currentValue);
                 if (it != valHintIt->second.end()) hint = it->second;
             }
         }
@@ -238,7 +238,7 @@ void Menu::clear() const {
 }
 
 void Menu::setValueChoice(const string &name, const string &value) {
-    auto valuesIt = _optionsValues.find(name);
+    const auto valuesIt = _optionsValues.find(name);
     if (valuesIt == _optionsValues.end()) return;
     const auto &values = valuesIt->second;
     for (size_t i = 0; i < values.size(); i++) {
@@ -250,9 +250,9 @@ void Menu::setValueChoice(const string &name, const string &value) {
 }
 
 void Menu::select(const int choice) {
-    string name = _options[choice];
+    const string name = _options[choice];
 
-    if (auto it = _actions.find(name); it != _actions.end() && it->second) {
+    if (const auto it = _actions.find(name); it != _actions.end() && it->second) {
         clear();
         it->second();
         if (onResize) onResize();
@@ -261,8 +261,8 @@ void Menu::select(const int choice) {
         return;
     }
 
-    if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
-        if (auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second) cb->second();
+    if (const auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
+        if (const auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second) cb->second();
         clear();
         if (it->second->open(false, true).exitAllMenus) {
             _close = true;
@@ -273,7 +273,7 @@ void Menu::select(const int choice) {
         }
     }
 
-    if (auto it = _callbacks.find(name); it != _callbacks.end() && it->second) {
+    if (const auto it = _callbacks.find(name); it != _callbacks.end() && it->second) {
         it->second(OptionChoice(_choice, _options, generateValues()));
     }
 

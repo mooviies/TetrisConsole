@@ -27,7 +27,7 @@ void Input::pollKeys() {
         for (ssize_t i = 0; i < n; i++) {
             if (buf[i] == '\033') {
                 if (i + 2 < n && buf[i + 1] == '[') {
-                    unsigned char c = buf[i + 2];
+                    const unsigned char c = buf[i + 2];
                     // Arrow keys: ESC [ A/B/C/D
                     if (c == 'A') {
                         pressed.push_back(KeyCode::ArrowUp);
@@ -88,7 +88,7 @@ void Input::pollKeys() {
                     pressed.push_back(KeyCode::Escape);
                 }
             } else {
-                unsigned char c = buf[i];
+                const unsigned char c = buf[i];
                 if (c == '\n' || c == '\r')
                     pressed.push_back(KeyCode::Enter);
                 else if (c == '\t')

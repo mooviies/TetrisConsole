@@ -132,7 +132,7 @@ void GameController::stepCompletion(GameState &state) const {
 
 void GameController::shuffle(GameState &state, const size_t start) {
     for (int i = 6; i >= 0; i--) {
-        int j = Random::getInteger(0, i);
+        const int j = Random::getInteger(0, i);
         if (i != j)
             state.pieces.bag[start + static_cast<size_t>(i)].swap(state.pieces.bag[start + static_cast<size_t>(j)]);
     }

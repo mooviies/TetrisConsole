@@ -27,7 +27,7 @@ std::vector<std::string> wrapText(const std::string &text, int maxWidth) {
         lines.push_back(text);
         return lines;
     }
-    auto pos = text.rfind(' ', static_cast<size_t>(maxWidth));
+    const auto pos = text.rfind(' ', static_cast<size_t>(maxWidth));
     if (pos == std::string::npos) {
         lines.push_back(text.substr(0, static_cast<size_t>(maxWidth)));
         lines.push_back(text.substr(static_cast<size_t>(maxWidth)));
@@ -117,7 +117,7 @@ void GameRenderer::render(const GameState &state, const bool playfieldVisible) {
         const int baseY = Layout::kSideNotifBaseY + oy;
 
         if (!lc.notificationText.empty()) {
-            auto lines = wrapText(lc.notificationText, Layout::kSideNotifWidth);
+            const auto lines = wrapText(lc.notificationText, Layout::kSideNotifWidth);
             const int startY = baseY - static_cast<int>(lines.size()) + 1;
             for (size_t i = 0; i < lines.size(); i++)
                 renderCenteredLine(baseX, startY + static_cast<int>(i), Layout::kSideNotifWidth, lines[i],

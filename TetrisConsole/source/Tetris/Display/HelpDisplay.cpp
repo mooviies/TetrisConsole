@@ -55,7 +55,7 @@ HelpDisplay::HelpDisplay() : _leftPanel(kLeftInterior), _rightPanel(kRightInteri
 
 // Column assignment: 0 = control keys, 1 = letters/digits, 2 = numpad
 static int keyColumn(KeyCode key) {
-    int k = static_cast<int>(key);
+    const int k = static_cast<int>(key);
     if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9')) return 1;
     if (key >= KeyCode::Numpad0 && key <= KeyCode::NumpadDel) return 2;
     return 0;
@@ -64,14 +64,14 @@ static int keyColumn(KeyCode key) {
 void HelpDisplay::refreshBindings() {
     for (int i = 0; i < kControlCount; i++) {
         const auto &keys = Input::getBindings(kActions[i]);
-        size_t row = _controlRows[static_cast<size_t>(i)];
+        const size_t row = _controlRows[static_cast<size_t>(i)];
 
         string cols[kMaxKeyCols];
         vector<KeyCode> overflow;
 
         // First pass: place each key in its preferred column
         for (auto key : keys) {
-            int col = keyColumn(key);
+            const int col = keyColumn(key);
             if (col < kMaxKeyCols && cols[col].empty())
                 cols[col] = Input::keyName(key);
             else
@@ -79,7 +79,7 @@ void HelpDisplay::refreshBindings() {
         }
 
         // Second pass: place overflow keys in any empty column
-        for (auto key : overflow) {
+        for (const auto key : overflow) {
             for (auto &col : cols) {
                 // cppcheck-suppress useStlAlgorithm
                 if (col.empty()) {
@@ -95,21 +95,21 @@ void HelpDisplay::refreshBindings() {
 }
 
 void HelpDisplay::reposition() {
-    int lw = _leftPanel.width();
-    int rw = _rightPanel.width();
-    int totalW = lw + kGap + rw;
+    const int lw = _leftPanel.width();
+    const int rw = _rightPanel.width();
+    const int totalW = lw + kGap + rw;
 
-    int availableTop = kTitleHeight + 1;
-    int availableHeight = kWindowHeight - availableTop;
+    constexpr int availableTop = kTitleHeight + 1;
+    constexpr int availableHeight = kWindowHeight - availableTop;
 
-    int lh = _leftPanel.height();
-    int rh = _rightPanel.height();
+    const int lh = _leftPanel.height();
+    const int rh = _rightPanel.height();
 
-    int lx = Platform::offsetX() + 1 + (kWindowWidth - totalW) / 2;
-    int rx = lx + lw + kGap;
+    const int lx = Platform::offsetX() + 1 + (kWindowWidth - totalW) / 2;
+    const int rx = lx + lw + kGap;
 
-    int ly = Platform::offsetY() + availableTop + (availableHeight - lh) / 2;
-    int ry = Platform::offsetY() + availableTop + (availableHeight - rh) / 2;
+    const int ly = Platform::offsetY() + availableTop + (availableHeight - lh) / 2;
+    const int ry = Platform::offsetY() + availableTop + (availableHeight - rh) / 2;
 
     _leftPanel.setPosition(lx, ly);
     _rightPanel.setPosition(rx, ry);

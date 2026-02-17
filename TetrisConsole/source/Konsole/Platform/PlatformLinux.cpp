@@ -148,7 +148,7 @@ bool Platform::wasResized() {
 
 void Platform::showResizePrompt() {
     rlutil::cls();
-    int row = std::max(1, rlutil::trows() / 2);
+    const int row = std::max(1, rlutil::trows() / 2);
     rlutil::locate(1, row);
     rlutil::setColor(rlutil::WHITE);
     std::cout << "  Please resize terminal to " << CONSOLE_WIDTH << "x" << CONSOLE_HEIGHT << std::flush;
@@ -167,8 +167,8 @@ int Platform::offsetY() {
 }
 
 void Platform::updateOffsets() {
-    int cols = rlutil::tcols();
-    int rows = rlutil::trows();
+    const int cols = rlutil::tcols();
+    const int rows = rlutil::trows();
     s_offsetX = std::max(0, (cols - CONSOLE_WIDTH) / 2);
     s_offsetY = std::max(0, (rows - CONSOLE_HEIGHT) / 2);
 }

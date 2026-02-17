@@ -39,7 +39,7 @@ void LineClear::stepPattern(GameState &state) const {
         string text;
         int color = 0;
         if (isTSpin) {
-            static const char *const names[] = {"T-SPIN", "T-SPIN SINGLE", "T-SPIN DOUBLE", "T-SPIN TRIPLE"};
+            static constexpr char *const names[] = {"T-SPIN", "T-SPIN SINGLE", "T-SPIN DOUBLE", "T-SPIN TRIPLE"};
             text = names[min(linesCleared, 3)];
             color = Color::LIGHTMAGENTA;
         } else if (isMiniTSpin) {

@@ -37,8 +37,8 @@ void Panel::addSeparator() {
 }
 
 size_t Panel::addElement(const shared_ptr<PanelElement> &element) {
-    size_t firstRow = _rows.size();
-    int h = element->height();
+    const size_t firstRow = _rows.size();
+    const int h = element->height();
     for (int i = 0; i < h; i++) {
         RowData row;
         row.type = RowData::Type::ELEMENT;
@@ -57,12 +57,12 @@ void Panel::ensureWidth() const {
         if (row.type != RowData::Type::TEXT) continue;
 
         if (row.cells.size() == 1) {
-            int w = static_cast<int>(row.cells[0].text.length()) + 2;
+            const int w = static_cast<int>(row.cells[0].text.length()) + 2;
             if (w > maxW) maxW = w;
         } else {
             int w = 0;
             for (const auto &cell : row.cells) {
-                int cellMin = max(cell.width, static_cast<int>(cell.text.length()) + 2);
+                const int cellMin = max(cell.width, static_cast<int>(cell.text.length()) + 2);
                 w += cellMin;
             }
             w += static_cast<int>(row.cells.size()) - 1; // column separators
@@ -75,12 +75,12 @@ void Panel::ensureWidth() const {
 }
 
 vector<int> Panel::computeColumnWidths(const vector<Cell> &cells) const {
-    int n = static_cast<int>(cells.size());
+    const int n = static_cast<int>(cells.size());
     if (n == 0) return {};
 
     if (n == 1) return {_interiorWidth};
 
-    int available = _interiorWidth - (n - 1); // subtract column separators
+    const int available = _interiorWidth - (n - 1); // subtract column separators
     int fixedSum = 0;
     int autoCount = 0;
 
@@ -92,8 +92,8 @@ vector<int> Panel::computeColumnWidths(const vector<Cell> &cells) const {
         }
     }
 
-    int remaining = available - fixedSum;
-    int autoWidth = autoCount > 0 ? remaining / autoCount : 0;
+    const int remaining = available - fixedSum;
+    const int autoWidth = autoCount > 0 ? remaining / autoCount : 0;
     int autoExtra = autoCount > 0 ? remaining % autoCount : 0;
 
     vector<int> widths;
@@ -118,7 +118,7 @@ vector<int> Panel::columnBoundaries(const vector<Cell> &cells) const {
     vector<int> boundaries;
     if (cells.size() <= 1) return boundaries;
 
-    vector<int> widths = computeColumnWidths(cells);
+    const vector<int> widths = computeColumnWidths(cells);
     int pos = 0;
     for (size_t i = 0; i < widths.size() - 1; i++) {
         pos += widths[i];
@@ -152,8 +152,8 @@ string Panel::renderSeparator(const size_t rowIndex) const {
 
     string result = "╠";
     for (int pos = 0; pos < _interiorWidth; pos++) {
-        bool above = aboveBounds.count(pos) > 0;
-        bool below = belowBounds.count(pos) > 0;
+        const bool above = aboveBounds.count(pos) > 0;
+        const bool below = belowBounds.count(pos) > 0;
 
         if (above && below)
             result += "╬";
@@ -169,7 +169,7 @@ string Panel::renderSeparator(const size_t rowIndex) const {
 }
 
 void Panel::drawColoredRow(const int x, const int y, const RowData &row) const {
-    vector<int> widths = computeColumnWidths(row.cells);
+    const vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
     rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
@@ -182,9 +182,9 @@ void Panel::drawColoredRow(const int x, const int y, const RowData &row) const {
         }
 
         const Cell &cell = row.cells[i];
-        int w = widths[i];
-        int textLen = static_cast<int>(cell.text.length());
-        int padding = w - textLen;
+        const int w = widths[i];
+        const int textLen = static_cast<int>(cell.text.length());
+        const int padding = w - textLen;
 
         rlutil::setColor(cell.color);
 
@@ -199,8 +199,8 @@ void Panel::drawColoredRow(const int x, const int y, const RowData &row) const {
                     break;
                 }
                 case Align::Center: {
-                    int left = padding / 2;
-                    int right = padding - left;
+                    const int left = padding / 2;
+                    const int right = padding - left;
                     for (int p = 0; p < left; p++)
                         cout << " ";
                     cout << cell.text;
@@ -325,7 +325,7 @@ void Panel::drawFull() {
 void Panel::drawSingleRow(const size_t row) const {
     if (row >= _rows.size()) return;
 
-    int rowY = _y + static_cast<int>(row) + 1;
+    const int rowY = _y + static_cast<int>(row) + 1;
     if (_rows[row].type == RowData::Type::SEPARATOR) {
         rlutil::locate(_x, rowY);
         rlutil::setBackgroundColor(Color::BLACK);
@@ -347,9 +347,9 @@ void Panel::drawSingleRow(const size_t row) const {
 }
 
 void Panel::clear() const {
-    int w = width();
-    int h = height();
-    string blank(static_cast<size_t>(w), ' ');
+    const int w = width();
+    const int h = height();
+    const string blank(static_cast<size_t>(w), ' ');
     rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
     for (int i = 0; i < h; i++) {

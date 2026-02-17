@@ -218,7 +218,7 @@ void SoundEngine::cleanup() {
 }
 
 void SoundEngine::playMusic(const string &name) {
-    auto it = s_sounds.find(name);
+    const auto it = s_sounds.find(name);
     if (it == s_sounds.end() || it->second == nullptr) return;
     ma_sound *sound = it->second.get();
 
@@ -236,7 +236,7 @@ void SoundEngine::playMusic(const string &name) {
 void SoundEngine::playSound(const string &name) {
     if (s_muteState == MuteState::AllMuted) return;
 
-    auto it = s_sounds.find(name);
+    const auto it = s_sounds.find(name);
     if (it == s_sounds.end() || it->second == nullptr) return;
     ma_sound *sound = it->second.get();
 

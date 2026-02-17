@@ -353,7 +353,7 @@ enum {
 /// Only Arrows, Esc, Enter and Space are currently working properly.
 RLUTIL_INLINE int getkey(void) {
 	#ifndef _WIN32
-	int cnt = kbhit(); // for ANSI escapes processing
+	const int cnt = kbhit(); // for ANSI escapes processing
 	#endif
 	int k = getch();
 	switch(k) {

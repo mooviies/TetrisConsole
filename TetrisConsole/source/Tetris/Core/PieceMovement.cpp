@@ -11,7 +11,6 @@ static constexpr auto kAutorepeatLeft = "autorepeatleft";
 static constexpr auto kAutorepeatRight = "autorepeatright";
 static constexpr auto kLockDown = "lockdown";
 static constexpr auto kGeneration = "generation";
-
 static constexpr double kAutorepeatDelay = 0.25;
 static constexpr double kAutorepeatSpeed = 0.01;
 static constexpr double kLockDownDelay = 0.5;
@@ -53,13 +52,18 @@ void PieceMovement::resetTimers() const {
 void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
     if (state.pieces.current == nullptr) return;
 
+    // Hard drop: instantly drop all the way and lock
     if (input.hardDrop && state.flags.stepState != GameStep::HardDrop) {
         state.queueSound(GameSound::HardDrop);
         state.flags.stepState = GameStep::HardDrop;
+        while (moveDown(state)) {
+            state.stats.score += kHardDropScore;
+        }
+        lock(state);
+        return;
     }
 
-    DropType dropType = input.softDrop ? DropType::Soft : DropType::Normal;
-    if (state.flags.stepState == GameStep::HardDrop) dropType = DropType::Hard;
+    const DropType dropType = input.softDrop ? DropType::Soft : DropType::Normal;
 
     if (const double interval = _gravity->fallInterval(state.stats.level, dropType);
         _timer.getSeconds(kFall) >= interval) {
@@ -67,8 +71,6 @@ void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
         if (moveDown(state)) {
             if (dropType == DropType::Soft)
                 state.stats.score += kSoftDropScore;
-            else if (dropType == DropType::Hard)
-                state.stats.score += kHardDropScore;
 
             if (state.lockDown.active) {
                 if (const int currentLine = state.pieces.current->getPosition().row;
@@ -79,11 +81,6 @@ void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
                 }
             }
         }
-    }
-
-    if (state.flags.stepState == GameStep::HardDrop) {
-        lock(state);
-        return;
     }
 
     if (!state.pieces.current->simulateMove(Vector2i(1, 0)) && !_timer.exist(kLockDown)) {

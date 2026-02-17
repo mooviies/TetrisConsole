@@ -131,7 +131,7 @@ void GameState::loadHighscore() {
             in.read(reinterpret_cast<char *>(&count), 4);
             if (!in) break;
 
-            size_t bucket = clamp(static_cast<size_t>(variantId), static_cast<size_t>(0), VARIANT_COUNT - 1);
+            const size_t bucket = clamp(static_cast<size_t>(variantId), static_cast<size_t>(0), VARIANT_COUNT - 1);
             for (uint32_t i = 0; i < count; i++) {
                 if (!in) break;
                 _highscores[bucket].push_back(readRecord(in));
@@ -295,8 +295,8 @@ void GameState::saveOptions() const {
     ofstream out(OPTIONS_FILE, ios::binary);
     if (!out.is_open()) return;
 
-    uint32_t magic = kOptMagic;
-    uint32_t version = kOptVersion;
+    constexpr uint32_t magic = kOptMagic;
+    constexpr uint32_t version = kOptVersion;
     out.write(reinterpret_cast<const char *>(&magic), 4);
     out.write(reinterpret_cast<const char *>(&version), 4);
 

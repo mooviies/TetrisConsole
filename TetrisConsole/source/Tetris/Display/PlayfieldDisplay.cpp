@@ -56,7 +56,7 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
             color = _state->lineClear.comboColor;
         }
         if (text != nullptr) {
-            const int totalWidth = TETRIS_WIDTH * 2;
+            constexpr int totalWidth = TETRIS_WIDTH * 2;
             const auto textLen = static_cast<int>(text->length());
             const int leftPad = (totalWidth - textLen) / 2;
             const int rightPad = totalWidth - textLen - leftPad;
