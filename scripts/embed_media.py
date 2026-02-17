@@ -4,7 +4,7 @@
 import os
 import sys
 
-MEDIA_DIR = os.path.join(os.path.dirname(__file__), "..", "TetrisConsole", "media")
+MEDIA_DIR = os.path.join(os.path.dirname(__file__), "..", "Tetrominos", "media")
 DEFAULT_BUILD_DIR = os.path.join(os.path.dirname(__file__), "..", "build")
 
 

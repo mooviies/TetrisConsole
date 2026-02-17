@@ -13,7 +13,7 @@ else()
 endif()
 
 # --- Konsole static library ---
-file(GLOB_RECURSE KONSOLE_SRCS TetrisConsole/source/Konsole/*.cpp)
+file(GLOB_RECURSE KONSOLE_SRCS Tetrominos/source/Konsole/*.cpp)
 
 if(WIN32)
     list(FILTER KONSOLE_SRCS EXCLUDE REGEX "Linux\\.cpp$")
@@ -24,12 +24,12 @@ endif()
 add_library(konsole STATIC ${KONSOLE_SRCS})
 
 target_include_directories(konsole PUBLIC
-    TetrisConsole/source/Konsole/Platform
-    TetrisConsole/source/Konsole/UI
-    TetrisConsole/source/Konsole/Util
+    Tetrominos/source/Konsole/Platform
+    Tetrominos/source/Konsole/UI
+    Tetrominos/source/Konsole/Util
 )
 target_include_directories(konsole SYSTEM PUBLIC
-    TetrisConsole/include
+    Tetrominos/include
     ${CMAKE_BINARY_DIR}
 )
 
@@ -48,7 +48,7 @@ else()
 endif()
 
 # --- Media embedding ---
-file(GLOB MEDIA_FILES TetrisConsole/media/*)
+file(GLOB MEDIA_FILES Tetrominos/media/*)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/media_data.h ${CMAKE_BINARY_DIR}/media_data.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
@@ -60,7 +60,7 @@ add_custom_target(media_embed DEPENDS ${CMAKE_BINARY_DIR}/media_data.h)
 add_dependencies(konsole media_embed)
 
 # --- Game executable ---
-file(GLOB_RECURSE GAME_SRCS TetrisConsole/source/Game/*.cpp)
+file(GLOB_RECURSE GAME_SRCS Tetrominos/source/Game/*.cpp)
 
 if(WIN32)
     set(TARGET_NAME Tetrominos)
@@ -71,18 +71,18 @@ endif()
 add_executable(${TARGET_NAME}
     ${GAME_SRCS}
     ${CMAKE_BINARY_DIR}/media_data.cpp
-        TetrisConsole/source/Game/Rules/GoalPolicy.cpp
-        TetrisConsole/source/Game/Rules/GoalPolicy.h
-        TetrisConsole/source/Game/Rules/VariantRule.cpp
-        TetrisConsole/source/Game/Rules/VariantRule.h
+        Tetrominos/source/Game/Rules/GoalPolicy.cpp
+        Tetrominos/source/Game/Rules/GoalPolicy.h
+        Tetrominos/source/Game/Rules/VariantRule.cpp
+        Tetrominos/source/Game/Rules/VariantRule.h
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE
-    TetrisConsole/source/Game/Core
-    TetrisConsole/source/Game/Piece
-    TetrisConsole/source/Game/Rules
-    TetrisConsole/source/Game/Display
-    TetrisConsole/source/Game/Test
+    Tetrominos/source/Game/Core
+    Tetrominos/source/Game/Piece
+    Tetrominos/source/Game/Rules
+    Tetrominos/source/Game/Display
+    Tetrominos/source/Game/Test
 )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE

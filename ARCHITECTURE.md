@@ -955,7 +955,7 @@ Shared via `add_compile_options()` (applies to both targets):
 - **GCC/Clang**: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`
 - **MSVC**: `/W3 /sdl`
 
-Vendored headers in `TetrisConsole/include/` use `-isystem` to suppress their warnings.
+Vendored headers in `Tetrominos/include/` use `-isystem` to suppress their warnings.
 
 ### Platform Linking
 
@@ -969,9 +969,9 @@ Attached to `konsole` with `PUBLIC` visibility (propagates to the executable):
 
 ### Media Embedding Pipeline
 
-`scripts/embed_media.py` runs at build time via `add_custom_command`, triggered when any file in `TetrisConsole/media/` changes:
+`scripts/embed_media.py` runs at build time via `add_custom_command`, triggered when any file in `Tetrominos/media/` changes:
 
-1. Scans `TetrisConsole/media/` for all files
+1. Scans `Tetrominos/media/` for all files
 2. Generates `${CMAKE_BINARY_DIR}/media_data.h` — declares `findEmbeddedMedia()`
 3. Generates `${CMAKE_BINARY_DIR}/media_data.cpp`:
    - One `static const unsigned char media_X[]` array per file (hex bytes)

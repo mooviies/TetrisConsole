@@ -109,7 +109,7 @@ All base points are multiplied by the current level. Consecutive Quads or T-spin
 ## Project Structure
 
 ```
-TetrisConsole/source/
+Tetrominos/source/
   Konsole/                  # Static library — platform abstraction & UI primitives
     Platform/               # OS abstraction (console init, keyboard input)
     UI/                     # Panel rendering, menus, colors

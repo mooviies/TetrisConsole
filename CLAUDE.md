@@ -42,7 +42,7 @@ Konsole is built as a **static library** (`libkonsole.a` / `konsole.lib`) that t
 ### Source Layout
 
 ```
-TetrisConsole/source/
+Tetrominos/source/
   Konsole/                  # Static library — platform abstraction & UI primitives
     Platform/               # OS abstraction (console, keyboard)
     UI/                     # Panel, Menu, Icon, Color, RowDrawContext
