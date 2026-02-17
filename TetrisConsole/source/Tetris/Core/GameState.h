@@ -135,6 +135,7 @@ public:
     GameMatrix matrix;
     GamePhase phase = GamePhase::Falling;
     LineClearState lineClear;
+    HardDropTrail hardDropTrail;
 
 private:
     bool _isDirty{};

@@ -109,6 +109,12 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
             ctx.setColor(Color::DARKGREY);
             ctx.print("██");
             ctx.setColor(Color::WHITE);
+        } else if (_visible && _state->hardDropTrail.active
+                   && _state->hardDropTrail.columns[i]
+                   && line >= _state->hardDropTrail.visibleStartRow
+                   && line < _state->hardDropTrail.endRow) {
+            ctx.setColor(_state->hardDropTrail.color);
+            ctx.print("░░");
         } else {
             ctx.setColor(Color::DARKGREY);
             if ((line % 2 == 0 && i % 2 != 0) || (line % 2 != 0 && i % 2 == 0))

@@ -11,6 +11,7 @@ static constexpr auto kAutorepeatLeft = "autorepeatleft";
 static constexpr auto kAutorepeatRight = "autorepeatright";
 static constexpr auto kLockDown = "lockdown";
 static constexpr auto kGeneration = "generation";
+static constexpr auto kHardDropTrail = "harddroptrail";
 static constexpr double kAutorepeatDelay = 0.25;
 static constexpr double kAutorepeatSpeed = 0.01;
 static constexpr double kLockDownDelay = 0.5;
@@ -47,6 +48,7 @@ void PieceMovement::resetTimers() const {
     _timer.stopTimer(kAutorepeatLeft);
     _timer.stopTimer(kAutorepeatRight);
     _timer.stopTimer(kLockDown);
+    _timer.stopTimer(kHardDropTrail);
 }
 
 void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
@@ -56,9 +58,33 @@ void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
     if (input.hardDrop && state.flags.stepState != GameStep::HardDrop) {
         state.queueSound(GameSound::HardDrop);
         state.flags.stepState = GameStep::HardDrop;
+
+        const int startRow = state.pieces.current->getPosition().row;
+        const int color = state.pieces.current->getColor();
+        bool columns[TETRIS_WIDTH]{};
+        for (int i = 0; i < TETRIS_WIDTH; i++)
+            columns[i] = state.pieces.current->isMino(startRow, i)
+                      || state.pieces.current->isMino(startRow + 1, i)
+                      || state.pieces.current->isMino(startRow + 2, i)
+                      || state.pieces.current->isMino(startRow + 3, i);
+
         while (moveDown(state)) {
             state.stats.score += kHardDropScore;
         }
+
+        const int endRow = state.pieces.current->getPosition().row;
+        if (endRow > startRow) {
+            auto &trail = state.hardDropTrail;
+            trail.startRow = startRow;
+            trail.endRow = endRow;
+            trail.visibleStartRow = startRow;
+            trail.color = color;
+            trail.active = true;
+            for (int i = 0; i < TETRIS_WIDTH; i++)
+                trail.columns[i] = columns[i];
+            _timer.resetTimer(kHardDropTrail);
+        }
+
         lock(state);
         return;
     }

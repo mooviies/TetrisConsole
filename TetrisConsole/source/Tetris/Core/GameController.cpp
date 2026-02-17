@@ -42,6 +42,23 @@ StepResult GameController::step(GameState &state, const InputSnapshot &input) {
 
     if (!state.flags.isStarted) return StepResult::Continue;
 
+    if (state.hardDropTrail.active) {
+        constexpr double kTrailDuration = 0.15;
+        const double elapsed = _timer.getSeconds("harddroptrail");
+        if (elapsed >= kTrailDuration) {
+            state.hardDropTrail.active = false;
+            state.markDirty();
+        } else {
+            const double t = elapsed / kTrailDuration;
+            const int total = state.hardDropTrail.endRow - state.hardDropTrail.startRow;
+            const int newStart = state.hardDropTrail.startRow + static_cast<int>(t * static_cast<double>(total));
+            if (newStart != state.hardDropTrail.visibleStartRow) {
+                state.hardDropTrail.visibleStartRow = newStart;
+                state.markDirty();
+            }
+        }
+    }
+
     switch (state.phase) {
         case GamePhase::Generation: stepGeneration(state); break;
         case GamePhase::Falling: _movement.stepFalling(state, input); break;
@@ -76,6 +93,7 @@ void GameController::reset(GameState &state) const {
     state.flags = {};
     state.phase = GamePhase::Falling;
     state.lineClear = {};
+    state.hardDropTrail = {};
     state.setPlayerName("");
 
     if (_variantRule->linesGoal() > 0) {
