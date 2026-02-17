@@ -577,6 +577,7 @@ static void cleanupConsole();
 static void flushInput();
 static void flushOutput();
 static int  getKey();              // blocking read (used by menus)
+static int  getKeyTimeout(int ms); // blocking read with timeout (-1 if none)
 static bool wasResized();
 static bool isTerminalTooSmall();
 static void showResizePrompt();
@@ -588,32 +589,53 @@ static std::string getDataDir();   // persistent data directory
 
 ### Linux
 
-**Console init**: saves original `termios` settings, enters alternate screen buffer (`\033[?1049h`), sets raw mode with:
-- `ICANON` off (no line buffering)
-- `ECHO` off
-- `ISIG` off (no Ctrl+C)
-- `VMIN=1` (blocking reads for menus)
-- `OPOST | ONLCR` on (so `\n` outputs as `\r\n`)
+**Console init** (`initConsole()`):
+1. Saves original `termios` settings for restoration on exit
+2. Enters alternate screen buffer (`\033[?1049h`) — restores the main screen on cleanup, like vim
+3. Registers `SIGWINCH` handler for terminal resize detection (no `SA_RESTART` flag, so `read()` returns `EINTR` immediately — lets the menu loop detect resizes without waiting for input)
+4. Sets raw mode via `tcsetattr()`:
+   - `ICANON` off (no line buffering)
+   - `ECHO` off
+   - `ISIG` off (no Ctrl+C — quit via in-app menu)
+   - `VMIN=1`, `VTIME=0` (blocking reads for menus; the game loop uses `select()` to avoid blocking)
+   - `OPOST | ONLCR` on (so `\n` outputs as `\r\n`)
+5. Hides cursor, sets console title, clears screen, resets colors, computes centering offsets
 
-Registers a `SIGWINCH` handler to detect terminal resizes.
+**Cleanup** (`cleanupConsole()`): restores original termios settings, shows cursor, resets colors, leaves alternate screen buffer (`\033[?1049l`). Guard flag `s_termiosRestored` prevents double-restore.
 
-**`getKey()`**: blocking read from stdin with ANSI escape sequence parsing. Reads one byte; if it's `ESC`, uses `select()` with 50ms timeout to read the rest of the escape sequence. Maps arrow keys to rlutil constants. This is separate from `Input::pollKeys()` — `getKey()` is for menus (blocking), `pollKeys()` is for the game loop (non-blocking).
+**`flushInput()`**: `tcflush(STDIN_FILENO, TCIFLUSH)` — discards unread terminal input.
 
-**Centering**: computes offsets to center the 80x29 game area in larger terminals: `offsetX = max(0, (cols - 80) / 2)`.
+**`getKey()`**: blocking read from stdin with ANSI escape sequence parsing. Reads one byte; if it's `ESC`, uses `select()` with 50ms timeout to read the rest of the escape sequence. Maps arrow keys to rlutil constants (`ESC[A` → UP, `ESC[B` → DOWN, etc.). This is separate from `Input::pollKeys()` — `getKey()` is for menus (blocking), `pollKeys()` is for the game loop (non-blocking).
 
-**Data directory**: `$XDG_DATA_HOME/TetrisConsole` or `~/.local/share/TetrisConsole`.
+**`getKeyTimeout(ms)`**: uses `select()` with the specified timeout on stdin. Returns `getKey()` if input arrives, or -1 on timeout.
 
-**Cleanup**: restores original terminal settings, shows cursor, leaves alternate screen buffer.
+**Resize handling**: `wasResized()` checks the `s_resized` flag (set by `SIGWINCH`). If the terminal is too small, shows a resize prompt and returns `false`. Otherwise, recomputes centering offsets (`updateOffsets()`), clears the screen, and returns `true` to trigger a full redraw.
+
+**Centering**: computes offsets to center the 80×29 game area in larger terminals: `offsetX = max(0, (cols - 80) / 2)`, `offsetY = max(0, (rows - 29) / 2)`.
+
+**Data directory**: `$XDG_DATA_HOME/TetrisConsole` or `~/.local/share/TetrisConsole`. Falls back to `/tmp/.local/share/TetrisConsole` if `$HOME` is unset. Directory created with `mkdir()` at mode 0755.
 
 ### Windows
 
-**Console init**: disables Ctrl+C, centers window on desktop (675x515px), disables resize/maximize, hides cursor, sets 80x29 buffer, disables quick-edit mode.
+**Console init** (`initConsole()`):
+1. Sets console output to UTF-8 via `SetConsoleOutputCP(CP_UTF8)` (required for box-drawing characters ╔═║ and block characters ██░░)
+2. Disables Ctrl+C via `SetConsoleCtrlHandler(NULL, TRUE)` — quit via in-app menu only
+3. Centers window on desktop (675×515px), disables resize/maximize via `SetWindowLongPtr`
+4. Sets window title to "Tetris Console"
+5. Resets colors (`system("color 0F")`), hides cursor, sets 80×29 screen buffer
+6. Disables quick-edit mode (prevents accidental selection-pause)
+
+**Cleanup** (`cleanupConsole()`): no-op — Windows handles cleanup automatically on process exit.
+
+**`flushInput()`**: `FlushConsoleInputBuffer()` — discards unread console input events.
 
 **`getKey()`**: delegates to `rlutil::getkey()`.
 
-**Resize**: all no-ops (fixed window size). Offsets always return 0.
+**`getKeyTimeout(ms)`**: polls `_kbhit()` in a loop with `Sleep(1)` per iteration, returns `getKey()` if a key is available or -1 on timeout.
 
-**Data directory**: `%APPDATA%\TetrisConsole` via `SHGetFolderPathA()`.
+**Resize**: all no-ops (fixed window size). `wasResized()` returns `false`, `isTerminalTooSmall()` returns `false`, offsets always return 0.
+
+**Data directory**: `%APPDATA%\TetrisConsole` via `SHGetFolderPathA()`. Falls back to `.\TetrisConsole` if the shell API call fails.
 
 ---
 
