@@ -9,24 +9,23 @@
 class ScoringRule;
 class Timer;
 
-class LineClear
-{
+class LineClear {
 public:
-	LineClear(Timer& timer, ScoringRule* scoringRule, GoalPolicy* goalPolicy, VariantRule* variantRule);
+    LineClear(Timer &timer, ScoringRule *scoringRule, GoalPolicy *goalPolicy, VariantRule *variantRule);
 
-	void stepPattern(GameState& state) const;
-	void stepAnimate(GameState& state) const;
-	void stepEliminate(GameState& state) const;
-	void resetTimers() const;
-	void setVariantRule(VariantRule* rule) { _variantRule = rule; }
+    void stepPattern(GameState &state) const;
+    void stepAnimate(GameState &state) const;
+    void stepEliminate(GameState &state) const;
+    void resetTimers() const;
+    void setVariantRule(VariantRule *rule) { _variantRule = rule; }
 
 private:
-	[[nodiscard]] static std::vector<int> detectFullRows(const GameState& state);
-	static void eliminateRows(GameState& state, const std::vector<int>& rows);
-	void awardScore(GameState& state, int linesCleared) const;
+    [[nodiscard]] static std::vector<int> detectFullRows(const GameState &state);
+    static void eliminateRows(GameState &state, const std::vector<int> &rows);
+    void awardScore(GameState &state, int linesCleared) const;
 
-	Timer& _timer;
-	ScoringRule* _scoringRule;
-	GoalPolicy* _goalPolicy;
-	VariantRule* _variantRule;
+    Timer &_timer;
+    ScoringRule *_scoringRule;
+    GoalPolicy *_goalPolicy;
+    VariantRule *_variantRule;
 };

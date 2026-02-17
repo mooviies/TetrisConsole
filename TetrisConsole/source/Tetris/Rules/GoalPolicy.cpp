@@ -1,6 +1,6 @@
 #include "GoalPolicy.h"
 
-int VariableGoal::goalValue(const int level)  const {
+int VariableGoal::goalValue(const int level) const {
     return 5 * level;
 }
 
@@ -12,7 +12,7 @@ bool VariableGoal::useAwardedLines() const {
     return true;
 }
 
-int FixedGoal::goalValue(int)  const {
+int FixedGoal::goalValue(int) const {
     return 10;
 }
 

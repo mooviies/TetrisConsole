@@ -10,13 +10,13 @@ static constexpr double kHardDropSpeed = 0.0001;
 
 class GravityPolicy {
 public:
-	virtual ~GravityPolicy() = default;
-	[[nodiscard]] virtual double fallInterval(int level, DropType dropType) const = 0;
+    virtual ~GravityPolicy() = default;
+    [[nodiscard]] virtual double fallInterval(int level, DropType dropType) const = 0;
 };
 
 class GuidelineGravity final : public GravityPolicy {
 public:
-	[[nodiscard]] double fallInterval(int level, DropType dropType) const override;
+    [[nodiscard]] double fallInterval(int level, DropType dropType) const override;
 };
 
 std::unique_ptr<GravityPolicy> makeDefaultGravityPolicy();

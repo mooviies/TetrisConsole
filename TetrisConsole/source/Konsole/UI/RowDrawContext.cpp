@@ -4,9 +4,7 @@
 
 #include "rlutil.h"
 
-RowDrawContext::RowDrawContext(const int x, const int y, const int width)
-    : _width(width)
-{
+RowDrawContext::RowDrawContext(const int x, const int y, const int width) : _width(width) {
     rlutil::locate(x, y);
 }
 
@@ -19,7 +17,7 @@ void RowDrawContext::setBackgroundColor(const int color) {
     rlutil::setBackgroundColor(color);
 }
 
-void RowDrawContext::print(const std::string& text) {
+void RowDrawContext::print(const std::string &text) {
     std::cout << text;
 }
 // NOLINTEND(readability-convert-member-functions-to-static)

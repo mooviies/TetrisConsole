@@ -14,17 +14,17 @@ using namespace std;
 class PlayfieldElement : public PanelElement {
 public:
     [[nodiscard]] int height() const override { return 20; }
-    void drawRow(int rowIndex, RowDrawContext& ctx) const override;
+    void drawRow(int rowIndex, RowDrawContext &ctx) const override;
 
-    void update(const GameState& state, bool visible);
+    void update(const GameState &state, bool visible);
 
 private:
-    const GameState* _state = nullptr;  // non-owning; lifetime guaranteed by game loop
+    const GameState *_state = nullptr; // non-owning; lifetime guaranteed by game loop
     bool _visible = true;
     int _ghostDropDistance = 0;
 };
 
-void PlayfieldElement::update(const GameState& state, const bool visible) {
+void PlayfieldElement::update(const GameState &state, const bool visible) {
     _state = &state;
     _visible = visible;
 
@@ -37,17 +37,16 @@ void PlayfieldElement::update(const GameState& state, const bool visible) {
     markDirty();
 }
 
-void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
-    if (_state == nullptr)
-        return;
+void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
+    if (_state == nullptr) return;
 
     const int line = MATRIX_START + rowIndex;
 
     // Notification overlay (levels 1-10): steady text centered on playfield
-    static constexpr int kNotificationRow = VISIBLE_ROWS / 2 - 1;  // 9
-    static constexpr int kComboRow        = VISIBLE_ROWS / 2;       // 10
+    static constexpr int kNotificationRow = VISIBLE_ROWS / 2 - 1; // 9
+    static constexpr int kComboRow = VISIBLE_ROWS / 2;            // 10
     if (_state->phase == GamePhase::Animate && _state->stats.level <= OVERLAY_LEVEL_THRESHOLD) {
-        const std::string* text = nullptr;
+        const std::string *text = nullptr;
         int color = 0;
         if (rowIndex == kNotificationRow && !_state->lineClear.notificationText.empty()) {
             text = &_state->lineClear.notificationText;
@@ -75,7 +74,7 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
 
     // Line-clear flash: draw entire row as white blocks when flashing on
     if (_state->phase == GamePhase::Animate && _state->lineClear.flashOn) {
-        const auto& rows = _state->lineClear.rows;
+        const auto &rows = _state->lineClear.rows;
         if (std::find(rows.begin(), rows.end(), line) != rows.end()) {
             for (int i = 0; i < TETRIS_WIDTH; i++) {
                 ctx.setColor(Color::WHITE);
@@ -85,14 +84,13 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
         }
     }
 
-    const auto* tetrimino = _state->pieces.current;
+    const auto *tetrimino = _state->pieces.current;
     for (int i = 0; i < TETRIS_WIDTH; i++) {
         bool currentTetriminoHere = false;
         bool ghostHere = false;
         if (tetrimino != nullptr) {
             currentTetriminoHere = tetrimino->isMino(line, i);
-            ghostHere = _ghostDropDistance > 0
-                        && tetrimino->isMino(line - _ghostDropDistance, i);
+            ghostHere = _ghostDropDistance > 0 && tetrimino->isMino(line - _ghostDropDistance, i);
         }
 
         if (_visible && (_state->matrix[line][i] || currentTetriminoHere)) {
@@ -121,20 +119,18 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext& ctx) const {
     }
 }
 
-PlayfieldDisplay::PlayfieldDisplay()
-    : _panel(20), _element(std::make_shared<PlayfieldElement>())
-{
+PlayfieldDisplay::PlayfieldDisplay() : _panel(20), _element(std::make_shared<PlayfieldElement>()) {
     _panel.addElement(_element);
 }
 
 PlayfieldDisplay::~PlayfieldDisplay() = default;
 
-void PlayfieldDisplay::update(const GameState& state, const bool visible) {
+void PlayfieldDisplay::update(const GameState &state, const bool visible) {
     _element->update(state, visible);
 
     _skylineColors.fill(0);
     if (visible) {
-        const auto* tetrimino = state.pieces.current;
+        const auto *tetrimino = state.pieces.current;
         for (int i = 0; i < TETRIS_WIDTH; i++) {
             if (tetrimino != nullptr && tetrimino->isMino(BUFFER_END, i))
                 _skylineColors[i] = tetrimino->getColor();
@@ -149,7 +145,9 @@ void PlayfieldDisplay::setPosition(const int x, const int y) {
     _y = y;
     _panel.setPosition(x, y);
 }
-void PlayfieldDisplay::invalidate() { _panel.invalidate(); }
+void PlayfieldDisplay::invalidate() {
+    _panel.invalidate();
+}
 
 void PlayfieldDisplay::render() {
     _panel.render();
@@ -162,11 +160,9 @@ void PlayfieldDisplay::drawSkylineBorder() const {
     std::cout << "╔";
 
     for (int i = 0; i < TETRIS_WIDTH; i++) {
-        if (_skylineColors[i])
-            rlutil::setColor(_skylineColors[i]);
+        if (_skylineColors[i]) rlutil::setColor(_skylineColors[i]);
         std::cout << "══";
-        if (_skylineColors[i])
-            rlutil::setColor(Color::WHITE);
+        if (_skylineColors[i]) rlutil::setColor(Color::WHITE);
     }
 
     std::cout << "╗";

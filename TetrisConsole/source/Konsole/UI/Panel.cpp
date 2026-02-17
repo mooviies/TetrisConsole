@@ -9,10 +9,10 @@
 
 using namespace std;
 
-Panel::Panel(const int interiorWidth)
-    : _interiorWidth(interiorWidth), _widthComputed(interiorWidth > 0) {}
+Panel::Panel(const int interiorWidth) : _interiorWidth(interiorWidth), _widthComputed(interiorWidth > 0) {
+}
 
-size_t Panel::addRow(const string& text, const Align align, const int color) {
+size_t Panel::addRow(const string &text, const Align align, const int color) {
     RowData row;
     row.type = RowData::Type::TEXT;
     row.cells.emplace_back(text, align, color, 0);
@@ -36,7 +36,7 @@ void Panel::addSeparator() {
     _rows.push_back(std::move(row));
 }
 
-size_t Panel::addElement(const shared_ptr<PanelElement>& element) {
+size_t Panel::addElement(const shared_ptr<PanelElement> &element) {
     size_t firstRow = _rows.size();
     int h = element->height();
     for (int i = 0; i < h; i++) {
@@ -50,27 +50,23 @@ size_t Panel::addElement(const shared_ptr<PanelElement>& element) {
 }
 
 void Panel::ensureWidth() const {
-    if (_widthComputed)
-        return;
+    if (_widthComputed) return;
 
     int maxW = 0;
-    for (const auto& row : _rows) {
-        if (row.type != RowData::Type::TEXT)
-            continue;
+    for (const auto &row : _rows) {
+        if (row.type != RowData::Type::TEXT) continue;
 
         if (row.cells.size() == 1) {
             int w = static_cast<int>(row.cells[0].text.length()) + 2;
-            if (w > maxW)
-                maxW = w;
+            if (w > maxW) maxW = w;
         } else {
             int w = 0;
-            for (const auto& cell : row.cells) {
+            for (const auto &cell : row.cells) {
                 int cellMin = max(cell.width, static_cast<int>(cell.text.length()) + 2);
                 w += cellMin;
             }
             w += static_cast<int>(row.cells.size()) - 1; // column separators
-            if (w > maxW)
-                maxW = w;
+            if (w > maxW) maxW = w;
         }
     }
 
@@ -78,19 +74,17 @@ void Panel::ensureWidth() const {
     _widthComputed = true;
 }
 
-vector<int> Panel::computeColumnWidths(const vector<Cell>& cells) const {
+vector<int> Panel::computeColumnWidths(const vector<Cell> &cells) const {
     int n = static_cast<int>(cells.size());
-    if (n == 0)
-        return {};
+    if (n == 0) return {};
 
-    if (n == 1)
-        return {_interiorWidth};
+    if (n == 1) return {_interiorWidth};
 
     int available = _interiorWidth - (n - 1); // subtract column separators
     int fixedSum = 0;
     int autoCount = 0;
 
-    for (const auto& cell : cells) {
+    for (const auto &cell : cells) {
         if (cell.width > 0) {
             fixedSum += cell.width;
         } else {
@@ -104,7 +98,7 @@ vector<int> Panel::computeColumnWidths(const vector<Cell>& cells) const {
 
     vector<int> widths;
     widths.reserve(static_cast<size_t>(n));
-    for (const auto& cell : cells) {
+    for (const auto &cell : cells) {
         if (cell.width > 0) {
             widths.push_back(cell.width);
         } else {
@@ -120,10 +114,9 @@ vector<int> Panel::computeColumnWidths(const vector<Cell>& cells) const {
     return widths;
 }
 
-vector<int> Panel::columnBoundaries(const vector<Cell>& cells) const {
+vector<int> Panel::columnBoundaries(const vector<Cell> &cells) const {
     vector<int> boundaries;
-    if (cells.size() <= 1)
-        return boundaries;
+    if (cells.size() <= 1) return boundaries;
 
     vector<int> widths = computeColumnWidths(cells);
     int pos = 0;
@@ -135,15 +128,14 @@ vector<int> Panel::columnBoundaries(const vector<Cell>& cells) const {
     return boundaries;
 }
 
-string Panel::renderTextRow(const RowData& row) const {
+string Panel::renderTextRow(const RowData &row) const {
     vector<int> widths = computeColumnWidths(row.cells);
     string result = "║";
 
     for (size_t i = 0; i < row.cells.size(); i++) {
-        if (i > 0)
-            result += "║";
+        if (i > 0) result += "║";
 
-        const Cell& cell = row.cells[i];
+        const Cell &cell = row.cells[i];
         int w = widths[i];
         int textLen = static_cast<int>(cell.text.length());
         int padding = w - textLen;
@@ -192,7 +184,7 @@ string Panel::renderSeparator(const size_t rowIndex) const {
     // Junction characters adapt to column boundaries of neighboring TEXT rows
     set<int> aboveBounds, belowBounds;
 
-    for (size_t i = rowIndex; i > 0; ) {
+    for (size_t i = rowIndex; i > 0;) {
         i--;
         if (_rows[i].type == RowData::Type::TEXT) {
             for (int b : columnBoundaries(_rows[i].cells))
@@ -227,7 +219,7 @@ string Panel::renderSeparator(const size_t rowIndex) const {
     return result;
 }
 
-void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
+void Panel::drawColoredRow(const int x, const int y, const RowData &row) const {
     vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
     rlutil::setBackgroundColor(Color::BLACK);
@@ -240,7 +232,7 @@ void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
             cout << "║";
         }
 
-        const Cell& cell = row.cells[i];
+        const Cell &cell = row.cells[i];
         int w = widths[i];
         int textLen = static_cast<int>(cell.text.length());
         int padding = w - textLen;
@@ -309,12 +301,10 @@ void Panel::render() {
     }
 
     for (size_t i = 0; i < _rows.size(); i++) {
-        if (_rows[i].type == RowData::Type::ELEMENT &&
-            _rows[i].element && _rows[i].element->isDirty()) {
+        if (_rows[i].type == RowData::Type::ELEMENT && _rows[i].element && _rows[i].element->isDirty()) {
             drawSingleRow(i);
             // Only clear after drawing all sub-rows of a multi-row element
-            if (_rows[i].elementRowIndex == _rows[i].element->height() - 1)
-                _rows[i].element->clearDirty();
+            if (_rows[i].elementRowIndex == _rows[i].element->height() - 1) _rows[i].element->clearDirty();
         }
     }
 }
@@ -331,7 +321,7 @@ void Panel::drawFull() {
     {
         string top = "╔";
         set<int> firstBounds;
-        for (const auto& row : _rows) {
+        for (const auto &row : _rows) {
             if (row.type == RowData::Type::TEXT) {
                 for (int b : columnBoundaries(row.cells))
                     firstBounds.insert(b);
@@ -352,8 +342,7 @@ void Panel::drawFull() {
     // Rows
     for (size_t i = 0; i < _rows.size(); i++) {
         drawSingleRow(i);
-        if (_rows[i].type == RowData::Type::ELEMENT && _rows[i].element)
-            _rows[i].element->clearDirty();
+        if (_rows[i].type == RowData::Type::ELEMENT && _rows[i].element) _rows[i].element->clearDirty();
     }
 
     // Bottom border
@@ -383,8 +372,7 @@ void Panel::drawFull() {
 }
 
 void Panel::drawSingleRow(const size_t row) const {
-    if (row >= _rows.size())
-        return;
+    if (row >= _rows.size()) return;
 
     int rowY = _y + static_cast<int>(row) + 1;
     if (_rows[row].type == RowData::Type::SEPARATOR) {
@@ -425,12 +413,11 @@ void Panel::recreate() {
     _needsFullDraw = true;
 }
 
-void Panel::setCell(const size_t row, const size_t col, const string& text) {
+void Panel::setCell(const size_t row, const size_t col, const string &text) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         if (_rows[row].cells[col].text == text) return;
         _rows[row].cells[col].text = text;
-        if (row < _dirtyRows.size())
-            _dirtyRows[row] = true;
+        if (row < _dirtyRows.size()) _dirtyRows[row] = true;
     }
 }
 
@@ -438,8 +425,7 @@ void Panel::setCellColor(const size_t row, const size_t col, const int color) {
     if (row < _rows.size() && _rows[row].type == RowData::Type::TEXT && col < _rows[row].cells.size()) {
         if (_rows[row].cells[col].color == color) return;
         _rows[row].cells[col].color = color;
-        if (row < _dirtyRows.size())
-            _dirtyRows[row] = true;
+        if (row < _dirtyRows.size()) _dirtyRows[row] = true;
     }
 }
 
@@ -451,4 +437,3 @@ int Panel::width() const {
 int Panel::height() const {
     return static_cast<int>(_rows.size()) + 2;
 }
-

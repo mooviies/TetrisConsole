@@ -110,12 +110,16 @@ int main() {
     // --- New Game menu (Level + Start) ---
     newGame.addOptionCloseAllMenu("Start", [&tetris](OptionChoice oc) {
         int level = 1;
-        try { level = stoi(oc.values["Level"]); } catch (...) {}
+        try {
+            level = stoi(oc.values["Level"]);
+        } catch (...) {}
         tetris.setStartingLevel(level);
 
         auto v = GameVariant::Marathon;
-        if (oc.values["Variant"] == "Sprint") v = GameVariant::Sprint;
-        else if (oc.values["Variant"] == "Ultra") v = GameVariant::Ultra;
+        if (oc.values["Variant"] == "Sprint")
+            v = GameVariant::Sprint;
+        else if (oc.values["Variant"] == "Ultra")
+            v = GameVariant::Ultra;
         tetris.setVariant(v);
 
         tetris.saveOptions();
@@ -140,7 +144,7 @@ int main() {
     options.addOptionWithValues("Ghost Piece", ghostValues);
     options.addOptionWithValues("Hold Piece", holdValues);
     options.addOptionWithValues("Preview", previewValues);
-    options.addOption("Reset Defaults", [&options](const OptionChoice&) {
+    options.addOption("Reset Defaults", [&options](const OptionChoice &) {
         options.setValueChoice("Lock Down", "Extended");
         options.setValueChoice("Ghost Piece", "On");
         options.setValueChoice("Hold Piece", "On");
@@ -158,9 +162,12 @@ int main() {
     for (int i = 6; i >= 0; i--) {
         string val = Utility::valueToString(i, 2);
         string hint;
-        if (i == 0) hint = "Hides the next piece queue.";
-        else if (i == 1) hint = "Shows the next piece.";
-        else hint = "Shows the next " + to_string(i) + " pieces.";
+        if (i == 0)
+            hint = "Hides the next piece queue.";
+        else if (i == 1)
+            hint = "Shows the next piece.";
+        else
+            hint = "Shows the next " + to_string(i) + " pieces.";
         options.setOptionValueHint("Preview", val, hint);
     }
     options.setOptionHint("Reset Defaults", "Restore all options to their default values.");
@@ -170,15 +177,19 @@ int main() {
     main.addOption("New Game", &newGame, [&]() {
         newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
         string varStr = "Marathon";
-        if (tetris.variant() == GameVariant::Sprint) varStr = "Sprint";
-        else if (tetris.variant() == GameVariant::Ultra) varStr = "Ultra";
+        if (tetris.variant() == GameVariant::Sprint)
+            varStr = "Sprint";
+        else if (tetris.variant() == GameVariant::Ultra)
+            varStr = "Ultra";
         newGame.setValueChoice("Variant", varStr);
     });
     main.addOptionAction("Options", [&]() {
         // Sync menu values from current tetris state
         string modeStr = "Extended";
-        if (tetris.mode() == LockDownMode::Classic) modeStr = "Classic";
-        else if (tetris.mode() == LockDownMode::ExtendedInfinity) modeStr = "Infinite";
+        if (tetris.mode() == LockDownMode::Classic)
+            modeStr = "Classic";
+        else if (tetris.mode() == LockDownMode::ExtendedInfinity)
+            modeStr = "Infinite";
         options.setValueChoice("Lock Down", modeStr);
         options.setValueChoice("Ghost Piece", tetris.ghostEnabled() ? "On" : "Off");
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
@@ -189,13 +200,17 @@ int main() {
         // Apply values back to tetris
         auto values = options.generateValues();
         auto mode = LockDownMode::Extended;
-        if (values["Lock Down"] == "Classic") mode = LockDownMode::Classic;
-        else if (values["Lock Down"] == "Infinite") mode = LockDownMode::ExtendedInfinity;
+        if (values["Lock Down"] == "Classic")
+            mode = LockDownMode::Classic;
+        else if (values["Lock Down"] == "Infinite")
+            mode = LockDownMode::ExtendedInfinity;
         tetris.setLockDownMode(mode);
         tetris.setGhostEnabled(values["Ghost Piece"] != "Off");
         tetris.setHoldEnabled(values["Hold Piece"] != "Off");
         int preview = 6;
-        try { preview = stoi(values["Preview"]); } catch (...) {}
+        try {
+            preview = stoi(values["Preview"]);
+        } catch (...) {}
         tetris.setPreviewCount(preview);
         tetris.saveOptions();
     });
@@ -225,7 +240,7 @@ int main() {
     backToMenuConfirm.addOptionCloseAllMenu("Yes");
     backToMenuConfirm.addOptionClose("No");
 
-    quit.addOption("Yes", [&tetris](const OptionChoice&) { tetris.exit(); });
+    quit.addOption("Yes", [&tetris](const OptionChoice &) { tetris.exit(); });
     quit.addOptionClose("No");
 
     // --- Game Over menu ---
@@ -243,8 +258,7 @@ int main() {
             const auto frameStart = chrono::steady_clock::now();
 
             Input::pollKeys();
-            if (Platform::wasResized())
-                tetris.redraw();
+            if (Platform::wasResized()) tetris.redraw();
             if (Platform::isTerminalTooSmall()) {
                 if (!wasTooSmall) {
                     tetris.pauseGameTimer();
@@ -259,22 +273,21 @@ int main() {
             }
 
             InputSnapshot snapshot;
-            snapshot.left     = Input::action(A(Action::Left));
-            snapshot.right    = Input::action(A(Action::Right));
+            snapshot.left = Input::action(A(Action::Left));
+            snapshot.right = Input::action(A(Action::Right));
             snapshot.softDrop = Input::action(A(Action::SoftDrop));
             snapshot.hardDrop = Input::action(A(Action::HardDrop));
-            snapshot.rotateCW  = Input::action(A(Action::RotateCW));
+            snapshot.rotateCW = Input::action(A(Action::RotateCW));
             snapshot.rotateCCW = Input::action(A(Action::RotateCCW));
-            snapshot.hold     = Input::action(A(Action::Hold));
-            snapshot.pause    = Input::action(A(Action::Pause));
-            snapshot.mute     = Input::action(A(Action::Mute));
+            snapshot.hold = Input::action(A(Action::Hold));
+            snapshot.pause = Input::action(A(Action::Pause));
+            snapshot.mute = Input::action(A(Action::Mute));
 
             tetris.step(snapshot);
             tetris.render();
 
             const auto elapsed = chrono::steady_clock::now() - frameStart;
-            if (const auto sleepTime = chrono::milliseconds(16) - elapsed;
-                sleepTime > chrono::milliseconds(0))
+            if (const auto sleepTime = chrono::milliseconds(16) - elapsed; sleepTime > chrono::milliseconds(0))
                 this_thread::sleep_for(sleepTime);
         }
         if (tetris.doExit()) break;

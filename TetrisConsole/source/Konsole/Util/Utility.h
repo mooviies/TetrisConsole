@@ -3,13 +3,11 @@
 #include <string>
 #include <cstdint>
 
-class Utility
-{
+class Utility {
 public:
-	static std::string valueToString(int64_t value, int length);
-	static std::string timeToString(double seconds);
+    static std::string valueToString(int64_t value, int length);
+    static std::string timeToString(double seconds);
 
-	Utility() = delete;
-	~Utility() = delete;
+    Utility() = delete;
+    ~Utility() = delete;
 };
-

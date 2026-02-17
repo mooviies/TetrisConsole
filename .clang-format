@@ -1,0 +1,35 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+# 4 spaces for indentation
+UseTab: Never
+TabWidth: 4
+IndentWidth: 4
+ColumnLimit: 120
+
+# Braces & indentation
+IndentCaseLabels: true
+AccessModifierOffset: -4
+
+# Short forms
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+AllowShortBlocksOnASingleLine: Empty
+
+# Pointer/Reference bind to the variable: int *p, const string &s
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+# Don't reorder includes — order can matter (e.g. MINIAUDIO_IMPLEMENTATION)
+SortIncludes: Never
+
+# Constructor initializers on next line, colon before
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: BinPack
+
+# Allow blank lines between logical sections
+MaxEmptyLinesToKeep: 2
+KeepEmptyLinesAtTheStartOfBlocks: false

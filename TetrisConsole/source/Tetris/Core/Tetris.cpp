@@ -10,8 +10,7 @@
 
 Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreDisplay)
     : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu),
-      _highScoreDisplay(highScoreDisplay)
-{
+      _highScoreDisplay(highScoreDisplay) {
     _state.loadOptions();
     _state.loadHighscore();
 }
@@ -28,32 +27,30 @@ void Tetris::start() {
     SoundEngine::playMusic("A");
 }
 
-void Tetris::step(const InputSnapshot& input) {
+void Tetris::step(const InputSnapshot &input) {
     const StepResult result = _controller.step(_state, input);
 
     playPendingSounds();
 
-    if (input.mute && !_wasMutePressed)
-        SoundEngine::cycleMute();
+    if (input.mute && !_wasMutePressed) SoundEngine::cycleMute();
     _wasMutePressed = input.mute;
 
     if (SoundEngine::musicEnded()) {
-        const auto& name = SoundEngine::currentMusicName();
-        if (name == "A") SoundEngine::playMusic("B");
-        else if (name == "B") SoundEngine::playMusic("C");
-        else if (name == "C") SoundEngine::playMusic("A");
+        const auto &name = SoundEngine::currentMusicName();
+        if (name == "A")
+            SoundEngine::playMusic("B");
+        else if (name == "B")
+            SoundEngine::playMusic("C");
+        else if (name == "C")
+            SoundEngine::playMusic("A");
     }
 
     switch (result) {
-        case StepResult::Continue:
-            break;
+        case StepResult::Continue: break;
         case StepResult::PauseRequested:
-            if (!_wasPausePressed)
-                handlePause();
+            if (!_wasPausePressed) handlePause();
             break;
-        case StepResult::GameOver:
-            handleGameOver();
-            break;
+        case StepResult::GameOver: handleGameOver(); break;
     }
     _wasPausePressed = input.pause;
 }
@@ -81,7 +78,7 @@ void Tetris::handlePause() {
     _state.clearDirty();
 
     const OptionChoice choices = _pauseMenu.open(false, true);
-    const auto& selected = choices.options[choices.selected];
+    const auto &selected = choices.options[choices.selected];
 
     if (selected == "Restart") {
         SoundEngine::stopMusic();
@@ -112,20 +109,20 @@ void Tetris::handleGameOver() {
     SoundEngine::stopMusic();
     if (_state.stats.hasBetterHighscore) {
         HighScoreRecord rec{};
-        rec.score         = _state.stats.score;
-        rec.level         = _state.stats.level;
-        rec.lines         = _state.stats.lines;
-        rec.tpm           = _state.tpm();
-        rec.lpm           = _state.lpm();
-        rec.tetris        = _state.stats.tetris;
-        rec.combos        = _state.stats.combos;
-        rec.tSpins        = _state.stats.tSpins;
-        rec.gameElapsed   = _state.gameElapsed();
+        rec.score = _state.stats.score;
+        rec.level = _state.stats.level;
+        rec.lines = _state.stats.lines;
+        rec.tpm = _state.tpm();
+        rec.lpm = _state.lpm();
+        rec.tetris = _state.stats.tetris;
+        rec.combos = _state.stats.combos;
+        rec.tSpins = _state.stats.tSpins;
+        rec.gameElapsed = _state.gameElapsed();
         rec.startingLevel = _state.config.startingLevel;
-        rec.mode          = _state.config.mode;
-        rec.ghostEnabled  = _state.config.ghostEnabled;
-        rec.holdEnabled   = _state.config.holdEnabled;
-        rec.previewCount  = _state.config.previewCount;
+        rec.mode = _state.config.mode;
+        rec.ghostEnabled = _state.config.ghostEnabled;
+        rec.holdEnabled = _state.config.holdEnabled;
+        rec.previewCount = _state.config.previewCount;
         rlutil::cls();
         GameRenderer::renderTitle("A classic in console!");
         _state.setPlayerName(_highScoreDisplay.openForNewEntry(_state.allHighscores(), rec, _state.config.variant));
@@ -135,7 +132,7 @@ void Tetris::handleGameOver() {
     _state.saveHighscore();
 
     const OptionChoice choices = _gameOverMenu.open(_state.stats.hasBetterHighscore);
-    const auto& selected = choices.options[choices.selected];
+    const auto &selected = choices.options[choices.selected];
 
     if (selected == "Main Menu") {
         _backToMenu = true;
@@ -153,13 +150,12 @@ void Tetris::handleGameOver() {
 void Tetris::playPendingSounds() {
     for (const auto sound : _state.pendingSounds()) {
         switch (sound) {
-            case GameSound::Click:     SoundEngine::playSound("CLICK"); break;
-            case GameSound::Lock:      SoundEngine::playSound("LOCK"); break;
-            case GameSound::HardDrop:  SoundEngine::playSound("HARD_DROP"); break;
+            case GameSound::Click: SoundEngine::playSound("CLICK"); break;
+            case GameSound::Lock: SoundEngine::playSound("LOCK"); break;
+            case GameSound::HardDrop: SoundEngine::playSound("HARD_DROP"); break;
             case GameSound::LineClear: SoundEngine::playSound("LINE_CLEAR"); break;
-            case GameSound::Tetris:    SoundEngine::playSound("TETRIS"); break;
+            case GameSound::Tetris: SoundEngine::playSound("TETRIS"); break;
         }
     }
     _state.clearPendingSounds();
 }
-

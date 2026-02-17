@@ -17,7 +17,9 @@ std::function<void()> Menu::onResize;
 
 Menu::Menu(string title, string subtitle)
     : _title(std::move(title)), _subtitle(std::move(subtitle)), _showSubtitle(false), _choice(0), _longestOption(0),
-      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false), _escaped(false) {}
+      _longestOptionWithChoice(0), _longestOptionValue(0), _x(0), _y(0), _width(0), _height(0), _close(false),
+      _escaped(false) {
+}
 
 
 Menu::~Menu() = default;
@@ -25,8 +27,7 @@ Menu::~Menu() = default;
 void Menu::addOption(const string &name, Menu *menu, std::function<void()> preOpen) {
     addOption(name);
     _menus[name] = menu;
-    if (preOpen)
-        _preOpenCallbacks[name] = std::move(preOpen);
+    if (preOpen) _preOpenCallbacks[name] = std::move(preOpen);
 }
 
 void Menu::addOption(const string &name, std::function<void(OptionChoice)> callback) {
@@ -34,59 +35,54 @@ void Menu::addOption(const string &name, std::function<void(OptionChoice)> callb
     _callbacks[name] = std::move(callback);
 }
 
-void Menu::addOptionAction(const string& name, std::function<void()> action) {
+void Menu::addOptionAction(const string &name, std::function<void()> action) {
     addOption(name);
     _actions[name] = std::move(action);
 }
 
-void Menu::addOptionClose(const string& name, std::function<void(OptionChoice)> callback) {
+void Menu::addOptionClose(const string &name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeOptions.insert(name);
     _callbacks[name] = std::move(callback);
 }
 
-void Menu::addOptionCloseAllMenu(const string& name, std::function<void(OptionChoice)> callback) {
+void Menu::addOptionCloseAllMenu(const string &name, std::function<void(OptionChoice)> callback) {
     addOption(name);
     _closeAllMenusOptions.insert(name);
     _callbacks[name] = std::move(callback);
     _closeOptions.insert(name);
 }
 
-void Menu::addOptionWithValues(const string& name, const vector<string> &values) {
+void Menu::addOptionWithValues(const string &name, const vector<string> &values) {
     _options.push_back(name);
     _optionsValues[name] = values;
     _optionsValuesChoices[name] = 0;
 
-    if (name.length() > _longestOptionWithChoice)
-        _longestOptionWithChoice = name.length();
+    if (name.length() > _longestOptionWithChoice) _longestOptionWithChoice = name.length();
 
-    for (const auto & value : values) {
+    for (const auto &value : values) {
         if (const size_t totalLength = name.length() + value.length() + 4; totalLength > _longestOption)
             _longestOption = totalLength;
 
-        if (value.length() > _longestOptionValue)
-            _longestOptionValue = value.length();
+        if (value.length() > _longestOptionValue) _longestOptionValue = value.length();
     }
 }
 
-void Menu::setOptionHint(const string& name, const string& hint) {
+void Menu::setOptionHint(const string &name, const string &hint) {
     _optionHints[name] = hint;
     _hasHints = true;
-    if (hint.length() > _longestHint)
-        _longestHint = hint.length();
+    if (hint.length() > _longestHint) _longestHint = hint.length();
 }
 
-void Menu::setOptionValueHint(const string& name, const string& value, const string& hint) {
+void Menu::setOptionValueHint(const string &name, const string &value, const string &hint) {
     _optionValueHints[name][value] = hint;
     _hasHints = true;
-    if (hint.length() > _longestHint)
-        _longestHint = hint.length();
+    if (hint.length() > _longestHint) _longestHint = hint.length();
 }
 
-void Menu::addOption(const string& name) {
+void Menu::addOption(const string &name) {
     _options.push_back(name);
-    if (name.length() > _longestOption)
-        _longestOption = name.length();
+    if (name.length() > _longestOption) _longestOption = name.length();
 }
 
 OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
@@ -95,28 +91,19 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
 
     Platform::flushInput();
     while (true) {
-        if (!Platform::isTerminalTooSmall())
-            draw();
+        if (!Platform::isTerminalTooSmall()) draw();
         switch (Platform::getKey()) {
             case rlutil::KEY_UP:
                 _choice--;
-                if (_choice < 0)
-                    _choice = static_cast<int>(_options.size())- 1;
+                if (_choice < 0) _choice = static_cast<int>(_options.size()) - 1;
                 break;
             case rlutil::KEY_DOWN:
                 _choice++;
-                if (_choice >= static_cast<int>(_options.size()))
-                    _choice = 0;
+                if (_choice >= static_cast<int>(_options.size())) _choice = 0;
                 break;
-            case rlutil::KEY_LEFT:
-                switchOptions(_choice, rlutil::KEY_LEFT);
-                break;
-            case rlutil::KEY_RIGHT:
-                switchOptions(_choice, rlutil::KEY_RIGHT);
-                break;
-            case rlutil::KEY_ENTER:
-                select(_choice);
-                break;
+            case rlutil::KEY_LEFT: switchOptions(_choice, rlutil::KEY_LEFT); break;
+            case rlutil::KEY_RIGHT: switchOptions(_choice, rlutil::KEY_RIGHT); break;
+            case rlutil::KEY_ENTER: select(_choice); break;
             case rlutil::KEY_ESCAPE:
                 if (escapeCloses) {
                     _choice = 0;
@@ -124,20 +111,18 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
                     _escaped = true;
                 }
                 break;
-            default: ;
+            default:;
         }
 
         if (Platform::wasResized()) {
             if (!Platform::isTerminalTooSmall()) {
                 generate();
-                if (onResize)
-                    onResize();
+                if (onResize) onResize();
             }
             continue;
         }
 
-        if (_close || (shouldExitGame && shouldExitGame()))
-            break;
+        if (_close || (shouldExitGame && shouldExitGame())) break;
     }
     clear();
 
@@ -148,8 +133,7 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
 void Menu::generate() {
     size_t middleWidth = _longestOption + 5;
     middleWidth = max(middleWidth, _title.length() + 2);
-    if (_showSubtitle)
-        middleWidth = max(middleWidth, _subtitle.length() + 2);
+    if (_showSubtitle) middleWidth = max(middleWidth, _subtitle.length() + 2);
     middleWidth = max(middleWidth, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
 
     _panel = Panel(static_cast<int>(middleWidth));
@@ -162,7 +146,7 @@ void Menu::generate() {
     _panel.addSeparator();
 
     _optionRows.clear();
-    for (const auto& option : _options) {
+    for (const auto &option : _options) {
         _optionRows.push_back(_panel.addRow("  " + option, Align::Left));
     }
 
@@ -192,7 +176,7 @@ void Menu::generate() {
 
 map<string, string> Menu::generateValues() {
     map<string, string> values;
-    for (const auto& name : _options) {
+    for (const auto &name : _options) {
         if (_optionsValues.find(name) != _optionsValues.end()) {
             values[name] = _optionsValues[name][_optionsValuesChoices[name]];
         }
@@ -222,45 +206,40 @@ void Menu::draw() {
 
     if (_hasHints) {
         string hint;
-        const string& name = _options[static_cast<size_t>(_choice)];
+        const string &name = _options[static_cast<size_t>(_choice)];
 
         // Check value-specific hint first
         if (auto valHintIt = _optionValueHints.find(name); valHintIt != _optionValueHints.end()) {
             auto valIt = _optionsValues.find(name);
             if (valIt != _optionsValues.end()) {
-                const string& currentValue = valIt->second[static_cast<size_t>(_optionsValuesChoices[name])];
+                const string &currentValue = valIt->second[static_cast<size_t>(_optionsValuesChoices[name])];
                 auto it = valHintIt->second.find(currentValue);
-                if (it != valHintIt->second.end())
-                    hint = it->second;
+                if (it != valHintIt->second.end()) hint = it->second;
             }
         }
 
         // Fall back to generic hint
         if (hint.empty()) {
-            if (const auto it = _optionHints.find(name); it != _optionHints.end())
-                hint = it->second;
+            if (const auto it = _optionHints.find(name); it != _optionHints.end()) hint = it->second;
         }
 
         _hintPanel.setCell(_hintRow, 0, hint);
     }
 
     _panel.render();
-    if (_hasHints)
-        _hintPanel.render();
+    if (_hasHints) _hintPanel.render();
     cout << flush;
 }
 
 void Menu::clear() const {
     _panel.clear();
-    if (_hasHints)
-        _hintPanel.clear();
+    if (_hasHints) _hintPanel.clear();
 }
 
-void Menu::setValueChoice(const string& name, const string& value) {
+void Menu::setValueChoice(const string &name, const string &value) {
     auto valuesIt = _optionsValues.find(name);
-    if (valuesIt == _optionsValues.end())
-        return;
-    const auto& values = valuesIt->second;
+    if (valuesIt == _optionsValues.end()) return;
+    const auto &values = valuesIt->second;
     for (size_t i = 0; i < values.size(); i++) {
         if (values[i] == value) {
             _optionsValuesChoices[name] = static_cast<int>(i);
@@ -275,16 +254,14 @@ void Menu::select(const int choice) {
     if (auto it = _actions.find(name); it != _actions.end() && it->second) {
         clear();
         it->second();
-        if (onResize)
-            onResize();
+        if (onResize) onResize();
         _panel.invalidate();
         if (_hasHints) _hintPanel.invalidate();
         return;
     }
 
     if (auto it = _menus.find(name); it != _menus.end() && it->second != nullptr) {
-        if (auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second)
-            cb->second();
+        if (auto cb = _preOpenCallbacks.find(name); cb != _preOpenCallbacks.end() && cb->second) cb->second();
         clear();
         if (it->second->open(false, true).exitAllMenus) {
             _close = true;
@@ -309,12 +286,10 @@ void Menu::switchOptions(const int choice, const int key) {
         int valueChoice = _optionsValuesChoices[name];
         if (key == rlutil::KEY_LEFT) {
             valueChoice--;
-            if (valueChoice < 0)
-                valueChoice = static_cast<int>(_optionsValues[name].size() - 1);
+            if (valueChoice < 0) valueChoice = static_cast<int>(_optionsValues[name].size() - 1);
         } else if (key == rlutil::KEY_RIGHT) {
             valueChoice++;
-            if (valueChoice >= static_cast<int>(_optionsValues[name].size()))
-                valueChoice = 0;
+            if (valueChoice >= static_cast<int>(_optionsValues[name].size())) valueChoice = 0;
         }
 
         _optionsValuesChoices[name] = valueChoice;

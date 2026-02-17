@@ -26,7 +26,7 @@ public:
     virtual ~PanelElement() = default;
 
     [[nodiscard]] virtual int height() const = 0;
-    virtual void drawRow(int rowIndex, RowDrawContext& ctx) const = 0;
+    virtual void drawRow(int rowIndex, RowDrawContext &ctx) const = 0;
 
     [[nodiscard]] bool isDirty() const { return _dirty; }
     void clearDirty() { _dirty = false; }
@@ -42,10 +42,10 @@ class Panel {
 public:
     explicit Panel(int interiorWidth = 0);
 
-    size_t addRow(const std::string& text, Align align = Align::Left, int color = 15);
+    size_t addRow(const std::string &text, Align align = Align::Left, int color = 15);
     size_t addRow(std::vector<Cell> cells);
     void addSeparator();
-    size_t addElement(const std::shared_ptr<PanelElement>& element);
+    size_t addElement(const std::shared_ptr<PanelElement> &element);
 
     void setPosition(int x, int y);
     void invalidate();
@@ -53,7 +53,7 @@ public:
     void clear() const;
     void recreate();
 
-    void setCell(size_t row, size_t col, const std::string& text);
+    void setCell(size_t row, size_t col, const std::string &text);
     void setCellColor(size_t row, size_t col, int color);
 
     int x() const { return _x; }
@@ -71,11 +71,11 @@ private:
     };
 
     void ensureWidth() const;
-    std::vector<int> computeColumnWidths(const std::vector<Cell>& cells) const;
-    std::string renderTextRow(const RowData& row) const;
+    std::vector<int> computeColumnWidths(const std::vector<Cell> &cells) const;
+    std::string renderTextRow(const RowData &row) const;
     std::string renderSeparator(size_t rowIndex) const;
-    void drawColoredRow(int x, int y, const RowData& row) const;
-    std::vector<int> columnBoundaries(const std::vector<Cell>& cells) const;
+    void drawColoredRow(int x, int y, const RowData &row) const;
+    std::vector<int> columnBoundaries(const std::vector<Cell> &cells) const;
     void drawSingleRow(size_t row) const;
     void drawFull();
 

@@ -14,31 +14,30 @@
 
 class Timer;
 
-class GameController
-{
+class GameController {
 public:
-	explicit GameController(Timer& timer);
-	~GameController();
+    explicit GameController(Timer &timer);
+    ~GameController();
 
-	void start(GameState& state) const;
-	StepResult step(GameState& state, const InputSnapshot& input);
-	void reset(GameState& state) const;
-	void configurePolicies(LockDownMode mode);
-	void configureVariant(GameVariant variant, GameState &state);
+    void start(GameState &state) const;
+    StepResult step(GameState &state, const InputSnapshot &input);
+    void reset(GameState &state) const;
+    void configurePolicies(LockDownMode mode);
+    void configureVariant(GameVariant variant, GameState &state);
 
 private:
-	void stepGeneration(GameState& state) const;
-	void stepCompletion(GameState& state) const;
+    void stepGeneration(GameState &state) const;
+    void stepCompletion(GameState &state) const;
 
-	static void shuffle(GameState& state, size_t start);
-	static void popTetrimino(GameState& state);
+    static void shuffle(GameState &state, size_t start);
+    static void popTetrimino(GameState &state);
 
-	Timer& _timer;
-	std::unique_ptr<LockDownPolicy> _lockDownPolicy;
-	std::unique_ptr<ScoringRule> _scoringRule;
-	std::unique_ptr<GravityPolicy> _gravityPolicy;
-	std::unique_ptr<GoalPolicy> _goalPolicy;
-	std::unique_ptr<VariantRule> _variantRule;
-	PieceMovement _movement;
-	LineClear _lineClear;
+    Timer &_timer;
+    std::unique_ptr<LockDownPolicy> _lockDownPolicy;
+    std::unique_ptr<ScoringRule> _scoringRule;
+    std::unique_ptr<GravityPolicy> _gravityPolicy;
+    std::unique_ptr<GoalPolicy> _goalPolicy;
+    std::unique_ptr<VariantRule> _variantRule;
+    PieceMovement _movement;
+    LineClear _lineClear;
 };

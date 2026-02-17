@@ -8,10 +8,10 @@
 class PiecePreview : public PanelElement {
 public:
     [[nodiscard]] int height() const override { return 2; }
-    void drawRow(int rowIndex, RowDrawContext& ctx) const override;
+    void drawRow(int rowIndex, RowDrawContext &ctx) const override;
 
-    void setPiece(const PiecePreview* piecePreview);
-    void setPiece(const Tetrimino* piece);
+    void setPiece(const PiecePreview *piecePreview);
+    void setPiece(const Tetrimino *piece);
     void clearPiece();
 
 private:

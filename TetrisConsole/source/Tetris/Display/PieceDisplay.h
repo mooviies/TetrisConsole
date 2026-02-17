@@ -11,18 +11,18 @@ class PiecePreview;
 
 class PieceDisplay {
 public:
-	explicit PieceDisplay(size_t size = 1);
-	~PieceDisplay();
+    explicit PieceDisplay(size_t size = 1);
+    ~PieceDisplay();
 
-	void update(const std::vector<const Tetrimino*>& pieces) const;
-	void setPosition(int x, int y);
-	void invalidate();
-	void render();
-	void clear() const;
-	void rebuild(size_t size);
+    void update(const std::vector<const Tetrimino *> &pieces) const;
+    void setPosition(int x, int y);
+    void invalidate();
+    void render();
+    void clear() const;
+    void rebuild(size_t size);
 
 private:
-	size_t _size;
-	Panel _panel;
-	std::vector<std::shared_ptr<PiecePreview>> _pieces;
+    size_t _size;
+    Panel _panel;
+    std::vector<std::shared_ptr<PiecePreview>> _pieces;
 };

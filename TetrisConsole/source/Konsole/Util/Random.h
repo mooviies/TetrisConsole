@@ -13,7 +13,7 @@ public:
     ~Random() = delete;
 
 private:
-    static std::mt19937& getGenerator() {
+    static std::mt19937 &getGenerator() {
         static std::random_device rd;
         static std::mt19937 gen(rd());
         return gen;

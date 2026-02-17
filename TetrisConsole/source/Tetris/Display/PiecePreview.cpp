@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void PiecePreview::drawRow(const int rowIndex, RowDrawContext& ctx) const {
+void PiecePreview::drawRow(const int rowIndex, RowDrawContext &ctx) const {
     if (_hasPiece) {
         ctx.setColor(_color);
         ctx.print(rowIndex == 0 ? _line1 : _line2);
@@ -13,7 +13,7 @@ void PiecePreview::drawRow(const int rowIndex, RowDrawContext& ctx) const {
     }
 }
 
-void PiecePreview::setPiece(const PiecePreview* piecePreview) {
+void PiecePreview::setPiece(const PiecePreview *piecePreview) {
     if (piecePreview == nullptr) {
         clearPiece();
         return;
@@ -26,7 +26,7 @@ void PiecePreview::setPiece(const PiecePreview* piecePreview) {
     markDirty();
 }
 
-void PiecePreview::setPiece(const Tetrimino* piece) {
+void PiecePreview::setPiece(const Tetrimino *piece) {
     if (piece == nullptr) {
         clearPiece();
         return;

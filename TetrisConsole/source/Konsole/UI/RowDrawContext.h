@@ -8,7 +8,7 @@ public:
 
     void setColor(int color);
     void setBackgroundColor(int color);
-    void print(const std::string& text);
+    void print(const std::string &text);
     [[nodiscard]] int width() const { return _width; }
 
 private:

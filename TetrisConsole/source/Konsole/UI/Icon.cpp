@@ -4,8 +4,8 @@
 
 #include "rlutil.h"
 
-Icon::Icon(std::string symbol, const int color)
-    : _symbol(std::move(symbol)), _color(color) {}
+Icon::Icon(std::string symbol, const int color) : _symbol(std::move(symbol)), _color(color) {
+}
 
 void Icon::setPosition(const int x, const int y) {
     _x = x;

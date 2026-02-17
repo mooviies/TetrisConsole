@@ -3,9 +3,7 @@
 #include "PiecePreview.h"
 #include "Tetrimino.h"
 
-PieceDisplay::PieceDisplay(const size_t size)
-    : _size(size), _panel(12)
-{
+PieceDisplay::PieceDisplay(const size_t size) : _size(size), _panel(12) {
     if (_size == 0) _size = 1;
 
     _panel.addRow("");
@@ -25,7 +23,7 @@ PieceDisplay::PieceDisplay(const size_t size)
 
 PieceDisplay::~PieceDisplay() = default;
 
-void PieceDisplay::update(const std::vector<const Tetrimino*>& pieces) const {
+void PieceDisplay::update(const std::vector<const Tetrimino *> &pieces) const {
     for (size_t i = 0; i < _pieces.size(); i++) {
         if (i < pieces.size())
             _pieces[i]->setPiece(pieces[i]);
@@ -34,10 +32,18 @@ void PieceDisplay::update(const std::vector<const Tetrimino*>& pieces) const {
     }
 }
 
-void PieceDisplay::setPosition(const int x, const int y) { _panel.setPosition(x, y); }
-void PieceDisplay::invalidate() { _panel.invalidate(); }
-void PieceDisplay::render() { _panel.render(); }
-void PieceDisplay::clear() const { _panel.clear(); }
+void PieceDisplay::setPosition(const int x, const int y) {
+    _panel.setPosition(x, y);
+}
+void PieceDisplay::invalidate() {
+    _panel.invalidate();
+}
+void PieceDisplay::render() {
+    _panel.render();
+}
+void PieceDisplay::clear() const {
+    _panel.clear();
+}
 
 void PieceDisplay::rebuild(const size_t size) {
     _size = size;
