@@ -43,6 +43,8 @@ private:
     void handlePause();
     void handleGameOver();
     void playPendingSounds();
+    void playStartingMusic();
+    static std::string randomTrack(const std::string &exclude = "");
 
     GameState _state;
     GameRenderer _renderer;

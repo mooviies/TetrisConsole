@@ -132,6 +132,8 @@ OptionChoice Menu::open(const bool showSubtitle, const bool escapeCloses) {
 
 void Menu::generate() {
     size_t middleWidth = _longestOption + 5;
+    if (_longestOptionWithChoice > 0)
+        middleWidth = max(middleWidth, _longestOptionWithChoice + _longestOptionValue + 6);
     middleWidth = max(middleWidth, _title.length() + 2);
     if (_showSubtitle) middleWidth = max(middleWidth, _subtitle.length() + 2);
     middleWidth = max(middleWidth, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));

@@ -39,7 +39,7 @@ void LineClear::stepPattern(GameState &state) const {
         string text;
         int color = 0;
         if (isTSpin) {
-            static constexpr char *const names[] = {"T-SPIN", "T-SPIN SINGLE", "T-SPIN DOUBLE", "T-SPIN TRIPLE"};
+            static constexpr const char *const names[] = {"T-SPIN", "T-SPIN SINGLE", "T-SPIN DOUBLE", "T-SPIN TRIPLE"};
             text = names[min(linesCleared, 3)];
             color = Color::LIGHTMAGENTA;
         } else if (isMiniTSpin) {
@@ -125,7 +125,7 @@ vector<int> LineClear::detectFullRows(const GameState &state) {
 }
 
 void LineClear::eliminateRows(GameState &state, const vector<int> &rows) {
-    // rows are sorted descending (highest index first) from detectFullRows
+    // rows are sorted descending (the highest index first) from detectFullRows
     for (const int r : rows)
         state.matrix.erase(state.matrix.begin() + r);
 
@@ -147,7 +147,7 @@ void LineClear::awardScore(GameState &state, const int linesCleared) const {
     state.flags.lastMoveIsMiniTSpin = false;
 
     // Combo (Ren) tracking: consecutive piece placements that clear lines.
-    // currentCombo reaches 1+ on the 2nd consecutive clear (= first real combo).
+    // the currentCombo reaches 1+ on the 2nd consecutive clear (= first real combo).
     if (linesCleared > 0) {
         state.stats.currentCombo++;
         if (state.stats.currentCombo > state.stats.combos) state.stats.combos = state.stats.currentCombo;

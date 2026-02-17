@@ -5,8 +5,11 @@
 #include <cassert>
 #include <cstring>
 
+#include <cmath>
+
 #include "PieceData.h"
 #include "Platform.h"
+#include "SoundEngine.h"
 
 using namespace std;
 
@@ -18,7 +21,7 @@ static constexpr size_t kMaxHighscores = 10;
 #define SCORE_FILE (Platform::getDataDir() + "/score.bin")
 
 static constexpr uint32_t kOptMagic = 0x54434F50; // "PCOT" little-endian
-static constexpr uint32_t kOptVersion = 2;
+static constexpr uint32_t kOptVersion = 3;
 
 #define OPTIONS_FILE (Platform::getDataDir() + "/options.bin")
 
@@ -289,6 +292,17 @@ void GameState::loadOptions() {
 
     in.read(reinterpret_cast<char *>(&val), 4);
     if (in) config.previewCount = clamp(static_cast<int>(val), 0, 6);
+
+    if (version >= 3) {
+        in.read(reinterpret_cast<char *>(&val), 4);
+        if (in) SoundEngine::setMusicVolume(static_cast<float>(clamp(static_cast<int>(val), 0, 10)) * 0.02f);
+
+        in.read(reinterpret_cast<char *>(&val), 4);
+        if (in) SoundEngine::setEffectVolume(static_cast<float>(clamp(static_cast<int>(val), 0, 10)) * 0.1f);
+
+        in.read(reinterpret_cast<char *>(&val), 4);
+        if (in) SoundEngine::setSoundtrackMode(static_cast<SoundtrackMode>(clamp(static_cast<int>(val), 0, 4)));
+    }
 }
 
 void GameState::saveOptions() const {
@@ -306,6 +320,9 @@ void GameState::saveOptions() const {
     write32(config.ghostEnabled ? 1 : 0);
     write32(config.holdEnabled ? 1 : 0);
     write32(static_cast<int32_t>(config.previewCount));
+    write32(static_cast<int32_t>(lround(SoundEngine::desiredMusicVolume() * 50)));
+    write32(static_cast<int32_t>(lround(SoundEngine::desiredEffectVolume() * 10)));
+    write32(static_cast<int32_t>(SoundEngine::getSoundtrackMode()));
 }
 
 void GameState::setStartingLevel(const int level) {

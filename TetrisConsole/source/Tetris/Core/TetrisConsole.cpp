@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -140,15 +142,27 @@ int main() {
     for (int i = 0; i <= 6; i++)
         previewValues.push_back(Utility::valueToString(i, 2));
 
+    vector<string> volumeValues;
+    for (int i = 0; i <= 10; i++)
+        volumeValues.emplace_back(string(static_cast<size_t>(i), '#') + string(static_cast<size_t>(10 - i), '-'));
+
+    vector<string> soundtrackValues = {"Cycle", "Random", "A", "B", "C"};
+
     options.addOptionWithValues("Lock Down", lockDownMode);
     options.addOptionWithValues("Ghost Piece", ghostValues);
     options.addOptionWithValues("Hold Piece", holdValues);
     options.addOptionWithValues("Preview", previewValues);
-    options.addOption("Reset Defaults", [&options](const OptionChoice &) {
+    options.addOptionWithValues("Music", volumeValues);
+    options.addOptionWithValues("Effects", volumeValues);
+    options.addOptionWithValues("Soundtrack", soundtrackValues);
+    options.addOption("Reset Defaults", [&options, &volumeValues](const OptionChoice &) {
         options.setValueChoice("Lock Down", "Extended");
         options.setValueChoice("Ghost Piece", "On");
         options.setValueChoice("Hold Piece", "On");
         options.setValueChoice("Preview", Utility::valueToString(6, 2));
+        options.setValueChoice("Music", volumeValues[5]);
+        options.setValueChoice("Effects", volumeValues[5]);
+        options.setValueChoice("Soundtrack", "Cycle");
     });
     options.addOptionClose("Back");
 
@@ -170,6 +184,13 @@ int main() {
             hint = "Shows the next " + to_string(i) + " pieces.";
         options.setOptionValueHint("Preview", val, hint);
     }
+    options.setOptionHint("Music", "Adjust the music volume.");
+    options.setOptionHint("Effects", "Adjust the sound effects volume.");
+    options.setOptionValueHint("Soundtrack", "Cycle", "Play tracks A, B, C in order, then repeat.");
+    options.setOptionValueHint("Soundtrack", "Random", "Play a random track each time.");
+    options.setOptionValueHint("Soundtrack", "A", "Always play track A.");
+    options.setOptionValueHint("Soundtrack", "B", "Always play track B.");
+    options.setOptionValueHint("Soundtrack", "C", "Always play track C.");
     options.setOptionHint("Reset Defaults", "Restore all options to their default values.");
     options.setOptionHint("Back", "Return to the main menu.");
 
@@ -195,6 +216,20 @@ int main() {
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
         options.setValueChoice("Preview", Utility::valueToString(tetris.previewCount(), 2));
 
+        int musicStep = clamp(static_cast<int>(lroundf(SoundEngine::desiredMusicVolume() * 50)), 0, 10);
+        options.setValueChoice("Music", volumeValues[static_cast<size_t>(musicStep)]);
+
+        int effectStep = clamp(static_cast<int>(lroundf(SoundEngine::desiredEffectVolume() * 10)), 0, 10);
+        options.setValueChoice("Effects", volumeValues[static_cast<size_t>(effectStep)]);
+
+        auto stMode = SoundEngine::getSoundtrackMode();
+        string stStr = "Cycle";
+        if (stMode == SoundtrackMode::Random) stStr = "Random";
+        else if (stMode == SoundtrackMode::TrackA) stStr = "A";
+        else if (stMode == SoundtrackMode::TrackB) stStr = "B";
+        else if (stMode == SoundtrackMode::TrackC) stStr = "C";
+        options.setValueChoice("Soundtrack", stStr);
+
         options.open(false, true);
 
         // Apply values back to tetris
@@ -212,6 +247,22 @@ int main() {
             preview = stoi(values["Preview"]);
         } catch (...) {}
         tetris.setPreviewCount(preview);
+
+        auto hashes = count(values["Music"].begin(), values["Music"].end(), '#');
+        SoundEngine::setMusicVolume(static_cast<float>(hashes) * 0.02f);
+
+        hashes = count(values["Effects"].begin(), values["Effects"].end(), '#');
+        SoundEngine::setEffectVolume(static_cast<float>(hashes) * 0.1f);
+
+        SoundEngine::unmute();
+
+        const auto &st = values["Soundtrack"];
+        if (st == "Random") SoundEngine::setSoundtrackMode(SoundtrackMode::Random);
+        else if (st == "A") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackA);
+        else if (st == "B") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackB);
+        else if (st == "C") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackC);
+        else SoundEngine::setSoundtrackMode(SoundtrackMode::Cycle);
+
         tetris.saveOptions();
     });
     main.addOptionAction("High Scores", [&]() { highScores.open(tetris.allHighscores(), tetris.variant()); });

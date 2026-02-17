@@ -275,7 +275,7 @@ void PieceMovement::rotate(GameState &state, const Direction direction) const {
 void PieceMovement::lock(GameState &state) const {
     if (state.pieces.current == nullptr || state.flags.isGameOver) return;
 
-    // False alarm: piece was nudged off its resting surface (e.g. slid over a gap)
+    // False alarm: the piece was nudged off its resting surface (e.g. slid over a gap)
     if (state.pieces.current->simulateMove(Vector2i(1, 0))) {
         _timer.stopTimer(kLockDown);
         state.lockDown.moveCount = 0;
@@ -284,7 +284,7 @@ void PieceMovement::lock(GameState &state) const {
         return;
     }
 
-    // Lock-out: piece overlaps the buffer zone
+    // Lock-out: the piece overlaps the buffer zone
     if (!state.pieces.current->lock()) {
         state.flags.isGameOver = true;
         return;

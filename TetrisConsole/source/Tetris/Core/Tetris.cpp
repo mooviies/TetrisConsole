@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "HighScoreDisplay.h"
+#include "Random.h"
 #include "Timer.h"
 #include "Menu.h"
 #include "SoundEngine.h"
@@ -24,7 +25,7 @@ void Tetris::start() {
     _controller.start(_state);
     _renderer.invalidate();
     _renderer.render(_state);
-    SoundEngine::playMusic("A");
+    playStartingMusic();
 }
 
 void Tetris::step(const InputSnapshot &input) {
@@ -37,12 +38,19 @@ void Tetris::step(const InputSnapshot &input) {
 
     if (SoundEngine::musicEnded()) {
         const auto &name = SoundEngine::currentMusicName();
-        if (name == "A")
-            SoundEngine::playMusic("B");
-        else if (name == "B")
-            SoundEngine::playMusic("C");
-        else if (name == "C")
-            SoundEngine::playMusic("A");
+        switch (SoundEngine::getSoundtrackMode()) {
+            case SoundtrackMode::Cycle:
+                if (name == "A") SoundEngine::playMusic("B");
+                else if (name == "B") SoundEngine::playMusic("C");
+                else if (name == "C") SoundEngine::playMusic("A");
+                break;
+            case SoundtrackMode::Random:
+                SoundEngine::playMusic(randomTrack(name));
+                break;
+            case SoundtrackMode::TrackA: SoundEngine::playMusic("A"); break;
+            case SoundtrackMode::TrackB: SoundEngine::playMusic("B"); break;
+            case SoundtrackMode::TrackC: SoundEngine::playMusic("C"); break;
+        }
     }
 
     switch (result) {
@@ -87,7 +95,7 @@ void Tetris::handlePause() {
         _renderer.invalidate();
         _renderer.render(_state);
         _state.clearDirty();
-        SoundEngine::playMusic("A");
+        playStartingMusic();
         return;
     }
 
@@ -144,7 +152,7 @@ void Tetris::handleGameOver() {
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();
-    SoundEngine::playMusic("A");
+    playStartingMusic();
 }
 
 void Tetris::playPendingSounds() {
@@ -158,4 +166,22 @@ void Tetris::playPendingSounds() {
         }
     }
     _state.clearPendingSounds();
+}
+
+std::string Tetris::randomTrack(const std::string &exclude) {
+    const std::string tracks[] = {"A", "B", "C"};
+    std::vector<std::string> choices;
+    for (const auto &t : tracks)
+        if (t != exclude) choices.push_back(t);
+    return choices[static_cast<size_t>(Random::getInteger(0, static_cast<int>(choices.size()) - 1))];
+}
+
+void Tetris::playStartingMusic() {
+    switch (SoundEngine::getSoundtrackMode()) {
+        case SoundtrackMode::Cycle: SoundEngine::playMusic("A"); break;
+        case SoundtrackMode::Random: SoundEngine::playMusic(randomTrack()); break;
+        case SoundtrackMode::TrackA: SoundEngine::playMusic("A"); break;
+        case SoundtrackMode::TrackB: SoundEngine::playMusic("B"); break;
+        case SoundtrackMode::TrackC: SoundEngine::playMusic("C"); break;
+    }
 }

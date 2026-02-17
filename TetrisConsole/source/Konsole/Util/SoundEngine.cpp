@@ -35,6 +35,7 @@ static float s_effectVolume = 0.5f;
 static auto s_muteState = MuteState::Unmuted;
 static float s_savedMusicVolume = 0.1f;
 static float s_savedEffectVolume = 0.5f;
+static auto s_soundtrackMode = SoundtrackMode::Cycle;
 
 // --- Embedded VFS for serving media from compiled-in data ---
 
@@ -306,6 +307,32 @@ void SoundEngine::cycleMute() {
     }
 }
 
+void SoundEngine::unmute() {
+    if (s_muteState == MuteState::MusicMuted) {
+        setMusicVolume(s_savedMusicVolume);
+    } else if (s_muteState == MuteState::AllMuted) {
+        setMusicVolume(s_savedMusicVolume);
+        s_effectVolume = s_savedEffectVolume;
+    }
+    s_muteState = MuteState::Unmuted;
+}
+
 MuteState SoundEngine::getMuteState() {
     return s_muteState;
+}
+
+float SoundEngine::desiredMusicVolume() {
+    return (s_muteState != MuteState::Unmuted) ? s_savedMusicVolume : s_musicVolume;
+}
+
+float SoundEngine::desiredEffectVolume() {
+    return (s_muteState == MuteState::AllMuted) ? s_savedEffectVolume : s_effectVolume;
+}
+
+SoundtrackMode SoundEngine::getSoundtrackMode() {
+    return s_soundtrackMode;
+}
+
+void SoundEngine::setSoundtrackMode(const SoundtrackMode mode) {
+    s_soundtrackMode = mode;
 }
