@@ -12,10 +12,10 @@ class HighScoreDisplay {
 public:
 	HighScoreDisplay();
 
-	void open(const HighScoreTable& allHighscores, VARIANT initialVariant);
+	void open(const HighScoreTable& allHighscores, GameVariant initialVariant);
 	std::string openForNewEntry(const HighScoreTable& allHighscores,
 	                            const HighScoreRecord& newRecord,
-	                            VARIANT variant);
+	                            GameVariant variant);
 
 private:
 	void updateDisplay(const std::vector<HighScoreRecord>& hs);
@@ -46,7 +46,7 @@ private:
 	size_t _previewRow{};
 
 	size_t _tabRow{};
-	VARIANT _activeTab{};
+	GameVariant _activeTab{};
 	int _selected{};
 	Confetti _confetti;
 };

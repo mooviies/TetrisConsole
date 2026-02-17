@@ -18,33 +18,33 @@ void ScoreDisplay::configure(bool showGoal) {
     _panel.addSeparator();
     _timeValueRow = _panel.addRow("00:00.00", Align::CENTER);
     _panel.addSeparator();
-    _levelRow = _panel.addRow({Cell("Level", Align::LEFT, 17, 9),
+    _levelRow = _panel.addRow({Cell("Level", Align::LEFT, Color::WHITE, 9),
                                 Cell("01", Align::CENTER)});
     _panel.addSeparator();
 
-    _linesRow = _panel.addRow({Cell("Lines", Align::LEFT, 17, 9),
+    _linesRow = _panel.addRow({Cell("Lines", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 
     if (showGoal) {
-        _goalRow = _panel.addRow({Cell("Goal", Align::LEFT, 17, 9),
+        _goalRow = _panel.addRow({Cell("Goal", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
     }
 
     _panel.addSeparator();
 
-    _tpmRow = _panel.addRow({Cell("TPM", Align::LEFT, 17, 9),
+    _tpmRow = _panel.addRow({Cell("TPM", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 
-    _lpmRow = _panel.addRow({Cell("LPM", Align::LEFT, 17, 9),
+    _lpmRow = _panel.addRow({Cell("LPM", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 
-    _tetrisRow = _panel.addRow({Cell("Tetris", Align::LEFT, 17, 9),
+    _tetrisRow = _panel.addRow({Cell("Tetris", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 
-    _combosRow = _panel.addRow({Cell("Combos", Align::LEFT, 17, 9),
+    _combosRow = _panel.addRow({Cell("Combos", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 
-    _tSpinsRow = _panel.addRow({Cell("T-Spins", Align::LEFT, 17, 9),
+    _tSpinsRow = _panel.addRow({Cell("T-Spins", Align::LEFT, Color::WHITE, 9),
                                 Cell("000000", Align::CENTER)});
 }
 

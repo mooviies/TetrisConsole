@@ -113,9 +113,9 @@ int main() {
         try { level = stoi(oc.values["Level"]); } catch (...) {}
         tetris.setStartingLevel(level);
 
-        auto v = VARIANT::MARATHON;
-        if (oc.values["Variant"] == "Sprint") v = VARIANT::SPRINT;
-        else if (oc.values["Variant"] == "Ultra") v = VARIANT::ULTRA;
+        auto v = GameVariant::MARATHON;
+        if (oc.values["Variant"] == "Sprint") v = GameVariant::SPRINT;
+        else if (oc.values["Variant"] == "Ultra") v = GameVariant::ULTRA;
         tetris.setVariant(v);
 
         tetris.saveOptions();
@@ -170,8 +170,8 @@ int main() {
     main.addOption("New Game", &newGame, [&]() {
         newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
         string varStr = "Marathon";
-        if (tetris.variant() == VARIANT::SPRINT) varStr = "Sprint";
-        else if (tetris.variant() == VARIANT::ULTRA) varStr = "Ultra";
+        if (tetris.variant() == GameVariant::SPRINT) varStr = "Sprint";
+        else if (tetris.variant() == GameVariant::ULTRA) varStr = "Ultra";
         newGame.setValueChoice("Variant", varStr);
     });
     main.addOptionAction("Options", [&]() {

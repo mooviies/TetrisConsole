@@ -143,7 +143,7 @@ void TestRunner::printProgress() const {
 void TestRunner::runScenario(const TestScenario& scenario) {
 	// Reset state
 	_controller.configurePolicies(LOCKDOWN_MODE::EXTENDED);
-	_controller.configureVariant(VARIANT::MARATHON, _state);
+	_controller.configureVariant(GameVariant::MARATHON, _state);
 	_renderer.configure(0, false, false);
 	_controller.start(_state);
 

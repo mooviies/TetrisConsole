@@ -48,12 +48,14 @@ void Tetris::step(const InputSnapshot& input) {
         case StepResult::Continue:
             break;
         case StepResult::PauseRequested:
-            handlePause();
+            if (!_wasPausePressed)
+                handlePause();
             break;
         case StepResult::GameOver:
             handleGameOver();
             break;
     }
+    _wasPausePressed = input.pause;
 }
 
 void Tetris::render() {

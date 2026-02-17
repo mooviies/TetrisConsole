@@ -52,7 +52,7 @@ file(GLOB MEDIA_FILES TetrisConsole/media/*)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/media_data.h ${CMAKE_BINARY_DIR}/media_data.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/embed_media.py ${CMAKE_BINARY_DIR}
+    COMMAND python ${CMAKE_SOURCE_DIR}/scripts/embed_media.py ${CMAKE_BINARY_DIR}
     DEPENDS ${MEDIA_FILES} ${CMAKE_SOURCE_DIR}/scripts/embed_media.py
     COMMENT "Embedding media files"
 )
@@ -90,3 +90,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE konsole)
+
+if(MINGW)
+    target_link_options(${TARGET_NAME} PRIVATE -static-libgcc -static-libstdc++ -static -lpthread)
+endif()

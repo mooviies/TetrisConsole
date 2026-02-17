@@ -32,7 +32,7 @@ struct HighScoreRecord {
 
 struct GameConfig {
 	LOCKDOWN_MODE mode = LOCKDOWN_MODE::EXTENDED;
-	VARIANT variant = VARIANT::MARATHON;
+	GameVariant variant = GameVariant::MARATHON;
 	bool ghostEnabled = true;
 	bool holdEnabled = true;
 	int previewCount = 6;
@@ -101,7 +101,7 @@ public:
 	[[nodiscard]] int tpm() const;
 	[[nodiscard]] int lpm() const;
 	[[nodiscard]] const std::vector<HighScoreRecord>& highscores() const { return _highscores[static_cast<size_t>(config.variant)]; }
-	[[nodiscard]] const std::vector<HighScoreRecord>& highscores(VARIANT v) const { return _highscores[static_cast<size_t>(v)]; }
+	[[nodiscard]] const std::vector<HighScoreRecord>& highscores(GameVariant v) const { return _highscores[static_cast<size_t>(v)]; }
 	[[nodiscard]] const HighScoreTable& allHighscores() const { return _highscores; }
 	[[nodiscard]] bool shouldExit() const { return _shouldExit; }
 

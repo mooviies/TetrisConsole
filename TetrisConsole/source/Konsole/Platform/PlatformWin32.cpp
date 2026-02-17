@@ -10,6 +10,8 @@
 
 void Platform::initConsole()
 {
+	SetConsoleOutputCP(CP_UTF8);
+
 	// Ignore Ctrl+C — quit through the in-app menu
 	SetConsoleCtrlHandler(NULL, TRUE);
 

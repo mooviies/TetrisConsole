@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Generate C++ source files containing embedded media data."""
 
 import os

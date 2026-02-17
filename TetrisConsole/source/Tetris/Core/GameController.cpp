@@ -26,7 +26,7 @@ void GameController::configurePolicies(const LOCKDOWN_MODE mode) {
 	_movement.setLockDownPolicy(_lockDownPolicy.get());
 }
 
-void GameController::configureVariant(const VARIANT variant, GameState& state) {
+void GameController::configureVariant(const GameVariant variant, GameState& state) {
 	_variantRule = makeVariantRule(variant);
 	_lineClear.setVariantRule(_variantRule.get());
 	state.config.timeLimit = _variantRule->timeLimit();

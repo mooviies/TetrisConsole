@@ -104,7 +104,7 @@ void GameState::loadHighscore()
 		in.read(reinterpret_cast<char*>(&count), 4);
 		if (!in) { in.close(); activateHighscore(); return; }
 
-		auto& marathon = _highscores[static_cast<size_t>(VARIANT::MARATHON)];
+		auto& marathon = _highscores[static_cast<size_t>(GameVariant::MARATHON)];
 		for (uint32_t i = 0; i < count; i++) {
 			if (!in) break;
 			marathon.push_back(readRecord(in));

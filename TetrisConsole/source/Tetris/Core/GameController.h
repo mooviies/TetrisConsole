@@ -24,7 +24,7 @@ public:
 	StepResult step(GameState& state, const InputSnapshot& input);
 	void reset(GameState& state) const;
 	void configurePolicies(LOCKDOWN_MODE mode);
-	void configureVariant(VARIANT variant, GameState &state);
+	void configureVariant(GameVariant variant, GameState &state);
 
 private:
 	void stepGeneration(GameState& state) const;

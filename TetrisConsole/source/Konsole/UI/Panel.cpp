@@ -230,6 +230,7 @@ string Panel::renderSeparator(const size_t rowIndex) const {
 void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
     vector<int> widths = computeColumnWidths(row.cells);
     rlutil::locate(x, y);
+    rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
     cout << "║";
 
@@ -325,6 +326,7 @@ void Panel::drawFull() {
 
     // Top border
     rlutil::locate(_x, _y);
+    rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
     {
         string top = "╔";
@@ -356,6 +358,7 @@ void Panel::drawFull() {
 
     // Bottom border
     rlutil::locate(_x, _y + static_cast<int>(_rows.size()) + 1);
+    rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
     {
         string bottom = "╚";
@@ -386,10 +389,12 @@ void Panel::drawSingleRow(const size_t row) const {
     int rowY = _y + static_cast<int>(row) + 1;
     if (_rows[row].type == RowData::Type::SEPARATOR) {
         rlutil::locate(_x, rowY);
+        rlutil::setBackgroundColor(Color::BLACK);
         rlutil::setColor(rlutil::WHITE);
         cout << renderSeparator(row);
     } else if (_rows[row].type == RowData::Type::ELEMENT) {
         rlutil::locate(_x, rowY);
+        rlutil::setBackgroundColor(Color::BLACK);
         rlutil::setColor(Color::WHITE);
         cout << "║";
         RowDrawContext ctx(_x + 1, rowY, _interiorWidth);
@@ -406,6 +411,7 @@ void Panel::clear() const {
     int w = width();
     int h = height();
     string blank(static_cast<size_t>(w), ' ');
+    rlutil::setBackgroundColor(Color::BLACK);
     rlutil::setColor(rlutil::WHITE);
     for (int i = 0; i < h; i++) {
         rlutil::locate(_x, _y + i);

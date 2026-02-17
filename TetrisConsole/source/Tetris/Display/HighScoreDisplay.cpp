@@ -159,7 +159,7 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 	}
 }
 
-void HighScoreDisplay::open(const HighScoreTable& allHighscores, VARIANT initialVariant) {
+void HighScoreDisplay::open(const HighScoreTable& allHighscores, GameVariant initialVariant) {
 	_selected = 0;
 	_activeTab = initialVariant;
 
@@ -192,7 +192,7 @@ void HighScoreDisplay::open(const HighScoreTable& allHighscores, VARIANT initial
 				break;
 			case rlutil::KEY_LEFT: {
 				auto idx = static_cast<size_t>(_activeTab);
-				_activeTab = static_cast<VARIANT>(idx == 0 ? VARIANT_COUNT - 1 : idx - 1);
+				_activeTab = static_cast<GameVariant>(idx == 0 ? VARIANT_COUNT - 1 : idx - 1);
 				_selected = 0;
 				updateTabRow();
 				updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
@@ -200,7 +200,7 @@ void HighScoreDisplay::open(const HighScoreTable& allHighscores, VARIANT initial
 			}
 			case rlutil::KEY_RIGHT: {
 				auto idx = static_cast<size_t>(_activeTab);
-				_activeTab = static_cast<VARIANT>((idx + 1) % VARIANT_COUNT);
+				_activeTab = static_cast<GameVariant>((idx + 1) % VARIANT_COUNT);
 				_selected = 0;
 				updateTabRow();
 				updateDisplay(allHighscores[static_cast<size_t>(_activeTab)]);
@@ -245,7 +245,7 @@ static vector<Rect> buildExclusionZones(int ox, int oy,
 
 string HighScoreDisplay::openForNewEntry(const HighScoreTable& allHighscores,
                                          const HighScoreRecord& newRecord,
-                                         VARIANT variant) {
+                                         GameVariant variant) {
 	constexpr int kMaxName = 10;
 
 	_activeTab = variant;

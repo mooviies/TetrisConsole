@@ -15,7 +15,7 @@ constexpr int MAX_LEVEL = 15;
 constexpr int VISIBLE_ROWS = MATRIX_END - MATRIX_START + 1;
 constexpr int OVERLAY_LEVEL_THRESHOLD = 10;
 
-enum class  VARIANT { MARATHON, SPRINT, ULTRA };
+enum class  GameVariant { MARATHON, SPRINT, ULTRA };
 inline constexpr size_t VARIANT_COUNT = 3;
 enum class LOCKDOWN_MODE { EXTENDED, EXTENDED_INFINITY, CLASSIC };
 enum class DROP_TYPE { NORMAL, SOFT, HARD };
