@@ -18,9 +18,10 @@
 /// Define: RLUTIL_USE_ANSI
 /// Define this to use ANSI escape sequences also on Windows
 /// (defaults to using WinAPI instead).
-#if 0
+/// Enabled: ANSI sequences can be buffered and flushed once per frame,
+/// avoiding hundreds of individual Win32 API round-trips through ConPTY
+/// on Windows Terminal. Requires ENABLE_VIRTUAL_TERMINAL_PROCESSING.
 #define RLUTIL_USE_ANSI
-#endif
 
 /// Define: RLUTIL_STRING_T
 /// Define/typedef this to your preference to override rlutil's string type.

@@ -100,7 +100,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 ### Dependencies (header-only, vendored in `include/`)
 
 - **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp. Vendored headers use `-isystem` to suppress warnings.
-- **rlutil.h** — Console colors, cursor positioning, `getkey()`. Already cross-platform internally via `#ifdef _WIN32`. Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
+- **rlutil.h** — Console colors, cursor positioning, `getkey()`. Cross-platform via `#ifdef _WIN32` with a `RLUTIL_USE_ANSI` flag (enabled) that forces ANSI escape sequences on Windows instead of Win32 API calls — required for output batching on Windows Terminal (see `BatchingStreambuf` in `PlatformWin32.cpp`). Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
 
 ### Key Quirks
 
@@ -111,6 +111,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 - `TETRIS_DEBUG` compile definition is set for Debug builds (`$<$<CONFIG:Debug>:TETRIS_DEBUG>`), enabling the test runner menu item.
 - CMakeLists.txt has duplicate source entries for `GoalPolicy.{cpp,h}` and `VariantRule.{cpp,h}` (listed explicitly in `add_executable` in addition to `GLOB_RECURSE`). This is harmless but should be cleaned up.
 - Source files were originally encoded in CP437/CP1252 (Windows console). All box-drawing (`╔═║` etc.) and block characters (`██░░▒▒▄▀`) are now UTF-8.
-- `Platform::flushOutput()` is called after drawing — necessary in termios raw mode where line-buffering is disabled.
+- `Platform::flushOutput()` is called after drawing — necessary in termios raw mode where line-buffering is disabled. On Windows, it triggers `BatchingStreambuf::sync()` which writes the entire frame's output in one `WriteFile` call.
+- Windows Terminal (Win 11 default) ignores legacy console APIs (`SetConsoleWindowInfo`, `MoveWindow`, `SetWindowLongPtr` for style). Terminal sizing uses `\033[8;29;80t` xterm escape sequence. Resize prevention is reactive: `wasResized()` detects size changes and snaps back. `getKey()` polls with `_kbhit()` + resize detection (since there's no `SIGWINCH` equivalent).
 - No `using namespace std;` in headers — all headers use explicit `std::` prefixes. `.cpp` files may use `using namespace std;`.
 - Compiler warnings: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`. The build should be warning-free.

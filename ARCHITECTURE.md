@@ -618,22 +618,30 @@ static std::string getDataDir();   // persistent data directory
 ### Windows
 
 **Console init** (`initConsole()`):
-1. Sets console output to UTF-8 via `SetConsoleOutputCP(CP_UTF8)` (required for box-drawing characters ╔═║ and block characters ██░░)
-2. Disables Ctrl+C via `SetConsoleCtrlHandler(NULL, TRUE)` — quit via in-app menu only
-3. Centers window on desktop (675×515px), disables resize/maximize via `SetWindowLongPtr`
-4. Sets window title to "Tetris Console"
-5. Resets colors (`system("color 0F")`), hides cursor, sets 80×29 screen buffer
-6. Disables quick-edit mode (prevents accidental selection-pause)
+1. `timeBeginPeriod(1)` — sets system timer resolution to 1ms so `Sleep()` is precise (default ~15.6ms granularity halves the frame rate)
+2. Sets console output to UTF-8 via `SetConsoleOutputCP(CP_UTF8)` (required for box-drawing characters ╔═║ and block characters ██░░)
+3. Disables Ctrl+C via `SetConsoleCtrlHandler(NULL, TRUE)` — quit via in-app menu only
+4. Disables resize/maximize buttons via `SetWindowLongPtr` (cosmetic — Windows Terminal ignores this)
+5. Sets window title to "Tetris Console"
+6. Resets colors (`system("color 0F")`), hides cursor
+7. Enables `ENABLE_VIRTUAL_TERMINAL_PROCESSING` on the output handle so ANSI escape sequences are interpreted by Windows Terminal
+8. Sets 80×29 screen buffer via console APIs (legacy conhost), then sends `\033[8;29;80t` xterm resize sequence (Windows Terminal)
+9. Disables quick-edit mode (prevents accidental selection-pause)
+10. Installs `BatchingStreambuf` on `std::cout` (see Output Batching below)
 
-**Cleanup** (`cleanupConsole()`): no-op — Windows handles cleanup automatically on process exit.
+**Output Batching** (`BatchingStreambuf`): A custom `std::streambuf` subclass defined in `PlatformWin32.cpp` that replaces `std::cout`'s default streambuf. All `std::cout <<` operations append to an in-memory string (zero system calls). When `std::flush` triggers `sync()`, the entire buffer is written to the console in a single `WriteFile` call. This avoids hundreds of individual round-trips through Windows Terminal's ConPTY layer per frame. Without this, rendering is ~10× slower on Windows Terminal compared to Linux terminals. Installed after all init output is flushed; uninstalled during cleanup.
+
+**Cleanup** (`cleanupConsole()`): uninstalls the batching streambuf (flushing any pending output and restoring the original `std::cout` streambuf), then calls `timeEndPeriod(1)` to restore the default timer resolution.
 
 **`flushInput()`**: `FlushConsoleInputBuffer()` — discards unread console input events.
 
-**`getKey()`**: delegates to `rlutil::getkey()`.
+**`flushOutput()`**: `std::cout << std::flush` — triggers `BatchingStreambuf::sync()`, which writes the accumulated frame output to the console via a single `WriteFile` call.
+
+**`getKey()`**: polls `_kbhit()` in a loop with `Sleep(10)` per iteration, returning `rlutil::getkey()` when a key is available. Also checks for terminal resize each iteration — if the terminal is no longer 80×29, returns -1 immediately so the caller's `wasResized()` check runs. This mirrors how Linux's `SIGWINCH` interrupts `read()` to allow resize detection between keypresses.
 
 **`getKeyTimeout(ms)`**: polls `_kbhit()` in a loop with `Sleep(1)` per iteration, returns `getKey()` if a key is available or -1 on timeout.
 
-**Resize**: all no-ops (fixed window size). `wasResized()` returns `false`, `isTerminalTooSmall()` returns `false`, offsets always return 0.
+**Resize handling**: `wasResized()` checks if `rlutil::tcols()` or `rlutil::trows()` differ from 80×29. If so, sends `\033[8;29;80t` to snap back, waits 50ms for the terminal to process it, clears the screen, and returns `true` for a full redraw. `isTerminalTooSmall()` performs the same size check. Offsets always return 0 (content is not centered within the window).
 
 **Data directory**: `%APPDATA%\TetrisConsole` via `SHGetFolderPathA()`. Falls back to `.\TetrisConsole` if the shell API call fails.
 
