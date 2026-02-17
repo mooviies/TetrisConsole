@@ -152,14 +152,14 @@ string Panel::renderTextRow(const RowData& row) const {
             result += cell.text.substr(0, static_cast<size_t>(w));
         } else {
             switch (cell.align) {
-                case Align::LEFT: {
+                case Align::Left: {
                     result += " ";
                     result += cell.text;
                     for (int p = 0; p < padding - 1; p++)
                         result += " ";
                     break;
                 }
-                case Align::CENTER: {
+                case Align::Center: {
                     int left = padding / 2;
                     int right = padding - left;
                     for (int p = 0; p < left; p++)
@@ -169,14 +169,14 @@ string Panel::renderTextRow(const RowData& row) const {
                         result += " ";
                     break;
                 }
-                case Align::RIGHT: {
+                case Align::Right: {
                     for (int p = 0; p < padding - 1; p++)
                         result += " ";
                     result += cell.text;
                     result += " ";
                     break;
                 }
-                case Align::FILL: {
+                case Align::Fill: {
                     result += cell.text;
                     break;
                 }
@@ -251,13 +251,13 @@ void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
             cout << cell.text.substr(0, static_cast<size_t>(w));
         } else {
             switch (cell.align) {
-                case Align::LEFT: {
+                case Align::Left: {
                     cout << " " << cell.text;
                     for (int p = 0; p < padding - 1; p++)
                         cout << " ";
                     break;
                 }
-                case Align::CENTER: {
+                case Align::Center: {
                     int left = padding / 2;
                     int right = padding - left;
                     for (int p = 0; p < left; p++)
@@ -267,14 +267,14 @@ void Panel::drawColoredRow(const int x, const int y, const RowData& row) const {
                         cout << " ";
                     break;
                 }
-                case Align::RIGHT: {
+                case Align::Right: {
                     for (int p = 0; p < padding - 1; p++)
                         cout << " ";
                     cout << cell.text;
                     cout << " ";
                     break;
                 }
-                case Align::FILL: {
+                case Align::Fill: {
                     cout << cell.text;
                     break;
                 }

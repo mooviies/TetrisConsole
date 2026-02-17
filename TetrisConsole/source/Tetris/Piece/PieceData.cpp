@@ -23,10 +23,10 @@ static PieceData buildI()
 	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,1},{0,2}), RotationPoint({0,-2},{0,-1}), RotationPoint({2,1},{-1,2}), RotationPoint({-1,-2},{2,-1}) }};
 	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-2},{0,1}), RotationPoint({0,1},{0,-2}), RotationPoint({1,-2},{2,1}), RotationPoint({-2,1},{-1,-2}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	return data;
 }
@@ -48,10 +48,10 @@ static PieceData buildJ()
 	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
 	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	return data;
 }
@@ -73,10 +73,10 @@ static PieceData buildL()
 	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
 	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	return data;
 }
@@ -91,10 +91,10 @@ static PieceData buildO()
 	const auto north = vector<Vector2i>{{0,0}, {-1,0}, {-1,1}, {0,1}};
 	const array<RotationPoint, 5> rotN = {{ RotationPoint({0,0},{0,0}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, north, rotN);
-	data.facings[SOUTH] = Facing(SOUTH, north, rotN);
-	data.facings[WEST]  = Facing(WEST, north, rotN);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, north, rotN);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, north, rotN);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, north, rotN);
 
 	return data;
 }
@@ -116,10 +116,10 @@ static PieceData buildS()
 	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
 	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	return data;
 }
@@ -165,16 +165,16 @@ static PieceData buildT()
 		RotationPoint({-2,-1},{-2,-1})
 	}};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	data.hasTSpin = true;
-	data.tSpinPositions[NORTH] = TSpinPositions({-1,-1}, {-1,1}, {1,-1}, {1,1});
-	data.tSpinPositions[EAST]  = TSpinPositions({-1,1}, {1,1}, {-1,-1}, {1,-1});
-	data.tSpinPositions[SOUTH] = TSpinPositions({1,1}, {1,-1}, {-1,-1}, {-1,1});
-	data.tSpinPositions[WEST]  = TSpinPositions({1,-1}, {-1,-1}, {1,1}, {-1,1});
+	data.tSpinPositions[static_cast<int>(Rotation::North)] = TSpinPositions({-1,-1}, {-1,1}, {1,-1}, {1,1});
+	data.tSpinPositions[static_cast<int>(Rotation::East)]  = TSpinPositions({-1,1}, {1,1}, {-1,-1}, {1,-1});
+	data.tSpinPositions[static_cast<int>(Rotation::South)] = TSpinPositions({1,1}, {1,-1}, {-1,-1}, {-1,1});
+	data.tSpinPositions[static_cast<int>(Rotation::West)]  = TSpinPositions({1,-1}, {-1,-1}, {1,1}, {-1,1});
 
 	return data;
 }
@@ -196,10 +196,10 @@ static PieceData buildZ()
 	const array<RotationPoint, 5> rotS = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,1}), RotationPoint({-1,-1},{-1,1}), RotationPoint({2,0},{2,0}), RotationPoint({2,-1},{2,1}) }};
 	const array<RotationPoint, 5> rotW = {{ RotationPoint({0,0},{0,0}), RotationPoint({0,-1},{0,-1}), RotationPoint({1,-1},{1,-1}), RotationPoint({-2,0},{-2,0}), RotationPoint({-2,-1},{-2,-1}) }};
 
-	data.facings[NORTH] = Facing(NORTH, north, rotN);
-	data.facings[EAST]  = Facing(EAST, east, rotE);
-	data.facings[SOUTH] = Facing(SOUTH, south, rotS);
-	data.facings[WEST]  = Facing(WEST, west, rotW);
+	data.facings[static_cast<int>(Rotation::North)] = Facing(Rotation::North, north, rotN);
+	data.facings[static_cast<int>(Rotation::East)]  = Facing(Rotation::East, east, rotE);
+	data.facings[static_cast<int>(Rotation::South)] = Facing(Rotation::South, south, rotS);
+	data.facings[static_cast<int>(Rotation::West)]  = Facing(Rotation::West, west, rotW);
 
 	return data;
 }

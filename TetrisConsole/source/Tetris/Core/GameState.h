@@ -24,15 +24,15 @@ struct HighScoreRecord {
 	std::string name;
 	// Options used during this game
 	int startingLevel{1};
-	LOCKDOWN_MODE mode{LOCKDOWN_MODE::EXTENDED};
+	LockDownMode mode{LockDownMode::Extended};
 	bool ghostEnabled{true};
 	bool holdEnabled{true};
 	int previewCount{6};
 };
 
 struct GameConfig {
-	LOCKDOWN_MODE mode = LOCKDOWN_MODE::EXTENDED;
-	GameVariant variant = GameVariant::MARATHON;
+	LockDownMode mode = LockDownMode::Extended;
+	GameVariant variant = GameVariant::Marathon;
 	bool ghostEnabled = true;
 	bool holdEnabled = true;
 	int previewCount = 6;

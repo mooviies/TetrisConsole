@@ -31,7 +31,7 @@ private:
 	void moveLeft(GameState& state) const;
 	void moveRight(GameState& state) const;
 	[[nodiscard]] static bool moveDown(GameState& state);
-	void rotate(GameState& state, DIRECTION direction) const;
+	void rotate(GameState& state, Direction direction) const;
 	void lock(GameState& state) const;
 
 	using MoveFunc = void(PieceMovement::*)(GameState&) const;

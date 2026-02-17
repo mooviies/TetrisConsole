@@ -60,7 +60,7 @@ static HighScoreRecord readRecord(istream& in) {
 	rec.name = nameBuf;
 
 	memcpy(&tmp, buf + 60, 4); rec.startingLevel = tmp;
-	memcpy(&tmp, buf + 64, 4); rec.mode = static_cast<LOCKDOWN_MODE>(tmp);
+	memcpy(&tmp, buf + 64, 4); rec.mode = static_cast<LockDownMode>(tmp);
 	memcpy(&tmp, buf + 68, 4); rec.ghostEnabled = (tmp != 0);
 	memcpy(&tmp, buf + 72, 4); rec.holdEnabled  = (tmp != 0);
 	memcpy(&tmp, buf + 76, 4); rec.previewCount = tmp;
@@ -104,7 +104,7 @@ void GameState::loadHighscore()
 		in.read(reinterpret_cast<char*>(&count), 4);
 		if (!in) { in.close(); activateHighscore(); return; }
 
-		auto& marathon = _highscores[static_cast<size_t>(GameVariant::MARATHON)];
+		auto& marathon = _highscores[static_cast<size_t>(GameVariant::Marathon)];
 		for (uint32_t i = 0; i < count; i++) {
 			if (!in) break;
 			marathon.push_back(readRecord(in));
@@ -267,7 +267,7 @@ void GameState::loadOptions() {
 	if (in) config.startingLevel = clamp(static_cast<int>(val), 1, 15);
 
 	in.read(reinterpret_cast<char*>(&val), 4);
-	if (in) config.mode = static_cast<LOCKDOWN_MODE>(clamp(static_cast<int>(val), 0, 2));
+	if (in) config.mode = static_cast<LockDownMode>(clamp(static_cast<int>(val), 0, 2));
 
 	in.read(reinterpret_cast<char*>(&val), 4);
 	if (in) config.ghostEnabled = (val != 0);

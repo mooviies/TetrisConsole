@@ -5,11 +5,11 @@
 
 #include "Constants.h"
 
-double GuidelineGravity::fallInterval(const int level, const DROP_TYPE dropType) const {
+double GuidelineGravity::fallInterval(const int level, const DropType dropType) const {
 	switch (dropType) {
-		case DROP_TYPE::NORMAL: return GRAVITY_EQUATION(level);
-		case DROP_TYPE::SOFT: return GRAVITY_EQUATION(level) / kSoftDropFactor;
-		case DROP_TYPE::HARD: return kHardDropSpeed;
+		case DropType::Normal: return GRAVITY_EQUATION(level);
+		case DropType::Soft: return GRAVITY_EQUATION(level) / kSoftDropFactor;
+		case DropType::Hard: return kHardDropSpeed;
 		default: return 1.0;
 	}
 }

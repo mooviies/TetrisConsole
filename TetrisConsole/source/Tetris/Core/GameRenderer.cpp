@@ -157,18 +157,18 @@ void GameRenderer::renderTitle(const std::string& subtitle) {
     const int oy = Platform::offsetY();
 
     Panel title(78);
-    title.addRow("Tetris Console", Align::CENTER);
+    title.addRow("Tetris Console", Align::Center);
     title.addSeparator();
-    title.addRow(subtitle, Align::CENTER);
+    title.addRow(subtitle, Align::Center);
     title.setPosition(1 + ox, 1 + oy);
     title.render();
 }
 
 void GameRenderer::drawMuteIndicator() {
     switch (SoundEngine::getMuteState()) {
-        case MuteState::UNMUTED:      _muteIcon.setColor(Color::WHITE);  break;
-        case MuteState::MUSIC_MUTED:  _muteIcon.setColor(Color::YELLOW); break;
-        case MuteState::ALL_MUTED:    _muteIcon.setColor(Color::RED);    break;
+        case MuteState::Unmuted:      _muteIcon.setColor(Color::WHITE);  break;
+        case MuteState::MusicMuted:  _muteIcon.setColor(Color::YELLOW); break;
+        case MuteState::AllMuted:    _muteIcon.setColor(Color::RED);    break;
     }
     _muteIcon.draw();
 }

@@ -24,44 +24,44 @@ HighScoreDisplay::HighScoreDisplay()
 {
 	// --- Left panel: tab row + 10 list rows ---
 	_tabRow = _leftPanel.addRow({
-		Cell("Marathon", Align::CENTER),
-		Cell("Sprint",  Align::CENTER),
-		Cell("Ultra",   Align::CENTER)
+		Cell("Marathon", Align::Center),
+		Cell("Sprint",  Align::Center),
+		Cell("Ultra",   Align::Center)
 	});
 	_leftPanel.addSeparator();
 	for (int i = 0; i < 10; i++)
-		_listRows[static_cast<size_t>(i)] = _leftPanel.addRow("", Align::LEFT);
+		_listRows[static_cast<size_t>(i)] = _leftPanel.addRow("", Align::Left);
 
 	// --- Right panel: score/time/name header + stats + options ---
-	_scoreRow = _rightPanel.addRow("", Align::CENTER);
-	_timeRow  = _rightPanel.addRow("", Align::CENTER);
-	_nameRow  = _rightPanel.addRow("", Align::CENTER);
+	_scoreRow = _rightPanel.addRow("", Align::Center);
+	_timeRow  = _rightPanel.addRow("", Align::Center);
+	_nameRow  = _rightPanel.addRow("", Align::Center);
 	_rightPanel.addSeparator();
-	_lvlStatRow    = _rightPanel.addRow({Cell("Level",   Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_tpmStatRow    = _rightPanel.addRow({Cell("TPM",     Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_lpmStatRow    = _rightPanel.addRow({Cell("LPM",     Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_linesStatRow  = _rightPanel.addRow({Cell("Lines",   Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_tetrisStatRow = _rightPanel.addRow({Cell("Tetris",  Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_combosStatRow = _rightPanel.addRow({Cell("Combos",  Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
-	_tSpinsStatRow = _rightPanel.addRow({Cell("T-Spins", Align::LEFT, 15, kLabelWidth),
-	                                     Cell("", Align::CENTER)});
+	_lvlStatRow    = _rightPanel.addRow({Cell("Level",   Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_tpmStatRow    = _rightPanel.addRow({Cell("TPM",     Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_lpmStatRow    = _rightPanel.addRow({Cell("LPM",     Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_linesStatRow  = _rightPanel.addRow({Cell("Lines",   Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_tetrisStatRow = _rightPanel.addRow({Cell("Tetris",  Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_combosStatRow = _rightPanel.addRow({Cell("Combos",  Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
+	_tSpinsStatRow = _rightPanel.addRow({Cell("T-Spins", Align::Left, 15, kLabelWidth),
+	                                     Cell("", Align::Center)});
 	_rightPanel.addSeparator();
-	_startRow   = _rightPanel.addRow({Cell("FirstLvl",   Align::LEFT, 15, kLabelWidth),
-	                                  Cell("", Align::CENTER)});
-	_previewRow = _rightPanel.addRow({Cell("Preview", Align::LEFT, 15, kLabelWidth),
-									  Cell("", Align::CENTER)});
-	_ghostRow   = _rightPanel.addRow({Cell("Ghost",   Align::LEFT, 15, kLabelWidth),
-	                                  Cell("", Align::CENTER)});
-	_holdRow    = _rightPanel.addRow({Cell("Hold",    Align::LEFT, 15, kLabelWidth),
-	                                  Cell("", Align::CENTER)});
-	_modeRow    = _rightPanel.addRow({Cell("LckDwn",    Align::LEFT, 15, kLabelWidth),
-									  Cell("", Align::CENTER)});
+	_startRow   = _rightPanel.addRow({Cell("FirstLvl",   Align::Left, 15, kLabelWidth),
+	                                  Cell("", Align::Center)});
+	_previewRow = _rightPanel.addRow({Cell("Preview", Align::Left, 15, kLabelWidth),
+									  Cell("", Align::Center)});
+	_ghostRow   = _rightPanel.addRow({Cell("Ghost",   Align::Left, 15, kLabelWidth),
+	                                  Cell("", Align::Center)});
+	_holdRow    = _rightPanel.addRow({Cell("Hold",    Align::Left, 15, kLabelWidth),
+	                                  Cell("", Align::Center)});
+	_modeRow    = _rightPanel.addRow({Cell("LckDwn",    Align::Left, 15, kLabelWidth),
+									  Cell("", Align::Center)});
 
 	reposition();
 }
@@ -132,8 +132,8 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 
 		_rightPanel.setCell(_startRow, 1, Utility::valueToString(rec.startingLevel, 2));
 		string modeStr = "Extended";
-		if (rec.mode == LOCKDOWN_MODE::CLASSIC) modeStr = "Classic";
-		else if (rec.mode == LOCKDOWN_MODE::EXTENDED_INFINITY) modeStr = "Infinite";
+		if (rec.mode == LockDownMode::Classic) modeStr = "Classic";
+		else if (rec.mode == LockDownMode::ExtendedInfinity) modeStr = "Infinite";
 		_rightPanel.setCell(_modeRow,    1, modeStr);
 		_rightPanel.setCell(_ghostRow,   1, rec.ghostEnabled ? "On" : "Off");
 		_rightPanel.setCell(_holdRow,    1, rec.holdEnabled  ? "On" : "Off");

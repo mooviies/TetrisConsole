@@ -7,16 +7,16 @@
 
 using namespace std;
 
-static constexpr auto ANIMATE = "animate";
+static constexpr auto kAnimate = "animate";
 
-static constexpr double ANIMATE_DURATION = 0.4;
-static constexpr double FLASH_INTERVAL   = 0.1;
+static constexpr double kAnimateDuration = 0.4;
+static constexpr double kFlashInterval   = 0.1;
 
 LineClear::LineClear(Timer& timer, ScoringRule* scoringRule, GoalPolicy* goalPolicy, VariantRule* variantRule)
     : _timer(timer), _scoringRule(scoringRule), _goalPolicy(goalPolicy), _variantRule(variantRule) {}
 
 void LineClear::resetTimers() const {
-	_timer.stopTimer(ANIMATE);
+	_timer.stopTimer(kAnimate);
 }
 
 void LineClear::stepPattern(GameState& state) const {
@@ -74,23 +74,23 @@ void LineClear::stepPattern(GameState& state) const {
 }
 
 void LineClear::stepAnimate(GameState& state) const {
-	if (!_timer.exist(ANIMATE)) {
-		_timer.startTimer(ANIMATE);
+	if (!_timer.exist(kAnimate)) {
+		_timer.startTimer(kAnimate);
 		state.lineClear.flashOn = true;
 		state.markDirty();
 	}
 
-	const double elapsed = _timer.getSeconds(ANIMATE);
+	const double elapsed = _timer.getSeconds(kAnimate);
 
-	if (elapsed >= ANIMATE_DURATION) {
-		_timer.stopTimer(ANIMATE);
+	if (elapsed >= kAnimateDuration) {
+		_timer.stopTimer(kAnimate);
 		state.lineClear.flashOn = false;
 		state.phase = GamePhase::Eliminate;
 		state.markDirty();
 		return;
 	}
 
-	if (const bool shouldBeOn = static_cast<int>(elapsed / FLASH_INTERVAL) % 2 == 0;
+	if (const bool shouldBeOn = static_cast<int>(elapsed / kFlashInterval) % 2 == 0;
 		shouldBeOn != state.lineClear.flashOn) {
 		state.lineClear.flashOn = shouldBeOn;
 		state.markDirty();

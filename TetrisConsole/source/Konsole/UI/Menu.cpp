@@ -154,16 +154,16 @@ void Menu::generate() {
 
     _panel = Panel(static_cast<int>(middleWidth));
 
-    _panel.addRow(_title, Align::CENTER);
+    _panel.addRow(_title, Align::Center);
     if (_showSubtitle) {
         _panel.addSeparator();
-        _panel.addRow(_subtitle, Align::CENTER);
+        _panel.addRow(_subtitle, Align::Center);
     }
     _panel.addSeparator();
 
     _optionRows.clear();
     for (const auto& option : _options) {
-        _optionRows.push_back(_panel.addRow("  " + option, Align::LEFT));
+        _optionRows.push_back(_panel.addRow("  " + option, Align::Left));
     }
 
     _width = _panel.width();
@@ -178,7 +178,7 @@ void Menu::generate() {
     if (_hasHints) {
         size_t hintWidth = max(_longestHint + 2, static_cast<size_t>(MINIMUM_INTERIOR_WIDTH));
         _hintPanel = Panel(static_cast<int>(hintWidth));
-        _hintRow = _hintPanel.addRow("", Align::CENTER, Color::GREY);
+        _hintRow = _hintPanel.addRow("", Align::Center, Color::GREY);
         int hintPanelWidth = _hintPanel.width();
         int hx = Platform::offsetX() + 1 + (windowWidth - hintPanelWidth) / 2;
         int hy = _y + _height;

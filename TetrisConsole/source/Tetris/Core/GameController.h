@@ -23,7 +23,7 @@ public:
 	void start(GameState& state) const;
 	StepResult step(GameState& state, const InputSnapshot& input);
 	void reset(GameState& state) const;
-	void configurePolicies(LOCKDOWN_MODE mode);
+	void configurePolicies(LockDownMode mode);
 	void configureVariant(GameVariant variant, GameState &state);
 
 private:

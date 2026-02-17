@@ -5,9 +5,9 @@
 
 using namespace std;
 
-static constexpr auto GENERATION = "generation";
+static constexpr auto kGeneration = "generation";
 
-static constexpr double GENERATION_DELAY = 0.2;
+static constexpr double kGenerationDelay = 0.2;
 
 GameController::GameController(Timer& timer)
     : _timer(timer),
@@ -21,7 +21,7 @@ GameController::GameController(Timer& timer)
 
 GameController::~GameController() = default;
 
-void GameController::configurePolicies(const LOCKDOWN_MODE mode) {
+void GameController::configurePolicies(const LockDownMode mode) {
 	_lockDownPolicy = makeLockDownPolicy(mode);
 	_movement.setLockDownPolicy(_lockDownPolicy.get());
 }
@@ -37,7 +37,7 @@ void GameController::start(GameState& state) const {
 	reset(state);
 	state.flags.isStarted = true;
 	state.phase = GamePhase::Generation;
-	_timer.resetTimer(GENERATION, GENERATION_DELAY);
+	_timer.resetTimer(kGeneration, kGenerationDelay);
 }
 
 StepResult GameController::step(GameState& state, const InputSnapshot& input) {
@@ -101,12 +101,12 @@ void GameController::reset(GameState& state) const {
 
 	_movement.resetTimers();
 	_lineClear.resetTimers();
-	_timer.stopTimer(GENERATION);
+	_timer.stopTimer(kGeneration);
 }
 
 void GameController::stepGeneration(GameState& state) const {
-	if (_timer.getSeconds(GENERATION) >= GENERATION_DELAY) {
-		_timer.stopTimer(GENERATION);
+	if (_timer.getSeconds(kGeneration) >= kGenerationDelay) {
+		_timer.stopTimer(kGeneration);
 		popTetrimino(state);
 		if (!state.pieces.current->setPosition(state.pieces.current->getStartingPosition())) {
 			state.flags.isGameOver = true;
@@ -129,7 +129,7 @@ void GameController::stepCompletion(GameState& state) const {
 		}
 	}
 
-	_timer.startTimer(GENERATION);
+	_timer.startTimer(kGeneration);
 	state.phase = GamePhase::Generation;
 	state.markDirty();
 }

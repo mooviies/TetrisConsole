@@ -25,13 +25,13 @@ HelpDisplay::HelpDisplay()
 	// --- Left panel: Controls ---
 	auto makeRow = [](const string& label) {
 		vector<Cell> cells;
-		cells.emplace_back(label, Align::LEFT, 15, kLabelWidth);
+		cells.emplace_back(label, Align::Left, 15, kLabelWidth);
 		for (int k = 0; k < kMaxKeyCols; k++)
-			cells.emplace_back("", Align::LEFT, 15, kKeyColWidth);
+			cells.emplace_back("", Align::Left, 15, kKeyColWidth);
 		return cells;
 	};
 
-	_leftPanel.addRow("CONTROLS", Align::CENTER);
+	_leftPanel.addRow("CONTROLS", Align::Center);
 	_leftPanel.addSeparator();
 	_controlRows[0] = _leftPanel.addRow(makeRow("Move Left"));
 	_controlRows[1] = _leftPanel.addRow(makeRow("Move Right"));
@@ -44,13 +44,13 @@ HelpDisplay::HelpDisplay()
 	_controlRows[8] = _leftPanel.addRow(makeRow("Mute"));
 
 	// --- Right panel: About / Credits ---
-	_rightPanel.addRow("ABOUT", Align::CENTER);
+	_rightPanel.addRow("ABOUT", Align::Center);
 	_rightPanel.addSeparator();
-	_rightPanel.addRow("Console Tetris", Align::CENTER);
-	_rightPanel.addRow("with official score", Align::CENTER);
-	_rightPanel.addRow("system!", Align::CENTER);
+	_rightPanel.addRow("Console Tetris", Align::Center);
+	_rightPanel.addRow("with official score", Align::Center);
+	_rightPanel.addRow("system!", Align::Center);
 	_rightPanel.addSeparator();
-	_rightPanel.addRow("by mooviies", Align::CENTER);
+	_rightPanel.addRow("by mooviies", Align::Center);
 
 	reposition();
 }

@@ -15,10 +15,10 @@ constexpr int MAX_LEVEL = 15;
 constexpr int VISIBLE_ROWS = MATRIX_END - MATRIX_START + 1;
 constexpr int OVERLAY_LEVEL_THRESHOLD = 10;
 
-enum class  GameVariant { MARATHON, SPRINT, ULTRA };
+enum class  GameVariant { Marathon, Sprint, Ultra };
 inline constexpr size_t VARIANT_COUNT = 3;
-enum class LOCKDOWN_MODE { EXTENDED, EXTENDED_INFINITY, CLASSIC };
-enum class DROP_TYPE { NORMAL, SOFT, HARD };
+enum class LockDownMode { Extended, ExtendedInfinity, Classic };
+enum class DropType { Normal, Soft, Hard };
 
 using MatrixRow = std::array<int, TETRIS_WIDTH>;
 using GameMatrix = std::deque<MatrixRow>;

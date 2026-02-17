@@ -32,7 +32,7 @@ static string s_musicPlayingName;
 static float s_musicVolume = 0.1f;
 static float s_effectVolume = 0.5f;
 
-static auto s_muteState = MuteState::UNMUTED;
+static auto s_muteState = MuteState::Unmuted;
 static float s_savedMusicVolume = 0.1f;
 static float s_savedEffectVolume = 0.5f;
 
@@ -241,7 +241,7 @@ void SoundEngine::playMusic(const string& name)
 
 void SoundEngine::playSound(const string& name)
 {
-	if (s_muteState == MuteState::ALL_MUTED)
+	if (s_muteState == MuteState::AllMuted)
 		return;
 
 	auto it = s_sounds.find(name);
@@ -311,20 +311,20 @@ const string& SoundEngine::currentMusicName()
 void SoundEngine::cycleMute()
 {
 	switch (s_muteState) {
-		case MuteState::UNMUTED:
+		case MuteState::Unmuted:
 			s_savedMusicVolume = s_musicVolume;
 			setMusicVolume(0.0f);
-			s_muteState = MuteState::MUSIC_MUTED;
+			s_muteState = MuteState::MusicMuted;
 			break;
-		case MuteState::MUSIC_MUTED:
+		case MuteState::MusicMuted:
 			s_savedEffectVolume = s_effectVolume;
 			s_effectVolume = 0.0f;
-			s_muteState = MuteState::ALL_MUTED;
+			s_muteState = MuteState::AllMuted;
 			break;
-		case MuteState::ALL_MUTED:
+		case MuteState::AllMuted:
 			setMusicVolume(s_savedMusicVolume);
 			s_effectVolume = s_savedEffectVolume;
-			s_muteState = MuteState::UNMUTED;
+			s_muteState = MuteState::Unmuted;
 			break;
 	}
 }

@@ -2,7 +2,7 @@
 
 #include <string>
 
-enum class MuteState { UNMUTED, MUSIC_MUTED, ALL_MUTED };
+enum class MuteState { Unmuted, MusicMuted, AllMuted };
 
 class SoundEngine
 {

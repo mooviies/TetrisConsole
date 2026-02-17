@@ -6,18 +6,18 @@
 
 using namespace std;
 
-static constexpr auto FALL             = "fall";
-static constexpr auto AUTOREPEAT_LEFT  = "autorepeatleft";
-static constexpr auto AUTOREPEAT_RIGHT = "autorepeatright";
-static constexpr auto LOCK_DOWN        = "lockdown";
-static constexpr auto GENERATION       = "generation";
+static constexpr auto kFall            = "fall";
+static constexpr auto kAutorepeatLeft  = "autorepeatleft";
+static constexpr auto kAutorepeatRight = "autorepeatright";
+static constexpr auto kLockDown        = "lockdown";
+static constexpr auto kGeneration      = "generation";
 
-static constexpr double AUTOREPEAT_DELAY = 0.25;
-static constexpr double AUTOREPEAT_SPEED = 0.01;
-static constexpr double LOCK_DOWN_DELAY  = 0.5;
-static constexpr double GENERATION_DELAY = 0.2;
-static constexpr int SOFT_DROP_SCORE = 1;
-static constexpr int HARD_DROP_SCORE = 2;
+static constexpr double kAutorepeatDelay = 0.25;
+static constexpr double kAutorepeatSpeed = 0.01;
+static constexpr double kLockDownDelay   = 0.5;
+static constexpr double kGenerationDelay = 0.2;
+static constexpr int kSoftDropScore = 1;
+static constexpr int kHardDropScore = 2;
 
 PieceMovement::PieceMovement(Timer& timer, LockDownPolicy* lockDown, GravityPolicy* gravity)
     : _timer(timer), _lockDown(lockDown), _gravity(gravity) {}
@@ -35,9 +35,9 @@ void PieceMovement::stepFalling(GameState& state, const InputSnapshot& input) {
 
 	if (!state.flags.didRotate) {
 		if (input.rotateCW)
-			rotate(state, RIGHT);
+			rotate(state, Direction::Right);
 		else if (input.rotateCCW)
-			rotate(state, LEFT);
+			rotate(state, Direction::Left);
 	} else {
 		if (!input.rotateCW && !input.rotateCCW)
 			state.flags.didRotate = false;
@@ -45,10 +45,10 @@ void PieceMovement::stepFalling(GameState& state, const InputSnapshot& input) {
 }
 
 void PieceMovement::resetTimers() const {
-	_timer.stopTimer(FALL);
-	_timer.stopTimer(AUTOREPEAT_LEFT);
-	_timer.stopTimer(AUTOREPEAT_RIGHT);
-	_timer.stopTimer(LOCK_DOWN);
+	_timer.stopTimer(kFall);
+	_timer.stopTimer(kAutorepeatLeft);
+	_timer.stopTimer(kAutorepeatRight);
+	_timer.stopTimer(kLockDown);
 }
 
 void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
@@ -60,23 +60,23 @@ void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
 		state.flags.stepState = GameStep::HardDrop;
 	}
 
-	DROP_TYPE dropType = input.softDrop ? DROP_TYPE::SOFT : DROP_TYPE::NORMAL;
-	if (state.flags.stepState == GameStep::HardDrop) dropType = DROP_TYPE::HARD;
+	DropType dropType = input.softDrop ? DropType::Soft : DropType::Normal;
+	if (state.flags.stepState == GameStep::HardDrop) dropType = DropType::Hard;
 
 	if (const double interval = _gravity->fallInterval(state.stats.level, dropType);
-		_timer.getSeconds(FALL) >= interval) {
-		_timer.resetTimer(FALL);
+		_timer.getSeconds(kFall) >= interval) {
+		_timer.resetTimer(kFall);
 		if (moveDown(state)) {
-			if (dropType == DROP_TYPE::SOFT)
-				state.stats.score += SOFT_DROP_SCORE;
-			else if (dropType == DROP_TYPE::HARD)
-				state.stats.score += HARD_DROP_SCORE;
+			if (dropType == DropType::Soft)
+				state.stats.score += kSoftDropScore;
+			else if (dropType == DropType::Hard)
+				state.stats.score += kHardDropScore;
 
 			if (state.lockDown.active) {
 				if (const int currentLine = state.pieces.current->getPosition().row; currentLine > state.lockDown.lowestLine) {
 					state.lockDown.lowestLine = currentLine;
 					state.lockDown.moveCount = 0;
-					_timer.resetTimer(LOCK_DOWN);
+					_timer.resetTimer(kLockDown);
 				}
 			}
 		}
@@ -87,12 +87,12 @@ void PieceMovement::fall(GameState& state, const InputSnapshot& input) const {
 		return;
 	}
 
-	if (!state.pieces.current->simulateMove(Vector2i(1, 0)) && !_timer.exist(LOCK_DOWN)) {
-		_timer.startTimer(LOCK_DOWN);
+	if (!state.pieces.current->simulateMove(Vector2i(1, 0)) && !_timer.exist(kLockDown)) {
+		_timer.startTimer(kLockDown);
 		state.lockDown.active = true;
 	}
 
-	if (_timer.getSeconds(LOCK_DOWN) >= LOCK_DOWN_DELAY) {
+	if (_timer.getSeconds(kLockDown) >= kLockDownDelay) {
 		lock(state);
 		if (state.flags.isGameOver) return;
 	}
@@ -106,8 +106,8 @@ void PieceMovement::stepIdle(GameState& state, const InputSnapshot& input) {
 	fall(state, input);
 	if (state.flags.isGameOver) return;
 
-	checkAutorepeat(state, input.left, AUTOREPEAT_LEFT, &PieceMovement::moveLeft, GameStep::MoveLeft);
-	checkAutorepeat(state, input.right, AUTOREPEAT_RIGHT, &PieceMovement::moveRight, GameStep::MoveRight);
+	checkAutorepeat(state, input.left, kAutorepeatLeft, &PieceMovement::moveLeft, GameStep::MoveLeft);
+	checkAutorepeat(state, input.right, kAutorepeatRight, &PieceMovement::moveRight, GameStep::MoveRight);
 
 	if (state.config.holdEnabled && !state.pieces.isNewHold && input.hold) {
 		Tetrimino *buffer = state.pieces.hold;
@@ -119,11 +119,11 @@ void PieceMovement::stepIdle(GameState& state, const InputSnapshot& input) {
 				state.flags.isGameOver = true;
 				return;
 			}
-			_timer.startTimer(FALL);
+			_timer.startTimer(kFall);
 			state.markDirty();
 		} else {
 			state.phase = GamePhase::Generation;
-			_timer.resetTimer(GENERATION, GENERATION_DELAY);
+			_timer.resetTimer(kGeneration, kGenerationDelay);
 		}
 		state.pieces.isNewHold = true;
 	}
@@ -140,12 +140,12 @@ void PieceMovement::stepMoveLeft(GameState& state, const InputSnapshot& input) c
 
 	if (!input.left) {
 		state.flags.stepState = GameStep::Idle;
-		_timer.stopTimer(AUTOREPEAT_LEFT);
+		_timer.stopTimer(kAutorepeatLeft);
 	}
 
-	if (_timer.getSeconds(AUTOREPEAT_LEFT) >= AUTOREPEAT_SPEED) {
+	if (_timer.getSeconds(kAutorepeatLeft) >= kAutorepeatSpeed) {
 		moveLeft(state);
-		_timer.resetTimer(AUTOREPEAT_LEFT);
+		_timer.resetTimer(kAutorepeatLeft);
 	}
 }
 
@@ -160,12 +160,12 @@ void PieceMovement::stepMoveRight(GameState& state, const InputSnapshot& input) 
 
 	if (!input.right) {
 		state.flags.stepState = GameStep::Idle;
-		_timer.stopTimer(AUTOREPEAT_RIGHT);
+		_timer.stopTimer(kAutorepeatRight);
 	}
 
-	if (_timer.getSeconds(AUTOREPEAT_RIGHT) >= AUTOREPEAT_SPEED) {
+	if (_timer.getSeconds(kAutorepeatRight) >= kAutorepeatSpeed) {
 		moveRight(state);
-		_timer.resetTimer(AUTOREPEAT_RIGHT);
+		_timer.resetTimer(kAutorepeatRight);
 	}
 }
 
@@ -192,7 +192,7 @@ void PieceMovement::resetLockDown(const GameState& state) const {
 		return;
 
 	if (state.lockDown.active) {
-		_timer.resetTimer(LOCK_DOWN);
+		_timer.resetTimer(kLockDown);
 	}
 }
 
@@ -236,7 +236,7 @@ bool PieceMovement::moveDown(GameState& state) {
 	return false;
 }
 
-void PieceMovement::rotate(GameState& state, const DIRECTION direction) const {
+void PieceMovement::rotate(GameState& state, const Direction direction) const {
 	if (state.pieces.current == nullptr)
 		return;
 
@@ -263,7 +263,7 @@ void PieceMovement::lock(GameState& state) const {
 
 	// False alarm: piece was nudged off its resting surface (e.g. slid over a gap)
 	if (state.pieces.current->simulateMove(Vector2i(1, 0))) {
-		_timer.stopTimer(LOCK_DOWN);
+		_timer.stopTimer(kLockDown);
 		state.lockDown.moveCount = 0;
 		if (const int row = state.pieces.current->getPosition().row; row > state.lockDown.lowestLine)
 			state.lockDown.lowestLine = row;
@@ -285,7 +285,7 @@ void PieceMovement::lock(GameState& state) const {
 	state.pieces.current = nullptr;
 	state.stats.nbMinos++;
 
-	_timer.stopTimer(LOCK_DOWN);
+	_timer.stopTimer(kLockDown);
 
 	state.phase = GamePhase::Pattern;
 	state.flags.stepState = GameStep::Idle;
@@ -299,7 +299,7 @@ void PieceMovement::checkAutorepeat(GameState& state, const bool input, const st
 			_timer.startTimer(timer);
 		}
 
-		if (_timer.getSeconds(timer) >= AUTOREPEAT_DELAY) {
+		if (_timer.getSeconds(timer) >= kAutorepeatDelay) {
 			_timer.startTimer(timer);
 			(this->*move)(state);
 			state.flags.stepState = nextState;

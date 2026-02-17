@@ -18,7 +18,7 @@ Tetrimino::Tetrimino(const PieceType type, GameMatrix& matrix)
 	_hasTSpin = data.hasTSpin;
 	_tSpinPositions = data.tSpinPositions;
 
-	_currentRotation = NORTH;
+	_currentRotation = Rotation::North;
 	_lastRotationPoint = -1;
 }
 
@@ -53,25 +53,25 @@ bool Tetrimino::simulateMove(const Vector2i& distance) const {
 	return checkPositionValidity(newPosition, _currentRotation);
 }
 
-bool Tetrimino::rotate(const DIRECTION direction)
+bool Tetrimino::rotate(const Direction direction)
 {
-	ROTATION newRotation = _currentRotation;
-	if (direction == LEFT)
+	Rotation newRotation = _currentRotation;
+	if (direction == Direction::Left)
 	{
-		if (newRotation == NORTH)
-			newRotation = WEST;
+		if (newRotation == Rotation::North)
+			newRotation = Rotation::West;
 		else
-			newRotation = static_cast<ROTATION>(newRotation - 1);
+			newRotation = static_cast<Rotation>(static_cast<int>(newRotation) - 1);
 	}
-	else if (direction == RIGHT)
+	else if (direction == Direction::Right)
 	{
-		if (newRotation == WEST)
-			newRotation = NORTH;
+		if (newRotation == Rotation::West)
+			newRotation = Rotation::North;
 		else
-			newRotation = static_cast<ROTATION>(newRotation + 1);
+			newRotation = static_cast<Rotation>(static_cast<int>(newRotation) + 1);
 	}
 
-	Facing const & currentFacing = _facings[_currentRotation];
+	Facing const & currentFacing = _facings[static_cast<int>(_currentRotation)];
 	for (int i = 0; i < 5; i++)
 	{
 		RotationPoint const & rotationPoint = currentFacing.getRotationPoint(i);
@@ -91,7 +91,7 @@ bool Tetrimino::rotate(const DIRECTION direction)
 
 bool Tetrimino::lock()
 {
-	const Facing& facing = _facings[_currentRotation];
+	const Facing& facing = _facings[static_cast<int>(_currentRotation)];
 	const int minoCount = facing.getMinoCount();
 
 	bool gameOver = true;
@@ -103,7 +103,7 @@ bool Tetrimino::lock()
 			gameOver = false;
 	}
 
-	_currentRotation = NORTH;
+	_currentRotation = Rotation::North;
 	_lastRotationPoint = -1;
 
 	return !gameOver;
@@ -111,14 +111,14 @@ bool Tetrimino::lock()
 
 void Tetrimino::resetRotation()
 {
-	_currentRotation = NORTH;
+	_currentRotation = Rotation::North;
 	_lastRotationPoint = -1;
 }
 
 bool Tetrimino::isMino(const int row, const int column) const
 {
 	const auto position = Vector2i(row, column);
-	Facing const & currentFacing = _facings[_currentRotation];
+	Facing const & currentFacing = _facings[static_cast<int>(_currentRotation)];
 	const int minoCount = currentFacing.getMinoCount();
 	const Vector2i relativePos = position - _currentPosition;
 
@@ -148,8 +148,8 @@ int Tetrimino::getMino(const Vector2i & position) const
 	return getMino(position.row, position.column);
 }
 
-bool Tetrimino::checkPositionValidity(const Vector2i& position, const ROTATION rotation) const {
-	const Facing& facing = _facings[rotation];
+bool Tetrimino::checkPositionValidity(const Vector2i& position, const Rotation rotation) const {
+	const Facing& facing = _facings[static_cast<int>(rotation)];
 	const int minoCount = facing.getMinoCount();
 	bool valid = true;
 	for (int i = 0; i < minoCount; i++)
@@ -176,7 +176,7 @@ bool Tetrimino::checkTSpin() const {
 	if (getLastRotationPoint() < 0)
 		return false;
 
-	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
+	TSpinPositions const & tspinPos = _tSpinPositions[static_cast<int>(getCurrentRotation())];
 
 	if (const Vector2i position = getPosition(); getMino(position + tspinPos.A) && getMino(position + tspinPos.B) && (getMino(position + tspinPos.C) || getMino(position + tspinPos.D)))
 		return true;
@@ -196,7 +196,7 @@ bool Tetrimino::checkMiniTSpin() const {
 	if (getLastRotationPoint() <= 1)
 		return false;
 
-	TSpinPositions const & tspinPos = _tSpinPositions[getCurrentRotation()];
+	TSpinPositions const & tspinPos = _tSpinPositions[static_cast<int>(getCurrentRotation())];
 
 	if (const Vector2i position = getPosition(); getMino(position + tspinPos.C) && getMino(position + tspinPos.D) && (getMino(position + tspinPos.A) || getMino(position + tspinPos.B)))
 		return true;

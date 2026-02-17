@@ -7,16 +7,16 @@
 
 #include "RowDrawContext.h"
 
-enum class Align { LEFT, CENTER, RIGHT, FILL };
+enum class Align { Left, Center, Right, Fill };
 
 struct Cell {
     std::string text;
-    Align align = Align::LEFT;
+    Align align = Align::Left;
     int color = 15; // rlutil::WHITE
     int width = 0;  // 0 = auto
 
     Cell() = default;
-    Cell(std::string t, const Align a = Align::LEFT, const int c = 15, const int w = 0)
+    Cell(std::string t, const Align a = Align::Left, const int c = 15, const int w = 0)
         : text(std::move(t)), align(a), color(c), width(w) {}
 };
 
@@ -42,7 +42,7 @@ class Panel {
 public:
     explicit Panel(int interiorWidth = 0);
 
-    size_t addRow(const std::string& text, Align align = Align::LEFT, int color = 15);
+    size_t addRow(const std::string& text, Align align = Align::Left, int color = 15);
     size_t addRow(std::vector<Cell> cells);
     void addSeparator();
     size_t addElement(const std::shared_ptr<PanelElement>& element);

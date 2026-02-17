@@ -113,9 +113,9 @@ int main() {
         try { level = stoi(oc.values["Level"]); } catch (...) {}
         tetris.setStartingLevel(level);
 
-        auto v = GameVariant::MARATHON;
-        if (oc.values["Variant"] == "Sprint") v = GameVariant::SPRINT;
-        else if (oc.values["Variant"] == "Ultra") v = GameVariant::ULTRA;
+        auto v = GameVariant::Marathon;
+        if (oc.values["Variant"] == "Sprint") v = GameVariant::Sprint;
+        else if (oc.values["Variant"] == "Ultra") v = GameVariant::Ultra;
         tetris.setVariant(v);
 
         tetris.saveOptions();
@@ -170,15 +170,15 @@ int main() {
     main.addOption("New Game", &newGame, [&]() {
         newGame.setValueChoice("Level", Utility::valueToString(tetris.startingLevel(), 2));
         string varStr = "Marathon";
-        if (tetris.variant() == GameVariant::SPRINT) varStr = "Sprint";
-        else if (tetris.variant() == GameVariant::ULTRA) varStr = "Ultra";
+        if (tetris.variant() == GameVariant::Sprint) varStr = "Sprint";
+        else if (tetris.variant() == GameVariant::Ultra) varStr = "Ultra";
         newGame.setValueChoice("Variant", varStr);
     });
     main.addOptionAction("Options", [&]() {
         // Sync menu values from current tetris state
         string modeStr = "Extended";
-        if (tetris.mode() == LOCKDOWN_MODE::CLASSIC) modeStr = "Classic";
-        else if (tetris.mode() == LOCKDOWN_MODE::EXTENDED_INFINITY) modeStr = "Infinite";
+        if (tetris.mode() == LockDownMode::Classic) modeStr = "Classic";
+        else if (tetris.mode() == LockDownMode::ExtendedInfinity) modeStr = "Infinite";
         options.setValueChoice("Lock Down", modeStr);
         options.setValueChoice("Ghost Piece", tetris.ghostEnabled() ? "On" : "Off");
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
@@ -188,9 +188,9 @@ int main() {
 
         // Apply values back to tetris
         auto values = options.generateValues();
-        auto mode = LOCKDOWN_MODE::EXTENDED;
-        if (values["Lock Down"] == "Classic") mode = LOCKDOWN_MODE::CLASSIC;
-        else if (values["Lock Down"] == "Infinite") mode = LOCKDOWN_MODE::EXTENDED_INFINITY;
+        auto mode = LockDownMode::Extended;
+        if (values["Lock Down"] == "Classic") mode = LockDownMode::Classic;
+        else if (values["Lock Down"] == "Infinite") mode = LockDownMode::ExtendedInfinity;
         tetris.setLockDownMode(mode);
         tetris.setGhostEnabled(values["Ghost Piece"] != "Off");
         tetris.setHoldEnabled(values["Hold Piece"] != "Off");

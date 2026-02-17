@@ -4,16 +4,16 @@
 #include <array>
 #include "Vector2i.h"
 
-enum ROTATION {
-	NORTH = 0,
-	EAST,
-	SOUTH,
-	WEST
+enum class Rotation {
+	North = 0,
+	East,
+	South,
+	West
 };
 
-enum DIRECTION {
-	LEFT = 0,
-	RIGHT
+enum class Direction {
+	Left = 0,
+	Right
 };
 
 // SRS wall kick data: each RotationPoint holds two translations (one per direction).
@@ -27,8 +27,8 @@ struct RotationPoint
 
 	RotationPoint(const Vector2i& translationLeft, const Vector2i& translationRight)
 	{
-		_translations[LEFT] = translationLeft;
-		_translations[RIGHT] = translationRight;
+		_translations[static_cast<int>(Direction::Left)] = translationLeft;
+		_translations[static_cast<int>(Direction::Right)] = translationRight;
 		_exist = true;
 	}
 
@@ -37,9 +37,9 @@ struct RotationPoint
 		return _exist;
 	}
 
-	[[nodiscard]] Vector2i const & getTranslation(const DIRECTION direction) const
+	[[nodiscard]] Vector2i const & getTranslation(const Direction direction) const
 	{
-		return _translations[direction];
+		return _translations[static_cast<int>(direction)];
 	}
 
 private:
@@ -51,16 +51,16 @@ class Facing
 {
 public:
 	Facing();
-	Facing(ROTATION direction, const std::vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints);
+	Facing(Rotation direction, const std::vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints);
 	~Facing();
 
-	[[nodiscard]] ROTATION getDirection() const;
+	[[nodiscard]] Rotation getDirection() const;
 	[[nodiscard]] int getMinoCount() const;
 	[[nodiscard]] Vector2i getMino(int mino) const;
 	[[nodiscard]] RotationPoint const & getRotationPoint(int point) const;
 
 private:
 	std::vector<Vector2i> _minos;
-	ROTATION _direction;
+	Rotation _direction;
 	std::array<RotationPoint, 5> _rotationPoints;
 };

@@ -37,4 +37,4 @@ class UltraVariant final : public VariantRule {
     [[nodiscard]] bool showGoal() const override { return false; }
 };
 
-std::unique_ptr<VariantRule> makeVariantRule(GameVariant variant = GameVariant::MARATHON);
+std::unique_ptr<VariantRule> makeVariantRule(GameVariant variant = GameVariant::Marathon);

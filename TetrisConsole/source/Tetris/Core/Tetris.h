@@ -24,13 +24,13 @@ public:
 	[[nodiscard]] bool backToMenu() const { return _backToMenu; }
 	void clearBackToMenu() { _backToMenu = false; }
 	void setStartingLevel(const int level) { _state.setStartingLevel(level); }
-	void setLockDownMode(const LOCKDOWN_MODE mode) { _state.config.mode = mode; }
+	void setLockDownMode(const LockDownMode mode) { _state.config.mode = mode; }
 	void setVariant(const GameVariant variant) { _state.config.variant = variant; }
 	void setGhostEnabled(const bool v) { _state.config.ghostEnabled = v; }
 	void setHoldEnabled(const bool v) { _state.config.holdEnabled = v; }
 	void setPreviewCount(const int n) { _state.config.previewCount = n; }
 	[[nodiscard]] int startingLevel() const { return _state.config.startingLevel; }
-	[[nodiscard]] LOCKDOWN_MODE mode() const { return _state.config.mode; }
+	[[nodiscard]] LockDownMode mode() const { return _state.config.mode; }
 	[[nodiscard]] GameVariant variant() const { return _state.config.variant; }
 	[[nodiscard]] bool ghostEnabled() const { return _state.config.ghostEnabled; }
 	[[nodiscard]] bool holdEnabled() const { return _state.config.holdEnabled; }

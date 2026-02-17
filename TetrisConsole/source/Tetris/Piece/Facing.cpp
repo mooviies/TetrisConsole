@@ -5,10 +5,10 @@ using namespace std;
 
 Facing::Facing()
 {
-	_direction = NORTH;
+	_direction = Rotation::North;
 }
 
-Facing::Facing(const ROTATION direction, const vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints)
+Facing::Facing(const Rotation direction, const vector<Vector2i> &minos, const std::array<RotationPoint, 5>& rotationPoints)
 	: _minos(minos), _direction(direction), _rotationPoints(rotationPoints)
 {
 }
@@ -16,7 +16,7 @@ Facing::Facing(const ROTATION direction, const vector<Vector2i> &minos, const st
 Facing::~Facing()
 = default;
 
-ROTATION Facing::getDirection() const
+Rotation Facing::getDirection() const
 {
 	return _direction;
 }

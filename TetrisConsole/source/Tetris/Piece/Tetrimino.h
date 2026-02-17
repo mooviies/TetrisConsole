@@ -15,7 +15,7 @@ public:
 	[[nodiscard]] bool setPosition(const Vector2i &position);
 	[[nodiscard]] bool move(const Vector2i &distance);
 	[[nodiscard]] bool simulateMove(const Vector2i &distance) const;
-	[[nodiscard]] bool rotate(DIRECTION direction);
+	[[nodiscard]] bool rotate(Direction direction);
 	[[nodiscard]] bool lock();
 	void resetRotation();
 
@@ -33,10 +33,10 @@ public:
 private:
 	[[nodiscard]] int getMino(int row, int column) const;
 	[[nodiscard]] int getMino(const Vector2i& position) const;
-	[[nodiscard]] bool checkPositionValidity(const Vector2i &position, ROTATION rotation) const;
+	[[nodiscard]] bool checkPositionValidity(const Vector2i &position, Rotation rotation) const;
 
 	[[nodiscard]] int getLastRotationPoint() const { return _lastRotationPoint; }
-	[[nodiscard]] ROTATION getCurrentRotation() const { return _currentRotation; }
+	[[nodiscard]] Rotation getCurrentRotation() const { return _currentRotation; }
 
 	GameMatrix& _matrix;
 
@@ -48,7 +48,7 @@ private:
 	std::string _previewLine1;
 	std::string _previewLine2;
 
-	ROTATION _currentRotation;
+	Rotation _currentRotation;
 	Vector2i _currentPosition;
 
 	// T-spin data (only meaningful for T piece)
