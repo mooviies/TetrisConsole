@@ -24,6 +24,7 @@ endif()
 add_library(konsole STATIC ${KONSOLE_SRCS})
 
 target_include_directories(konsole PUBLIC
+    Tetrominos/source/Konsole/Core
     Tetrominos/source/Konsole/Platform
     Tetrominos/source/Konsole/UI
     Tetrominos/source/Konsole/Util
