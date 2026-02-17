@@ -54,5 +54,4 @@ private:
     HighScoreDisplay &_highScoreDisplay;
     bool _backToMenu{};
     bool _wasPausePressed{};
-    bool _wasMutePressed{};
 };

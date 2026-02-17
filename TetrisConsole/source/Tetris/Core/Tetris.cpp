@@ -33,9 +33,6 @@ void Tetris::step(const InputSnapshot &input) {
 
     playPendingSounds();
 
-    if (input.mute && !_wasMutePressed) SoundEngine::cycleMute();
-    _wasMutePressed = input.mute;
-
     if (SoundEngine::musicEnded()) {
         const auto &name = SoundEngine::currentMusicName();
         switch (SoundEngine::getSoundtrackMode()) {

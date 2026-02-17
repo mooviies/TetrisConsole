@@ -320,8 +320,8 @@ void GameState::saveOptions() const {
     write32(config.ghostEnabled ? 1 : 0);
     write32(config.holdEnabled ? 1 : 0);
     write32(static_cast<int32_t>(config.previewCount));
-    write32(static_cast<int32_t>(lround(SoundEngine::desiredMusicVolume() * 50)));
-    write32(static_cast<int32_t>(lround(SoundEngine::desiredEffectVolume() * 10)));
+    write32(static_cast<int32_t>(lround(SoundEngine::getMusicVolume() * 50)));
+    write32(static_cast<int32_t>(lround(SoundEngine::getEffectVolume() * 10)));
     write32(static_cast<int32_t>(SoundEngine::getSoundtrackMode()));
 }
 

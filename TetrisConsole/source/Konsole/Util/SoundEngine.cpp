@@ -32,9 +32,6 @@ static string s_musicPlayingName;
 static float s_musicVolume = 0.1f;
 static float s_effectVolume = 0.5f;
 
-static auto s_muteState = MuteState::Unmuted;
-static float s_savedMusicVolume = 0.1f;
-static float s_savedEffectVolume = 0.5f;
 static auto s_soundtrackMode = SoundtrackMode::Cycle;
 
 // --- Embedded VFS for serving media from compiled-in data ---
@@ -235,8 +232,6 @@ void SoundEngine::playMusic(const string &name) {
 }
 
 void SoundEngine::playSound(const string &name) {
-    if (s_muteState == MuteState::AllMuted) return;
-
     const auto it = s_sounds.find(name);
     if (it == s_sounds.end() || it->second == nullptr) return;
     ma_sound *sound = it->second.get();
@@ -285,48 +280,6 @@ bool SoundEngine::musicEnded() {
 
 const string &SoundEngine::currentMusicName() {
     return s_musicPlayingName;
-}
-
-void SoundEngine::cycleMute() {
-    switch (s_muteState) {
-        case MuteState::Unmuted:
-            s_savedMusicVolume = s_musicVolume;
-            setMusicVolume(0.0f);
-            s_muteState = MuteState::MusicMuted;
-            break;
-        case MuteState::MusicMuted:
-            s_savedEffectVolume = s_effectVolume;
-            s_effectVolume = 0.0f;
-            s_muteState = MuteState::AllMuted;
-            break;
-        case MuteState::AllMuted:
-            setMusicVolume(s_savedMusicVolume);
-            s_effectVolume = s_savedEffectVolume;
-            s_muteState = MuteState::Unmuted;
-            break;
-    }
-}
-
-void SoundEngine::unmute() {
-    if (s_muteState == MuteState::MusicMuted) {
-        setMusicVolume(s_savedMusicVolume);
-    } else if (s_muteState == MuteState::AllMuted) {
-        setMusicVolume(s_savedMusicVolume);
-        s_effectVolume = s_savedEffectVolume;
-    }
-    s_muteState = MuteState::Unmuted;
-}
-
-MuteState SoundEngine::getMuteState() {
-    return s_muteState;
-}
-
-float SoundEngine::desiredMusicVolume() {
-    return (s_muteState != MuteState::Unmuted) ? s_savedMusicVolume : s_musicVolume;
-}
-
-float SoundEngine::desiredEffectVolume() {
-    return (s_muteState == MuteState::AllMuted) ? s_savedEffectVolume : s_effectVolume;
 }
 
 SoundtrackMode SoundEngine::getSoundtrackMode() {

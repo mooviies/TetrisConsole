@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Icon.h"
 #include "Constants.h"
 #include "ScoreDisplay.h"
 #include "PieceDisplay.h"
@@ -21,13 +20,11 @@ public:
 
 private:
     void updatePositions();
-    void drawMuteIndicator();
 
     ScoreDisplay _score;
     PieceDisplay _next;
     PieceDisplay _hold;
     PlayfieldDisplay _playfield;
-    Icon _muteIcon;
     int _previewCount = 6;
     bool _holdEnabled = true;
     bool _wasShowingNotification{};

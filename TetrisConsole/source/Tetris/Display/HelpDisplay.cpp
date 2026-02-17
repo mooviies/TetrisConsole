@@ -39,7 +39,6 @@ HelpDisplay::HelpDisplay() : _leftPanel(kLeftInterior), _rightPanel(kRightInteri
     _controlRows[5] = _leftPanel.addRow(makeRow("Rotate CCW"));
     _controlRows[6] = _leftPanel.addRow(makeRow("Hold Piece"));
     _controlRows[7] = _leftPanel.addRow(makeRow("Pause"));
-    _controlRows[8] = _leftPanel.addRow(makeRow("Mute"));
 
     // --- Right panel: About / Credits ---
     _rightPanel.addRow("ABOUT", Align::Center);

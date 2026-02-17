@@ -6,7 +6,6 @@
 
 #include "GameState.h"
 #include "Platform.h"
-#include "SoundEngine.h"
 #include "Color.h"
 #include "rlutil.h"
 
@@ -16,7 +15,6 @@ constexpr int kScoreX = 4, kScoreY = 12;
 constexpr int kPlayfieldX = 30, kPlayfieldY = 6;
 constexpr int kNextX = 59, kNextY = 6;
 constexpr int kHoldX = 7, kHoldY = 6;
-constexpr int kMuteX = 78, kMuteY = 2;
 constexpr int kSideNotifWidth = 12;                         // next-piece queue interior width
 constexpr int kSideNotifBaseY = kPlayfieldY + VISIBLE_ROWS; // 2nd-to-last playfield row
 } // namespace Layout
@@ -50,8 +48,7 @@ void renderCenteredLine(int x, int y, int width, const std::string &text, int co
 }
 } // namespace
 
-GameRenderer::GameRenderer() : _muteIcon("♪") {
-}
+GameRenderer::GameRenderer() = default;
 
 GameRenderer::~GameRenderer() = default;
 
@@ -78,7 +75,6 @@ void GameRenderer::updatePositions() {
     _playfield.setPosition(Layout::kPlayfieldX + ox, Layout::kPlayfieldY + oy);
     _next.setPosition(Layout::kNextX + ox, Layout::kNextY + oy);
     _hold.setPosition(Layout::kHoldX + ox, Layout::kHoldY + oy);
-    _muteIcon.setPosition(Layout::kMuteX + ox, Layout::kMuteY + oy);
 }
 
 void GameRenderer::invalidate() {
@@ -98,7 +94,6 @@ void GameRenderer::render(const GameState &state, const bool playfieldVisible) {
         _hold.update(playfieldVisible ? std::vector<const Tetrimino *>{state.pieces.hold}
                                       : std::vector<const Tetrimino *>{});
     _score.update(state);
-    drawMuteIndicator();
 
     _score.render();
     _playfield.render();
@@ -158,11 +153,3 @@ void GameRenderer::renderTitle(const std::string &subtitle) {
     title.render();
 }
 
-void GameRenderer::drawMuteIndicator() {
-    switch (SoundEngine::getMuteState()) {
-        case MuteState::Unmuted: _muteIcon.setColor(Color::WHITE); break;
-        case MuteState::MusicMuted: _muteIcon.setColor(Color::YELLOW); break;
-        case MuteState::AllMuted: _muteIcon.setColor(Color::RED); break;
-    }
-    _muteIcon.draw();
-}

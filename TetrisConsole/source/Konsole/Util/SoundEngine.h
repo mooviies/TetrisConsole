@@ -2,7 +2,6 @@
 
 #include <string>
 
-enum class MuteState { Unmuted, MusicMuted, AllMuted };
 enum class SoundtrackMode { Cycle, Random, TrackA, TrackB, TrackC };
 
 class SoundEngine {
@@ -20,13 +19,6 @@ public:
 
     static float getEffectVolume();
     static void setEffectVolume(float volume);
-
-    static void cycleMute();
-    static void unmute();
-    static MuteState getMuteState();
-
-    static float desiredMusicVolume();
-    static float desiredEffectVolume();
 
     static SoundtrackMode getSoundtrackMode();
     static void setSoundtrackMode(SoundtrackMode mode);

@@ -62,8 +62,6 @@ int main() {
     Input::bind(A(Action::Pause), KeyCode::Escape);
     Input::bind(A(Action::Pause), KeyCode::F1);
 
-    Input::bind(A(Action::Mute), KeyCode(static_cast<int>('M')));
-
     Input::bind(A(Action::Select), KeyCode::Enter);
 
     if (!SoundEngine::init()) {
@@ -97,6 +95,7 @@ int main() {
     Menu newGame("NEW GAME");
     Menu options("OPTIONS");
     Menu pause("PAUSE");
+    Menu pauseSound("SOUND");
     Menu restartConfirm("Restart game?");
     Menu backToMenuConfirm("Back to menu?");
     Menu quit("Quit game?");
@@ -216,10 +215,10 @@ int main() {
         options.setValueChoice("Hold Piece", tetris.holdEnabled() ? "On" : "Off");
         options.setValueChoice("Preview", Utility::valueToString(tetris.previewCount(), 2));
 
-        int musicStep = clamp(static_cast<int>(lroundf(SoundEngine::desiredMusicVolume() * 50)), 0, 10);
+        int musicStep = clamp(static_cast<int>(lroundf(SoundEngine::getMusicVolume() * 50)), 0, 10);
         options.setValueChoice("Music", volumeValues[static_cast<size_t>(musicStep)]);
 
-        int effectStep = clamp(static_cast<int>(lroundf(SoundEngine::desiredEffectVolume() * 10)), 0, 10);
+        int effectStep = clamp(static_cast<int>(lroundf(SoundEngine::getEffectVolume() * 10)), 0, 10);
         options.setValueChoice("Effects", volumeValues[static_cast<size_t>(effectStep)]);
 
         auto stMode = SoundEngine::getSoundtrackMode();
@@ -254,8 +253,6 @@ int main() {
         hashes = count(values["Effects"].begin(), values["Effects"].end(), '#');
         SoundEngine::setEffectVolume(static_cast<float>(hashes) * 0.1f);
 
-        SoundEngine::unmute();
-
         const auto &st = values["Soundtrack"];
         if (st == "Random") SoundEngine::setSoundtrackMode(SoundtrackMode::Random);
         else if (st == "A") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackA);
@@ -279,9 +276,58 @@ int main() {
 #endif
     main.addOption("Exit", &quit);
 
+    // --- Pause Sound menu ---
+    pauseSound.addOptionWithValues("Music", volumeValues);
+    pauseSound.addOptionWithValues("Effects", volumeValues);
+    pauseSound.addOptionWithValues("Soundtrack", soundtrackValues);
+    pauseSound.addOptionClose("Back");
+
+    pauseSound.setOptionHint("Music", "Adjust the music volume.");
+    pauseSound.setOptionHint("Effects", "Adjust the sound effects volume.");
+    pauseSound.setOptionValueHint("Soundtrack", "Cycle", "Play tracks A, B, C in order, then repeat.");
+    pauseSound.setOptionValueHint("Soundtrack", "Random", "Play a random track each time.");
+    pauseSound.setOptionValueHint("Soundtrack", "A", "Always play track A.");
+    pauseSound.setOptionValueHint("Soundtrack", "B", "Always play track B.");
+    pauseSound.setOptionValueHint("Soundtrack", "C", "Always play track C.");
+    pauseSound.setOptionHint("Back", "Return to the pause menu.");
+
     // --- Pause menu ---
     pause.addOptionClose("Resume");
     pause.addOption("Restart", &restartConfirm);
+    pause.addOptionAction("Options", [&]() {
+        int musicStep = clamp(static_cast<int>(lroundf(SoundEngine::getMusicVolume() * 50)), 0, 10);
+        pauseSound.setValueChoice("Music", volumeValues[static_cast<size_t>(musicStep)]);
+
+        int effectStep = clamp(static_cast<int>(lroundf(SoundEngine::getEffectVolume() * 10)), 0, 10);
+        pauseSound.setValueChoice("Effects", volumeValues[static_cast<size_t>(effectStep)]);
+
+        auto stMode = SoundEngine::getSoundtrackMode();
+        string stStr = "Cycle";
+        if (stMode == SoundtrackMode::Random) stStr = "Random";
+        else if (stMode == SoundtrackMode::TrackA) stStr = "A";
+        else if (stMode == SoundtrackMode::TrackB) stStr = "B";
+        else if (stMode == SoundtrackMode::TrackC) stStr = "C";
+        pauseSound.setValueChoice("Soundtrack", stStr);
+
+        pauseSound.open(false, true);
+
+        auto values = pauseSound.generateValues();
+
+        auto hashes = count(values["Music"].begin(), values["Music"].end(), '#');
+        SoundEngine::setMusicVolume(static_cast<float>(hashes) * 0.02f);
+
+        hashes = count(values["Effects"].begin(), values["Effects"].end(), '#');
+        SoundEngine::setEffectVolume(static_cast<float>(hashes) * 0.1f);
+
+        const auto &st = values["Soundtrack"];
+        if (st == "Random") SoundEngine::setSoundtrackMode(SoundtrackMode::Random);
+        else if (st == "A") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackA);
+        else if (st == "B") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackB);
+        else if (st == "C") SoundEngine::setSoundtrackMode(SoundtrackMode::TrackC);
+        else SoundEngine::setSoundtrackMode(SoundtrackMode::Cycle);
+
+        tetris.saveOptions();
+    });
     pause.addOption("Main Menu", &backToMenuConfirm);
     pause.addOption("Exit Game", &quit);
 
@@ -332,7 +378,6 @@ int main() {
             snapshot.rotateCCW = Input::action(A(Action::RotateCCW));
             snapshot.hold = Input::action(A(Action::Hold));
             snapshot.pause = Input::action(A(Action::Pause));
-            snapshot.mute = Input::action(A(Action::Mute));
 
             tetris.step(snapshot);
             tetris.render();

@@ -20,11 +20,11 @@ private:
     Panel _leftPanel;
     Panel _rightPanel;
 
-    static constexpr int kControlCount = 9;
+    static constexpr int kControlCount = 8;
     static constexpr int kActions[kControlCount] = {
         static_cast<int>(Action::Left),     static_cast<int>(Action::Right),    static_cast<int>(Action::SoftDrop),
         static_cast<int>(Action::HardDrop), static_cast<int>(Action::RotateCW), static_cast<int>(Action::RotateCCW),
-        static_cast<int>(Action::Hold),     static_cast<int>(Action::Pause),    static_cast<int>(Action::Mute),
+        static_cast<int>(Action::Hold),     static_cast<int>(Action::Pause),
     };
     std::array<size_t, kControlCount> _controlRows{};
 };
