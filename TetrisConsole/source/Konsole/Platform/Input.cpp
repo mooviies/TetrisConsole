@@ -34,9 +34,9 @@ const std::vector<KeyCode>& Input::getBindings(const int action) {
 std::string Input::keyName(KeyCode key) {
 	int k = static_cast<int>(key);
 	if (k >= 'A' && k <= 'Z')
-		return std::string(1, static_cast<char>(k));
+		return {1, static_cast<char>(k)};
 	if (k >= '0' && k <= '9')
-		return std::string(1, static_cast<char>(k));
+		return {1, static_cast<char>(k)};
 	if (k == ' ')
 		return "Space";
 

@@ -1,5 +1,6 @@
 #include "Confetti.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include "Color.h"
@@ -73,7 +74,7 @@ void Confetti::stop() {
 	_active = false;
 }
 
-void Confetti::spawnParticle(Particle& p, bool randomY) {
+void Confetti::spawnParticle(Particle& p, bool randomY) const {
 	int slots = _screenW / 2;
 	int slot = Random::getInteger(0, slots - 1);
 	p.x = _offsetX + 1 + slot * 2;
@@ -104,10 +105,8 @@ void Confetti::drawParticle(const Particle& p) {
 }
 
 bool Confetti::overlapsExclusion(int px, int py) const {
-	for (const auto& r : _exclusions) {
-		if (py >= r.y && py < r.y + r.h &&
-		    px + 1 >= r.x && px < r.x + r.w)
-			return true;
-	}
-	return false;
+	return std::any_of(_exclusions.begin(), _exclusions.end(), [px, py](const Rect& r) {
+		return py >= r.y && py < r.y + r.h &&
+		       px + 1 >= r.x && px < r.x + r.w;
+	});
 }

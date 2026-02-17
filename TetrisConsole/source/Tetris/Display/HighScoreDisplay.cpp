@@ -107,8 +107,12 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord>& hs) {
 			if (name.size() > 10) name.resize(10);
 			while (name.size() < 10) name += ' ';
 			string score = Utility::valueToString(rec.score, 10);
-			_leftPanel.setCell(_listRows[static_cast<size_t>(i)], 0,
-			                   prefix + rank + name + " " + score);
+			string entry = prefix;
+			entry += rank;
+			entry += name;
+			entry += " ";
+			entry += score;
+			_leftPanel.setCell(_listRows[static_cast<size_t>(i)], 0, entry);
 		} else {
 			_leftPanel.setCell(_listRows[static_cast<size_t>(i)], 0,
 			                   prefix + rank + "----------" + " " + "----------");
@@ -291,8 +295,12 @@ string HighScoreDisplay::openForNewEntry(const HighScoreTable& allHighscores,
 		string prefix = "> ";
 		string rankStr = Utility::valueToString(rank + 1, 2) + ". ";
 		string scoreStr = Utility::valueToString(newRecord.score, 10);
-		_leftPanel.setCell(_listRows[rankIdx], 0,
-		                   prefix + rankStr + display + " " + scoreStr);
+		string entry = prefix;
+		entry += rankStr;
+		entry += display;
+		entry += " ";
+		entry += scoreStr;
+		_leftPanel.setCell(_listRows[rankIdx], 0, entry);
 		_rightPanel.setCell(_nameRow, 0, name.empty() ? "__________" : name);
 
 		if (!Platform::isTerminalTooSmall()) {

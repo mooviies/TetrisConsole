@@ -23,9 +23,9 @@ private:
 		float speed;
 	};
 
-	void spawnParticle(Particle& p, bool randomY);
-	void clearParticle(const Particle& p);
-	void drawParticle(const Particle& p);
+	void spawnParticle(Particle& p, bool randomY) const;
+	static void clearParticle(const Particle& p);
+	static void drawParticle(const Particle& p);
 	bool overlapsExclusion(int px, int py) const;
 
 	std::vector<Particle> _particles;

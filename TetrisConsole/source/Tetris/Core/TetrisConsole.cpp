@@ -140,7 +140,7 @@ int main() {
     options.addOptionWithValues("Ghost Piece", ghostValues);
     options.addOptionWithValues("Hold Piece", holdValues);
     options.addOptionWithValues("Preview", previewValues);
-    options.addOption("Reset Defaults", [&options](OptionChoice) {
+    options.addOption("Reset Defaults", [&options](const OptionChoice&) {
         options.setValueChoice("Lock Down", "Extended");
         options.setValueChoice("Ghost Piece", "On");
         options.setValueChoice("Hold Piece", "On");
@@ -225,7 +225,7 @@ int main() {
     backToMenuConfirm.addOptionCloseAllMenu("Yes");
     backToMenuConfirm.addOptionClose("No");
 
-    quit.addOption("Yes", [&tetris](OptionChoice) { tetris.exit(); });
+    quit.addOption("Yes", [&tetris](const OptionChoice&) { tetris.exit(); });
     quit.addOptionClose("No");
 
     // --- Game Over menu ---

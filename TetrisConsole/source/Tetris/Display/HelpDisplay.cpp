@@ -84,16 +84,16 @@ void HelpDisplay::refreshBindings() {
 
 		// Second pass: place overflow keys in any empty column
 		for (auto key : overflow) {
-			for (int c = 0; c < kMaxKeyCols; c++) {
-				if (cols[c].empty()) {
-					cols[c] = Input::keyName(key);
+			for (auto& col : cols) {
+				if (col.empty()) {
+					col = Input::keyName(key);
 					break;
 				}
 			}
 		}
 
 		for (int col = 0; col < kMaxKeyCols; col++)
-			_leftPanel.setCell(row, static_cast<size_t>(col + 1), cols[col]);
+			_leftPanel.setCell(row, static_cast<size_t>(col) + 1, cols[col]);
 	}
 }
 

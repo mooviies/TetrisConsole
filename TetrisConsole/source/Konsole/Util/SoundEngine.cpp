@@ -96,6 +96,7 @@ static ma_result embeddedVFS_onRead(ma_vfs* pVFS, const ma_vfs_file file, void* 
 	return MA_SUCCESS;
 }
 
+// NOLINTNEXTLINE(readability-non-const-parameter) - signature required by miniaudio VFS interface
 static ma_result embeddedVFS_onWrite(ma_vfs* pVFS, const ma_vfs_file file, const void* pSrc, const size_t sizeInBytes, size_t* pBytesWritten)
 {
 	(void)pVFS; (void)file; (void)pSrc; (void)sizeInBytes; (void)pBytesWritten;
