@@ -105,7 +105,21 @@ void Tetris::handlePause() {
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();
-    SoundEngine::unpauseMusic();
+
+    const auto &current = SoundEngine::currentMusicName();
+    switch (SoundEngine::getSoundtrackMode()) {
+        case SoundtrackMode::TrackA:
+            if (current != "A") SoundEngine::playMusic("A"); else SoundEngine::unpauseMusic();
+            break;
+        case SoundtrackMode::TrackB:
+            if (current != "B") SoundEngine::playMusic("B"); else SoundEngine::unpauseMusic();
+            break;
+        case SoundtrackMode::TrackC:
+            if (current != "C") SoundEngine::playMusic("C"); else SoundEngine::unpauseMusic();
+            break;
+        default: SoundEngine::unpauseMusic(); break;
+    }
+
     _state.resumeGameTimer();
 }
 
