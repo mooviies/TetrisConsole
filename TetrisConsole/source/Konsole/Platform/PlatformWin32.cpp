@@ -16,11 +16,6 @@ void Platform::initConsole()
 	SetConsoleCtrlHandler(NULL, TRUE);
 
 	HWND console = GetConsoleWindow();
-	HWND desktop = GetDesktopWindow();
-	RECT rectDesktop;
-	GetWindowRect(desktop, &rectDesktop);
-	int width = 675, height = 515;
-	MoveWindow(console, (rectDesktop.right - width) / 2, (rectDesktop.bottom - height) / 2, width, height, TRUE);
 	SetWindowLongPtr(console, GWL_STYLE, GetWindowLongPtr(console, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_SIZEBOX));
 	SetConsoleTitle(TEXT("Tetris Console"));
 
@@ -28,17 +23,28 @@ void Platform::initConsole()
 
 	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
 
+	// Enable VT processing so escape sequences work (needed for Windows Terminal)
+	DWORD outMode = 0;
+	GetConsoleMode(out, &outMode);
+	SetConsoleMode(out, outMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
 	CONSOLE_CURSOR_INFO cursorInfo;
 	GetConsoleCursorInfo(out, &cursorInfo);
 	cursorInfo.bVisible = false;
 	SetConsoleCursorInfo(out, &cursorInfo);
 
-	CONSOLE_SCREEN_BUFFER_INFO sbInfo;
-	COORD newSBSize;
-	GetConsoleScreenBufferInfo(out, &sbInfo);
-	newSBSize.X = 80;
-	newSBSize.Y = 29;
-	SetConsoleScreenBufferSize(out, newSBSize);
+	// Force exactly 80x29 character cells.
+	// Console APIs work on legacy conhost; the escape sequence works on
+	// Windows Terminal (Win 11 default) where the console APIs are ignored.
+	SMALL_RECT minWindow = {0, 0, 0, 0};
+	SetConsoleWindowInfo(out, TRUE, &minWindow);
+	COORD bufferSize = {80, 29};
+	SetConsoleScreenBufferSize(out, bufferSize);
+	SMALL_RECT windowSize = {0, 0, 79, 28};
+	SetConsoleWindowInfo(out, TRUE, &windowSize);
+
+	// xterm resize sequence — Windows Terminal respects this
+	std::cout << "\033[8;29;80t" << std::flush;
 
 	HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
 	DWORD prev_mode;
@@ -62,7 +68,16 @@ void Platform::flushOutput()
 
 int Platform::getKey()
 {
-	return rlutil::getkey();
+	// Poll so we can detect resize between keypresses, similar to how
+	// Linux's read() is interrupted by SIGWINCH.  Return -1 on resize
+	// so the caller's switch falls through to its wasResized() check.
+	while (true) {
+		if (_kbhit())
+			return rlutil::getkey();
+		if (rlutil::tcols() != 80 || rlutil::trows() != 29)
+			return -1;
+		Sleep(10);
+	}
 }
 
 int Platform::getKeyTimeout(int timeoutMs)
@@ -75,17 +90,21 @@ int Platform::getKeyTimeout(int timeoutMs)
 	return -1;
 }
 
-// Intentional no-ops: Windows console window is fixed-size, so resize
-// handling and offset computation are not needed.
-
 bool Platform::wasResized()
 {
+	if (rlutil::tcols() != 80 || rlutil::trows() != 29) {
+		// Snap back to 80x29 and clear the garbled content
+		std::cout << "\033[8;29;80t" << std::flush;
+		Sleep(50);
+		rlutil::cls();
+		return true;
+	}
 	return false;
 }
 
 bool Platform::isTerminalTooSmall()
 {
-	return false;
+	return rlutil::tcols() < 80 || rlutil::trows() < 29;
 }
 
 void Platform::showResizePrompt()
