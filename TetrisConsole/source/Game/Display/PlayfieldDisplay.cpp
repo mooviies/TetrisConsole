@@ -56,7 +56,7 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
             color = _state->lineClear.comboColor;
         }
         if (text != nullptr) {
-            constexpr int totalWidth = TETRIS_WIDTH * 2;
+            constexpr int totalWidth = BOARD_WIDTH * 2;
             const auto textLen = static_cast<int>(text->length());
             const int leftPad = (totalWidth - textLen) / 2;
             const int rightPad = totalWidth - textLen - leftPad;
@@ -76,7 +76,7 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
     if (_state->phase == GamePhase::Animate && _state->lineClear.flashOn) {
         const auto &rows = _state->lineClear.rows;
         if (std::find(rows.begin(), rows.end(), line) != rows.end()) {
-            for (int i = 0; i < TETRIS_WIDTH; i++) {
+            for (int i = 0; i < BOARD_WIDTH; i++) {
                 ctx.setColor(Color::WHITE);
                 ctx.print("██");
             }
@@ -85,7 +85,7 @@ void PlayfieldElement::drawRow(const int rowIndex, RowDrawContext &ctx) const {
     }
 
     const auto *tetrimino = _state->pieces.current;
-    for (int i = 0; i < TETRIS_WIDTH; i++) {
+    for (int i = 0; i < BOARD_WIDTH; i++) {
         bool currentTetriminoHere = false;
         bool ghostHere = false;
         if (tetrimino != nullptr) {
@@ -137,7 +137,7 @@ void PlayfieldDisplay::update(const GameState &state, const bool visible) {
     _skylineColors.fill(0);
     if (visible) {
         const auto *tetrimino = state.pieces.current;
-        for (int i = 0; i < TETRIS_WIDTH; i++) {
+        for (int i = 0; i < BOARD_WIDTH; i++) {
             if (tetrimino != nullptr && tetrimino->isMino(BUFFER_END, i))
                 _skylineColors[i] = tetrimino->getColor();
             else if (state.matrix[BUFFER_END][i])
@@ -165,7 +165,7 @@ void PlayfieldDisplay::drawSkylineBorder() const {
     rlutil::setColor(Color::WHITE);
     std::cout << "╔";
 
-    for (int i = 0; i < TETRIS_WIDTH; i++) {
+    for (int i = 0; i < BOARD_WIDTH; i++) {
         if (_skylineColors[i]) rlutil::setColor(_skylineColors[i]);
         std::cout << "══";
         if (_skylineColors[i]) rlutil::setColor(Color::WHITE);

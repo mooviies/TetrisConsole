@@ -26,7 +26,7 @@ private:
     size_t _linesRow{};
     size_t _tpmRow{};
     size_t _lpmRow{};
-    size_t _tetrisRow{};
+    size_t _quadRow{};
     size_t _combosRow{};
     size_t _tSpinsRow{};
     bool _showGoal{};

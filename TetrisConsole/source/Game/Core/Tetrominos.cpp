@@ -1,4 +1,4 @@
-#include "Tetris.h"
+#include "Tetrominos.h"
 
 #include <iostream>
 
@@ -9,16 +9,16 @@
 #include "SoundEngine.h"
 #include "rlutil.h"
 
-Tetris::Tetris(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreDisplay)
+Tetrominos::Tetrominos(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreDisplay)
     : _controller(Timer::instance()), _pauseMenu(pauseMenu), _gameOverMenu(gameOverMenu),
       _highScoreDisplay(highScoreDisplay) {
     _state.loadOptions();
     _state.loadHighscore();
 }
 
-Tetris::~Tetris() = default;
+Tetrominos::~Tetrominos() = default;
 
-void Tetris::start() {
+void Tetrominos::start() {
     _controller.configurePolicies(_state.config.mode);
     _controller.configureVariant(_state.config.variant, _state);
     _renderer.configure(_state.config.previewCount, _state.config.holdEnabled, _state.config.showGoal);
@@ -28,7 +28,7 @@ void Tetris::start() {
     playStartingMusic();
 }
 
-void Tetris::step(const InputSnapshot &input) {
+void Tetrominos::step(const InputSnapshot &input) {
     const StepResult result = _controller.step(_state, input);
 
     playPendingSounds();
@@ -60,7 +60,7 @@ void Tetris::step(const InputSnapshot &input) {
     _wasPausePressed = input.pause;
 }
 
-void Tetris::render() {
+void Tetrominos::render() {
     if (_state.isDirty()) {
         _renderer.render(_state);
         _state.clearDirty();
@@ -69,14 +69,14 @@ void Tetris::render() {
     }
 }
 
-void Tetris::redraw() {
+void Tetrominos::redraw() {
     GameRenderer::renderTitle("A classic in console!");
     _renderer.invalidate();
     _renderer.render(_state);
     _state.clearDirty();
 }
 
-void Tetris::handlePause() {
+void Tetrominos::handlePause() {
     _state.pauseGameTimer();
     SoundEngine::pauseMusic();
     _renderer.render(_state, false);
@@ -123,7 +123,7 @@ void Tetris::handlePause() {
     _state.resumeGameTimer();
 }
 
-void Tetris::handleGameOver() {
+void Tetrominos::handleGameOver() {
     _state.pauseGameTimer();
     SoundEngine::stopMusic();
     if (_state.stats.hasBetterHighscore) {
@@ -133,7 +133,7 @@ void Tetris::handleGameOver() {
         rec.lines = _state.stats.lines;
         rec.tpm = _state.tpm();
         rec.lpm = _state.lpm();
-        rec.tetris = _state.stats.tetris;
+        rec.quad = _state.stats.quad;
         rec.combos = _state.stats.combos;
         rec.tSpins = _state.stats.tSpins;
         rec.gameElapsed = _state.gameElapsed();
@@ -166,20 +166,20 @@ void Tetris::handleGameOver() {
     playStartingMusic();
 }
 
-void Tetris::playPendingSounds() {
+void Tetrominos::playPendingSounds() {
     for (const auto sound : _state.pendingSounds()) {
         switch (sound) {
             case GameSound::Click: SoundEngine::playSound("CLICK"); break;
             case GameSound::Lock: SoundEngine::playSound("LOCK"); break;
             case GameSound::HardDrop: SoundEngine::playSound("HARD_DROP"); break;
             case GameSound::LineClear: SoundEngine::playSound("LINE_CLEAR"); break;
-            case GameSound::Tetris: SoundEngine::playSound("TETRIS"); break;
+            case GameSound::Quad: SoundEngine::playSound("QUAD"); break;
         }
     }
     _state.clearPendingSounds();
 }
 
-std::string Tetris::randomTrack(const std::string &exclude) {
+std::string Tetrominos::randomTrack(const std::string &exclude) {
     const std::string tracks[] = {"A", "B", "C"};
     std::vector<std::string> choices;
     for (const auto &t : tracks)
@@ -187,7 +187,7 @@ std::string Tetris::randomTrack(const std::string &exclude) {
     return choices[static_cast<size_t>(Random::getInteger(0, static_cast<int>(choices.size()) - 1))];
 }
 
-void Tetris::playStartingMusic() {
+void Tetrominos::playStartingMusic() {
     switch (SoundEngine::getSoundtrackMode()) {
         case SoundtrackMode::Cycle: SoundEngine::playMusic("A"); break;
         case SoundtrackMode::Random: SoundEngine::playMusic(randomTrack()); break;

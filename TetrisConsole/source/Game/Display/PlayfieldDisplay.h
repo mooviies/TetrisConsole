@@ -26,5 +26,5 @@ private:
     std::shared_ptr<PlayfieldElement> _element;
     int _x = 0;
     int _y = 0;
-    std::array<int, TETRIS_WIDTH> _skylineColors{};
+    std::array<int, BOARD_WIDTH> _skylineColors{};
 };

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(TetrisConsole LANGUAGES CXX)
+project(Tetrominos LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -59,34 +59,34 @@ add_custom_command(
 add_custom_target(media_embed DEPENDS ${CMAKE_BINARY_DIR}/media_data.h)
 add_dependencies(konsole media_embed)
 
-# --- Tetris executable ---
-file(GLOB_RECURSE TETRIS_SRCS TetrisConsole/source/Tetris/*.cpp)
+# --- Game executable ---
+file(GLOB_RECURSE GAME_SRCS TetrisConsole/source/Game/*.cpp)
 
 if(WIN32)
-    set(TARGET_NAME TetrisConsole)
+    set(TARGET_NAME Tetrominos)
 else()
-    set(TARGET_NAME tetris)
+    set(TARGET_NAME tetrominos)
 endif()
 
 add_executable(${TARGET_NAME}
-    ${TETRIS_SRCS}
+    ${GAME_SRCS}
     ${CMAKE_BINARY_DIR}/media_data.cpp
-        TetrisConsole/source/Tetris/Rules/GoalPolicy.cpp
-        TetrisConsole/source/Tetris/Rules/GoalPolicy.h
-        TetrisConsole/source/Tetris/Rules/VariantRule.cpp
-        TetrisConsole/source/Tetris/Rules/VariantRule.h
+        TetrisConsole/source/Game/Rules/GoalPolicy.cpp
+        TetrisConsole/source/Game/Rules/GoalPolicy.h
+        TetrisConsole/source/Game/Rules/VariantRule.cpp
+        TetrisConsole/source/Game/Rules/VariantRule.h
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE
-    TetrisConsole/source/Tetris/Core
-    TetrisConsole/source/Tetris/Piece
-    TetrisConsole/source/Tetris/Rules
-    TetrisConsole/source/Tetris/Display
-    TetrisConsole/source/Tetris/Test
+    TetrisConsole/source/Game/Core
+    TetrisConsole/source/Game/Piece
+    TetrisConsole/source/Game/Rules
+    TetrisConsole/source/Game/Display
+    TetrisConsole/source/Game/Test
 )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
-    $<$<CONFIG:Debug>:TETRIS_DEBUG>
+    $<$<CONFIG:Debug>:GAME_DEBUG>
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE konsole)

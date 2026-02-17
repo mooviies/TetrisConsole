@@ -23,8 +23,8 @@ __pycache__/
 *.pyc
 
 # Binary
-tetris
-TetrisConsole.exe
+tetrominos
+Tetrominos.exe
 
 # User data
 score.bin

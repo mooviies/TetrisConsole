@@ -43,7 +43,7 @@ HelpDisplay::HelpDisplay() : _leftPanel(kLeftInterior), _rightPanel(kRightInteri
     // --- Right panel: About / Credits ---
     _rightPanel.addRow("ABOUT", Align::Center);
     _rightPanel.addSeparator();
-    _rightPanel.addRow("Console Tetris", Align::Center);
+    _rightPanel.addRow("Tetrominos", Align::Center);
     _rightPanel.addRow("with official score", Align::Center);
     _rightPanel.addRow("system!", Align::Center);
     _rightPanel.addSeparator();

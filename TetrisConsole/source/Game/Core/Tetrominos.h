@@ -7,10 +7,10 @@
 class HighScoreDisplay;
 class Menu;
 
-class Tetris {
+class Tetrominos {
 public:
-    Tetris(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreDisplay);
-    ~Tetris();
+    Tetrominos(Menu &pauseMenu, Menu &gameOverMenu, HighScoreDisplay &highScoreDisplay);
+    ~Tetrominos();
 
     void start();
     void step(const InputSnapshot &input);

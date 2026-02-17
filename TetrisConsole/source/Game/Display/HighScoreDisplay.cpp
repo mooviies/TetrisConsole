@@ -38,7 +38,7 @@ HighScoreDisplay::HighScoreDisplay() : _leftPanel(kLeftInterior), _rightPanel(kR
     _tpmStatRow = _rightPanel.addRow({Cell("TPM", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
     _lpmStatRow = _rightPanel.addRow({Cell("LPM", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
     _linesStatRow = _rightPanel.addRow({Cell("Lines", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
-    _tetrisStatRow = _rightPanel.addRow({Cell("Tetris", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
+    _quadStatRow = _rightPanel.addRow({Cell("Quad", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
     _combosStatRow = _rightPanel.addRow({Cell("Combos", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
     _tSpinsStatRow = _rightPanel.addRow({Cell("T-Spins", Align::Left, 15, kLabelWidth), Cell("", Align::Center)});
     _rightPanel.addSeparator();
@@ -111,7 +111,7 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord> &hs) {
         _rightPanel.setCell(_tpmStatRow, 1, Utility::valueToString(rec.tpm, 6));
         _rightPanel.setCell(_lpmStatRow, 1, Utility::valueToString(rec.lpm, 6));
         _rightPanel.setCell(_linesStatRow, 1, Utility::valueToString(rec.lines, 6));
-        _rightPanel.setCell(_tetrisStatRow, 1, Utility::valueToString(rec.tetris, 6));
+        _rightPanel.setCell(_quadStatRow, 1, Utility::valueToString(rec.quad, 6));
         _rightPanel.setCell(_combosStatRow, 1, Utility::valueToString(rec.combos, 6));
         _rightPanel.setCell(_tSpinsStatRow, 1, Utility::valueToString(rec.tSpins, 6));
 
@@ -134,7 +134,7 @@ void HighScoreDisplay::updateDisplay(const vector<HighScoreRecord> &hs) {
         _rightPanel.setCell(_tpmStatRow, 1, "------");
         _rightPanel.setCell(_lpmStatRow, 1, "------");
         _rightPanel.setCell(_linesStatRow, 1, "------");
-        _rightPanel.setCell(_tetrisStatRow, 1, "------");
+        _rightPanel.setCell(_quadStatRow, 1, "------");
         _rightPanel.setCell(_combosStatRow, 1, "------");
         _rightPanel.setCell(_tSpinsStatRow, 1, "------");
 

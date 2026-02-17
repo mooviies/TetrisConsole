@@ -30,7 +30,7 @@ void ScoreDisplay::configure(bool showGoal) {
 
     _lpmRow = _panel.addRow({Cell("LPM", Align::Left, Color::WHITE, 9), Cell("000000", Align::Center)});
 
-    _tetrisRow = _panel.addRow({Cell("Tetris", Align::Left, Color::WHITE, 9), Cell("000000", Align::Center)});
+    _quadRow = _panel.addRow({Cell("Quad", Align::Left, Color::WHITE, 9), Cell("000000", Align::Center)});
 
     _combosRow = _panel.addRow({Cell("Combos", Align::Left, Color::WHITE, 9), Cell("000000", Align::Center)});
 
@@ -46,7 +46,7 @@ void ScoreDisplay::update(const GameState &state) {
     if (_showGoal) _panel.setCell(_goalRow, 1, Utility::valueToString(state.stats.goal, 6));
 
     _panel.setCell(_linesRow, 1, Utility::valueToString(state.stats.lines, 6));
-    _panel.setCell(_tetrisRow, 1, Utility::valueToString(state.stats.tetris, 6));
+    _panel.setCell(_quadRow, 1, Utility::valueToString(state.stats.quad, 6));
     _panel.setCell(_combosRow, 1, Utility::valueToString(state.stats.combos, 6));
     _panel.setCell(_tSpinsRow, 1, Utility::valueToString(state.stats.tSpins, 6));
 }

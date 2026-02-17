@@ -1,12 +1,12 @@
 # Architecture
 
-Cross-platform console Tetris in C++17. Two layers: a platform abstraction library (`source/Konsole/`, built as a static library) and game logic (`source/Tetris/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`).
+Cross-platform console Tetrominos game in C++17. Two layers: a platform abstraction library (`source/Konsole/`, built as a static library) and game logic (`source/Game/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`).
 
 ---
 
 ## Table of Contents
 
-1. [Main Loop & Tetris Facade](#1-main-loop--tetris-facade)
+1. [Main Loop & Tetrominos Facade](#1-main-loop--tetrominos-facade)
 2. [MVC: GameController, GameState, GameRenderer](#2-mvc-gamecontroller-gamestate-gamerenderer)
 3. [Piece Generation (Double-Bag Randomizer)](#3-piece-generation-double-bag-randomizer)
 4. [Tetrimino, Facing & SRS Rotation](#4-tetrimino-facing--srs-rotation)
@@ -22,13 +22,13 @@ Cross-platform console Tetris in C++17. Two layers: a platform abstraction libra
 
 ---
 
-## 1. Main Loop & Tetris Facade
+## 1. Main Loop & Tetrominos Facade
 
-**Files:** `Tetris/Core/Tetris.h`, `Tetris/Core/Tetris.cpp`, `Tetris/Core/TetrisConsole.cpp`
+**Files:** `Game/Core/Tetrominos.h`, `Game/Core/Tetrominos.cpp`, `Game/Core/TetrominosConsole.cpp`
 
 ### Entry Point
 
-`main()` in `TetrisConsole.cpp` bootstraps the application:
+`main()` in `TetrominosConsole.cpp` bootstraps the application:
 
 1. `Platform::initConsole()` — terminal raw mode, alternate screen buffer, colors
 2. `Input::init(actionCount)` — initialize action-based input system with `Action::Count` (10) actions
@@ -36,30 +36,30 @@ Cross-platform console Tetris in C++17. Two layers: a platform abstraction libra
 4. `SoundEngine::init()` — miniaudio engine with embedded VFS
 5. Wait for terminal to reach minimum size (80x29)
 6. Build the menu tree (main, newGame, options, pause, restartConfirm, backToMenuConfirm, quit, gameOver) with option hints
-7. Create `HighScoreDisplay`, `HelpDisplay`, and the `Tetris` facade; wire menu callbacks via lambdas
+7. Create `HighScoreDisplay`, `HelpDisplay`, and the `Tetrominos` facade; wire menu callbacks via lambdas
 8. `main.open()` — blocking main menu (includes New Game, Options, High Scores, Help, Exit; plus Test in debug builds)
-9. `tetris.start()` — initialize game state, configure renderer, begin music
+9. `game.start()` — initialize game state, configure renderer, begin music
 10. Enter the main loop
 
 ### Main Loop
 
 ```
-while (!tetris.doExit() && !tetris.backToMenu()) {
+while (!game.doExit() && !game.backToMenu()) {
     frameStart = now()
     Input::pollKeys()                    // 1. gather input
     Platform::wasResized()?              // 2. handle terminal resize
     Platform::isTerminalTooSmall()?      // 3. pause if terminal too small
     snapshot = InputSnapshot from        // 4. capture action states
                Input::action() queries
-    tetris.step(snapshot)                // 5. game logic + sound dispatch
-    tetris.render()                      // 6. draw (dirty → full render, else timer-only)
+    game.step(snapshot)                  // 5. game logic + sound dispatch
+    game.render()                        // 6. draw (dirty → full render, else timer-only)
     sleep(16ms - elapsed)                // 7. ~60 FPS frame cap
 }
 ```
 
-### Tetris Facade
+### Tetrominos Facade
 
-The `Tetris` class owns all core components and wires them together:
+The `Tetrominos` class owns all core components and wires them together:
 
 - `GameState _state` — model
 - `GameRenderer _renderer` — view
@@ -76,7 +76,7 @@ The `Tetris` class owns all core components and wires them together:
 | `GameOver` | Pause timer, stop music, prompt player name if new high score, save highscore, open game over menu |
 
 After dispatching, `step()` also:
-- Plays pending sounds queued by the controller (`GameSound` enum: Click, Lock, HardDrop, LineClear, Tetris)
+- Plays pending sounds queued by the controller (`GameSound` enum: Click, Lock, HardDrop, LineClear, Quad)
 - Handles mute toggle requests
 - Cycles music tracks (A -> B -> C -> A) when a track ends
 
@@ -106,13 +106,13 @@ When `StepResult::GameOver` is returned:
 
 ### Exit Flow
 
-The quit menu callback calls `tetris.exit()`, which sets `_state.setShouldExit(true)`. The main loop checks `tetris.doExit()` and exits cleanly, running `SoundEngine::cleanup()`, `Input::cleanup()`, and `Platform::cleanupConsole()`.
+The quit menu callback calls `game.exit()`, which sets `_state.setShouldExit(true)`. The main loop checks `game.doExit()` and exits cleanly, running `SoundEngine::cleanup()`, `Input::cleanup()`, and `Platform::cleanupConsole()`.
 
 ---
 
 ## 2. MVC: GameController, GameState, GameRenderer
 
-**Files:** `Tetris/Core/GameController.h/.cpp`, `Tetris/Core/PieceMovement.h/.cpp`, `Tetris/Core/LineClear.h/.cpp`, `Tetris/Core/GameState.h/.cpp`, `Tetris/Core/GameRenderer.h/.cpp`
+**Files:** `Game/Core/GameController.h/.cpp`, `Game/Core/PieceMovement.h/.cpp`, `Game/Core/LineClear.h/.cpp`, `Game/Core/GameState.h/.cpp`, `Game/Core/GameRenderer.h/.cpp`
 
 ### Separation of Concerns
 
@@ -128,10 +128,10 @@ GameState (model) ---const getters---> GameRenderer (view)
     |                                       | reads via public API
     +---------------------------------------+
 
-Tetris (facade) owns all three, dispatches StepResult
+Tetrominos (facade) owns all three, dispatches StepResult
 ```
 
-**GameController** is the orchestrator. It owns `PieceMovement`, `LineClear`, and five pluggable policy objects (`LockDownPolicy`, `ScoringRule`, `GravityPolicy`, `GoalPolicy`, `VariantRule`). It dispatches game phases, handles Generation/Completion phases directly, manages the double-bag randomizer, and coordinates setup/reset. `configureVariant(variant, state)` sets variant-specific policies (goal, leveling, time limit) and updates `GameConfig`. Never touches the renderer or menus. Returns a `StepResult` enum; the `Tetris` facade dispatches the result.
+**GameController** is the orchestrator. It owns `PieceMovement`, `LineClear`, and five pluggable policy objects (`LockDownPolicy`, `ScoringRule`, `GravityPolicy`, `GoalPolicy`, `VariantRule`). It dispatches game phases, handles Generation/Completion phases directly, manages the double-bag randomizer, and coordinates setup/reset. `configureVariant(variant, state)` sets variant-specific policies (goal, leveling, time limit) and updates `GameConfig`. Never touches the renderer or menus. Returns a `StepResult` enum; the `Tetrominos` facade dispatches the result.
 
 **PieceMovement** handles everything during `GamePhase::Falling`: gravity, DAS autorepeat, left/right/down movement, SRS rotation, hard drop, hold swap, and lock-down. When a piece locks, it transitions to `GamePhase::Pattern`. Takes non-owning pointers to `LockDownPolicy` and `GravityPolicy` (owned by GameController).
 
@@ -140,7 +140,7 @@ Tetris (facade) owns all three, dispatches StepResult
 **GameState** holds all game data via public sub-structs:
 
 - `GameConfig config` — variant, lock-down mode, ghost, hold, preview count, starting level, time limit, showGoal
-- `Stats stats` — score, level, lines, goal, tetris count, combos, T-spins, back-to-back, highscore threshold
+- `Stats stats` — score, level, lines, goal, quad count, combos, T-spins, back-to-back, highscore threshold
 - `LockDownState lockDown` — active flag, move count, lowest line
 - `PieceState pieces` — bag (14 `unique_ptr<Tetrimino>`), bag index, current/hold pointers, isNewHold
 - `FrameFlags flags` — step state, rotation/T-spin flags, game-over/started flags
@@ -185,7 +185,7 @@ Within the Falling phase, `PieceMovement` uses a `GameStep` enum:
 
 ## 3. Piece Generation (Double-Bag Randomizer)
 
-**Files:** `Tetris/Core/GameState.h/.cpp`, `Tetris/Core/GameController.cpp`
+**Files:** `Game/Core/GameState.h/.cpp`, `Game/Core/GameController.cpp`
 
 ### The Double-Bag (14 Objects)
 
@@ -218,7 +218,7 @@ It swaps `unique_ptr`s, not the `Tetrimino` objects themselves. Raw pointers lik
    - Reshuffles indices 7-13 to prepare a fresh "next" bag.
    - Resets `_bagIndex` to 0.
 
-This guarantees the Tetris Guideline's **7-bag randomizer**: every piece type appears exactly once per bag of 7, so you never go more than 12 pieces without seeing any given type.
+This guarantees the Guideline's **7-bag randomizer**: every piece type appears exactly once per bag of 7, so you never go more than 12 pieces without seeing any given type.
 
 ### Feeding the Next Queue
 
@@ -232,7 +232,7 @@ This guarantees the Tetris Guideline's **7-bag randomizer**: every piece type ap
 
 ## 4. Tetrimino, Facing & SRS Rotation
 
-**Files:** `Tetris/Piece/Tetrimino.h/.cpp`, `Tetris/Piece/Facing.h/.cpp`, `Tetris/Piece/PieceData.h/.cpp`, `Konsole/Util/Vector2i.h`
+**Files:** `Game/Piece/Tetrimino.h/.cpp`, `Game/Piece/Facing.h/.cpp`, `Game/Piece/PieceData.h/.cpp`, `Konsole/Util/Vector2i.h`
 
 ### Piece Data (Static Table)
 
@@ -309,7 +309,7 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ## 5. Scoring, Leveling & Lock-Down
 
-**Files:** `Tetris/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Tetris/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Tetris/Rules/ScoringRule.h/.cpp`, `Tetris/Rules/LockDownPolicy.h/.cpp`, `Tetris/Rules/GravityPolicy.h/.cpp`, `Tetris/Rules/GoalPolicy.h/.cpp`, `Tetris/Rules/VariantRule.h/.cpp`
+**Files:** `Game/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Game/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Game/Rules/ScoringRule.h/.cpp`, `Game/Rules/LockDownPolicy.h/.cpp`, `Game/Rules/GravityPolicy.h/.cpp`, `Game/Rules/GoalPolicy.h/.cpp`, `Game/Rules/VariantRule.h/.cpp`
 
 ### Lock-Down Mechanics
 
@@ -395,18 +395,18 @@ Handles all scoring, stats, leveling, and sound queuing after a lock. Three bran
 | 1 (Single) | 100 | 1 | Breaks streak |
 | 2 (Double) | 300 | 3 | Breaks streak |
 | 3 (Triple) | 500 | 5 | Breaks streak |
-| 4 (Tetris) | 800 | 8 | Enables streak |
+| 4 (Quad) | 800 | 8 | Enables streak |
 
-All base scores are multiplied by the current level. **Back-to-back bonus**: consecutive Tetrises or T-spin line clears get a 1.5x score multiplier. Singles, Doubles, and Triples break the streak.
+All base scores are multiplied by the current level. **Back-to-back bonus**: consecutive Quads or T-spin line clears get a 1.5x score multiplier. Singles, Doubles, and Triples break the streak.
 
 After scoring, `awardScore()` advances leveling, tracks stats, and queues sounds:
 
 - `_lines += awardedLines`, `_goal += awardedLines`
 - When `_goal >= level * 5` → level up, goal resets
 - Combo tracking: `_currentCombo` counts consecutive line-clearing locks (-1 = no chain). `_combos` tracks the best combo achieved.
-- `_tetris` counts 4-line clears, `_tSpins` counts T-spin line clears
+- `_quad` counts 4-line clears, `_tSpins` counts T-spin line clears
 - `_nbMinos` increments per piece locked (feeds TPM calculation: `_nbMinos / minutesElapsed`)
-- 4 lines → Tetris sound; 1-3 lines → LineClear sound
+- 4 lines → Quad sound; 1-3 lines → LineClear sound
 
 ### Game Variants
 
@@ -439,7 +439,7 @@ Left/right movement uses Delayed Auto Shift:
 
 ### High Score Persistence
 
-**File:** `Tetris/Core/GameState.cpp` (persistence) + `Tetris/Core/GameState.h` (`HighScoreRecord` struct)
+**File:** `Game/Core/GameState.cpp` (persistence) + `Game/Core/GameState.h` (`HighScoreRecord` struct)
 
 Per-variant top-10 leaderboards stored as a binary file (`score.bin`). `HighScoreTable` is `std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>` — one sorted vector per variant (Marathon, Sprint, Ultra). Each record stores both game stats and the options used during that game:
 
@@ -453,7 +453,7 @@ Offset  Size  Field
 12      4     lines (int32)
 16      4     tpm (int32)
 20      4     lpm (int32)
-24      4     tetris count (int32)
+24      4     quad count (int32)
 28      4     combos (int32)
 32      4     tSpins (int32)
 36      8     gameElapsed (double, seconds)
@@ -479,7 +479,7 @@ Magic: `0x53484354` ("TCHS" little-endian), version 3.
 
 ## 6. Input System
 
-**Files:** `Konsole/Platform/Input.h`, `Konsole/Platform/Input.cpp`, `Konsole/Platform/InputLinux.cpp`, `Konsole/Platform/InputWin32.cpp`, `Tetris/Core/InputSnapshot.h`
+**Files:** `Konsole/Platform/Input.h`, `Konsole/Platform/Input.cpp`, `Konsole/Platform/InputLinux.cpp`, `Konsole/Platform/InputWin32.cpp`, `Game/Core/InputSnapshot.h`
 
 ### Architecture
 
@@ -500,7 +500,7 @@ Defines the game's logical actions:
 Left, Right, SoftDrop, HardDrop, RotateCW, RotateCCW, Hold, Pause, Mute, Select, Count
 ```
 
-`InputSnapshot` is a plain struct with a `bool` field for each action (except Select, which is menu-only). It is populated each frame from `Input::action()` queries and passed to `Tetris::step()`.
+`InputSnapshot` is a plain struct with a `bool` field for each action (except Select, which is menu-only). It is populated each frame from `Input::action()` queries and passed to `Tetrominos::step()`.
 
 ### Public Interface
 
@@ -519,7 +519,7 @@ The game loop calls `pollKeys()` once per frame, then queries `action()` for eac
 
 ### Default Key Bindings
 
-Set up in `TetrisConsole.cpp` after `Input::init()`:
+Set up in `TetrominosConsole.cpp` after `Input::init()`:
 
 | Action | Keys |
 |--------|------|
@@ -616,7 +616,7 @@ static std::string getDataDir();   // persistent data directory
 
 **Centering**: computes offsets to center the 80×29 game area in larger terminals: `offsetX = max(0, (cols - 80) / 2)`, `offsetY = max(0, (rows - 29) / 2)`.
 
-**Data directory**: `$XDG_DATA_HOME/TetrisConsole` or `~/.local/share/TetrisConsole`. Falls back to `/tmp/.local/share/TetrisConsole` if `$HOME` is unset. Directory created with `mkdir()` at mode 0755.
+**Data directory**: `$XDG_DATA_HOME/Tetrominos` or `~/.local/share/Tetrominos`. Falls back to `/tmp/.local/share/Tetrominos` if `$HOME` is unset. Directory created with `mkdir()` at mode 0755.
 
 ### Windows
 
@@ -625,7 +625,7 @@ static std::string getDataDir();   // persistent data directory
 2. Sets console output to UTF-8 via `SetConsoleOutputCP(CP_UTF8)` (required for box-drawing characters ╔═║ and block characters ██░░)
 3. Disables Ctrl+C via `SetConsoleCtrlHandler(NULL, TRUE)` — quit via in-app menu only
 4. Disables resize/maximize buttons via `SetWindowLongPtr` (cosmetic — Windows Terminal ignores this)
-5. Sets window title to "Tetris Console"
+5. Sets window title to "Tetrominos"
 6. Resets colors (`system("color 0F")`), hides cursor
 7. Enables `ENABLE_VIRTUAL_TERMINAL_PROCESSING` on the output handle so ANSI escape sequences are interpreted by Windows Terminal
 8. Sets 80×29 screen buffer via console APIs (legacy conhost), then sends `\033[8;29;80t` xterm resize sequence (Windows Terminal)
@@ -646,13 +646,13 @@ static std::string getDataDir();   // persistent data directory
 
 **Resize handling**: `wasResized()` checks if `rlutil::tcols()` or `rlutil::trows()` differ from 80×29. If so, sends `\033[8;29;80t` to snap back, waits 50ms for the terminal to process it, clears the screen, and returns `true` for a full redraw. `isTerminalTooSmall()` performs the same size check. Offsets always return 0 (content is not centered within the window).
 
-**Data directory**: `%APPDATA%\TetrisConsole` via `SHGetFolderPathA()`. Falls back to `.\TetrisConsole` if the shell API call fails.
+**Data directory**: `%APPDATA%\Tetrominos` via `SHGetFolderPathA()`. Falls back to `.\Tetrominos` if the shell API call fails.
 
 ---
 
 ## 8. Panel Rendering System
 
-**Files:** `Konsole/UI/Panel.h/.cpp`, `Konsole/UI/RowDrawContext.h/.cpp`, `Konsole/UI/Icon.h/.cpp`, `Konsole/UI/Color.h`, `Tetris/Display/PiecePreview.h/.cpp`, `Tetris/Display/PieceDisplay.h/.cpp`, `Tetris/Display/PlayfieldDisplay.h/.cpp`, `Tetris/Display/ScoreDisplay.h/.cpp`, `Tetris/Display/HighScoreDisplay.h/.cpp`, `Tetris/Display/HelpDisplay.h/.cpp`, `Tetris/Display/Confetti.h/.cpp`
+**Files:** `Konsole/UI/Panel.h/.cpp`, `Konsole/UI/RowDrawContext.h/.cpp`, `Konsole/UI/Icon.h/.cpp`, `Konsole/UI/Color.h`, `Game/Display/PiecePreview.h/.cpp`, `Game/Display/PieceDisplay.h/.cpp`, `Game/Display/PlayfieldDisplay.h/.cpp`, `Game/Display/ScoreDisplay.h/.cpp`, `Game/Display/HighScoreDisplay.h/.cpp`, `Game/Display/HelpDisplay.h/.cpp`, `Game/Display/Confetti.h/.cpp`
 
 ### Color
 
@@ -717,7 +717,7 @@ The 10x20 visible game field. Its `PlayfieldElement` (PanelElement subclass, hei
 
 ### ScoreDisplay
 
-Panel (interior width 18) showing Score, Time, TPM, LPM, Level, Goal (optional), Lines, Tetris, Combos, and T-Spins. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths. `configure(showGoal)` controls whether the Goal row appears (shown in Marathon, hidden in Sprint/Ultra). Has two update paths:
+Panel (interior width 18) showing Score, Time, TPM, LPM, Level, Goal (optional), Lines, Quad, Combos, and T-Spins. Score color changes to green during back-to-back bonus. Values are zero-padded to fixed widths. `configure(showGoal)` controls whether the Goal row appears (shown in Marathon, hidden in Sprint/Ultra). Has two update paths:
 
 - `update(state)` — full update of all fields (called when dirty)
 - `updateTimer(state)` — updates only Time, TPM, and LPM (called every frame for smooth display)
@@ -733,7 +733,7 @@ Takes `const HighScoreTable&` (per-variant scores) and a `VARIANT`. Blocks until
 
 **Left panel** (interior width 28): title "HIGH SCORES", separator, 10 ranked entries. Each entry shows cursor indicator, rank, name (10 chars), and score (10 digits). UP/DOWN arrows move the selection cursor.
 
-**Right panel** (interior width 22): variant tabs at top (Marathon / Sprint / Ultra, switchable with LEFT/RIGHT). Three header rows (score, time, name), a separator, seven stat rows (Level, TPM, LPM, Lines, Tetris, Combos, T-Spins), a separator, and five option rows (Start, Mode, Ghost, Hold, Preview) showing the settings used during that game. Empty slots show dashes.
+**Right panel** (interior width 22): variant tabs at top (Marathon / Sprint / Ultra, switchable with LEFT/RIGHT). Three header rows (score, time, name), a separator, seven stat rows (Level, TPM, LPM, Lines, Quad, Combos, T-Spins), a separator, and five option rows (Start, Mode, Ghost, Hold, Preview) showing the settings used during that game. Empty slots show dashes.
 
 Both panels are centered side-by-side with a 1-char gap, positioned relative to the window center.
 
@@ -783,7 +783,7 @@ All sounds are stored in a `map<string, MaSoundPtr>`. `MaSoundPtr` is a `unique_
 
 5 music tracks: `A.mp3`, `B.mp3`, `C.mp3` (game music), `title.mp3`, `score.mp3` (menu music, looping).
 
-`playMusic(name)` stops the current track, seeks to frame 0, sets volume, and starts. The `Tetris` facade checks `musicEnded()` each frame and cycles game music: A -> B -> C -> A.
+`playMusic(name)` stops the current track, seeks to frame 0, sets volume, and starts. The `Tetrominos` facade checks `musicEnded()` each frame and cycles game music: A -> B -> C -> A.
 
 ### Mute State Machine
 
@@ -893,7 +893,7 @@ Two static function pointers allow external control:
 - `Menu::shouldExitGame` — checked each loop iteration to break out when the game exits
 - `Menu::onResize` — called on terminal resize to redraw surrounding UI (also used by `HighScoreDisplay`)
 
-Menu callbacks use lambdas that capture the `Tetris` reference. The menu tree:
+Menu callbacks use lambdas that capture the `Tetrominos` reference. The menu tree:
 
 ```
 Main Menu
@@ -901,7 +901,7 @@ Main Menu
 ├── Options → Lock Down, Ghost Piece, Hold Piece, Preview (0-6), Reset Defaults, Back
 ├── High Scores → HighScoreDisplay (per-variant two-panel viewer)
 ├── Help → HelpDisplay (two-panel key bindings reference)
-├── Test → TestRunner (debug builds only, TETRIS_DEBUG)
+├── Test → TestRunner (debug builds only, GAME_DEBUG)
 └── Exit → Quit confirmation
 Pause Menu
 ├── Resume
@@ -924,15 +924,15 @@ Game Over Menu
 
 - C++17 standard, required
 - `CMAKE_EXPORT_COMPILE_COMMANDS ON` for clangd
-- Two build targets: `konsole` (static library) and `tetris`/`TetrisConsole` (executable)
-- Binary name: `tetris` (Linux/macOS), `TetrisConsole.exe` (Windows)
+- Two build targets: `konsole` (static library) and `tetrominos`/`Tetrominos` (executable)
+- Binary name: `tetrominos` (Linux/macOS), `Tetrominos.exe` (Windows)
 - Sources gathered with `file(GLOB_RECURSE ...)` to pick up files in subfolders automatically
 
 ### Build Targets
 
 **`konsole`** — static library from `Konsole/**/*.cpp`. Its include directories and link dependencies are `PUBLIC`, so they propagate automatically to the executable via `target_link_libraries`.
 
-**`tetris`** — executable from `Tetris/**/*.cpp` + `media_data.cpp`. Links against `konsole` with `PRIVATE` visibility.
+**`tetrominos`** — executable from `Game/**/*.cpp` + `media_data.cpp`. Links against `konsole` with `PRIVATE` visibility.
 
 A `media_embed` custom target ensures `media_data.h` is generated before `konsole` compiles (SoundEngine needs it).
 
@@ -989,4 +989,4 @@ Attached to `konsole` with `PUBLIC` visibility (propagates to the executable):
 | `lock.wav` | Effect | Piece lock |
 | `harddrop.wav` | Effect | Hard drop |
 | `lineclear.wav` | Effect | 1-3 line clear |
-| `tetris.wav` | Effect | 4-line clear (Tetris) |
+| `quad.wav` | Effect | 4-line clear (Quad) |

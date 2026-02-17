@@ -3,8 +3,8 @@
 #include <deque>
 #include <array>
 
-constexpr int TETRIS_HEIGHT = 40;
-constexpr int TETRIS_WIDTH = 10;
+constexpr int BOARD_HEIGHT = 40;
+constexpr int BOARD_WIDTH = 10;
 constexpr int BUFFER_START = 0;
 constexpr int BUFFER_END = 19;
 constexpr int MATRIX_START = 20;
@@ -20,5 +20,5 @@ inline constexpr size_t VARIANT_COUNT = 3;
 enum class LockDownMode { Extended, ExtendedInfinity, Classic };
 enum class DropType { Normal, Soft, Hard };
 
-using MatrixRow = std::array<int, TETRIS_WIDTH>;
+using MatrixRow = std::array<int, BOARD_WIDTH>;
 using GameMatrix = std::deque<MatrixRow>;

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <string>
 
-#include "Tetris.h"
+#include "Tetrominos.h"
 #include "Constants.h"
 #include "GameRenderer.h"
 #include "HighScoreDisplay.h"
@@ -13,7 +13,7 @@
 #include "Utility.h"
 #include "rlutil.h"
 
-#ifdef TETRIS_DEBUG
+#ifdef GAME_DEBUG
 #include "TestRunner.h"
 #endif
 
@@ -72,10 +72,10 @@ void GameMenus::applySoundFromMenu(Menu &menu) {
     else SoundEngine::setSoundtrackMode(SoundtrackMode::Cycle);
 }
 
-void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisplay &help) {
-    _tetris = &tetris;
+void GameMenus::configure(Tetrominos &game, HighScoreDisplay &highScores, HelpDisplay &help) {
+    _game = &game;
 
-    Menu::shouldExitGame = [this]() { return _tetris->doExit(); };
+    Menu::shouldExitGame = [this]() { return _game->doExit(); };
     Menu::onResize = []() { GameRenderer::renderTitle("A classic in console!"); };
 
     // --- Value vectors (local to configure, not captured by reference) ---
@@ -108,16 +108,16 @@ void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisp
         try {
             level = stoi(oc.values.at("Level"));
         } catch (...) {}
-        _tetris->setStartingLevel(level);
+        _game->setStartingLevel(level);
 
         auto v = GameVariant::Marathon;
         if (oc.values.at("Variant") == "Sprint")
             v = GameVariant::Sprint;
         else if (oc.values.at("Variant") == "Ultra")
             v = GameVariant::Ultra;
-        _tetris->setVariant(v);
+        _game->setVariant(v);
 
-        _tetris->saveOptions();
+        _game->saveOptions();
     });
     _newGame.addOptionWithValues("Level", levels);
     _newGame.addOptionWithValues("Variant", variants);
@@ -177,24 +177,24 @@ void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisp
 
     // --- Main menu ---
     _main.addOption("New Game", &_newGame, [this]() {
-        _newGame.setValueChoice("Level", Utility::valueToString(_tetris->startingLevel(), 2));
+        _newGame.setValueChoice("Level", Utility::valueToString(_game->startingLevel(), 2));
         string varStr = "Marathon";
-        if (_tetris->variant() == GameVariant::Sprint)
+        if (_game->variant() == GameVariant::Sprint)
             varStr = "Sprint";
-        else if (_tetris->variant() == GameVariant::Ultra)
+        else if (_game->variant() == GameVariant::Ultra)
             varStr = "Ultra";
         _newGame.setValueChoice("Variant", varStr);
     });
     _main.addOptionAction("Options", [this]() {
         string modeStr = "Extended";
-        if (_tetris->mode() == LockDownMode::Classic)
+        if (_game->mode() == LockDownMode::Classic)
             modeStr = "Classic";
-        else if (_tetris->mode() == LockDownMode::ExtendedInfinity)
+        else if (_game->mode() == LockDownMode::ExtendedInfinity)
             modeStr = "Infinite";
         _options.setValueChoice("Lock Down", modeStr);
-        _options.setValueChoice("Ghost Piece", _tetris->ghostEnabled() ? "On" : "Off");
-        _options.setValueChoice("Hold Piece", _tetris->holdEnabled() ? "On" : "Off");
-        _options.setValueChoice("Preview", Utility::valueToString(_tetris->previewCount(), 2));
+        _options.setValueChoice("Ghost Piece", _game->ghostEnabled() ? "On" : "Off");
+        _options.setValueChoice("Hold Piece", _game->holdEnabled() ? "On" : "Off");
+        _options.setValueChoice("Preview", Utility::valueToString(_game->previewCount(), 2));
 
         syncSoundToMenu(_options);
 
@@ -206,24 +206,24 @@ void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisp
             mode = LockDownMode::Classic;
         else if (values["Lock Down"] == "Infinite")
             mode = LockDownMode::ExtendedInfinity;
-        _tetris->setLockDownMode(mode);
-        _tetris->setGhostEnabled(values["Ghost Piece"] != "Off");
-        _tetris->setHoldEnabled(values["Hold Piece"] != "Off");
+        _game->setLockDownMode(mode);
+        _game->setGhostEnabled(values["Ghost Piece"] != "Off");
+        _game->setHoldEnabled(values["Hold Piece"] != "Off");
         int preview = 6;
         try {
             preview = stoi(values["Preview"]);
         } catch (...) {}
-        _tetris->setPreviewCount(preview);
+        _game->setPreviewCount(preview);
 
         applySoundFromMenu(_options);
 
-        _tetris->saveOptions();
+        _game->saveOptions();
     });
     _main.addOptionAction("High Scores", [this, &highScores]() {
-        highScores.open(_tetris->allHighscores(), _tetris->variant());
+        highScores.open(_game->allHighscores(), _game->variant());
     });
     _main.addOptionAction("Help", [&help]() { help.open(); });
-#ifdef TETRIS_DEBUG
+#ifdef GAME_DEBUG
     _main.addOptionAction("Test", []() {
         rlutil::cls();
         GameRenderer::renderTitle("Test Runner");
@@ -260,7 +260,7 @@ void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisp
 
         applySoundFromMenu(_pauseSound);
 
-        _tetris->saveOptions();
+        _game->saveOptions();
     });
     _pause.addOption("Main Menu", &_backToMenuConfirm);
     _pause.addOption("Exit Game", &_quit);
@@ -271,7 +271,7 @@ void GameMenus::configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisp
     _backToMenuConfirm.addOptionCloseAllMenu("Yes");
     _backToMenuConfirm.addOptionClose("No");
 
-    _quit.addOption("Yes", [this](const OptionChoice &) { _tetris->exit(); });
+    _quit.addOption("Yes", [this](const OptionChoice &) { _game->exit(); });
     _quit.addOptionClose("No");
 
     // --- Game Over menu ---

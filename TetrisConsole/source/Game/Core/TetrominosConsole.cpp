@@ -1,7 +1,7 @@
 #include <chrono>
 #include <thread>
 
-#include "Tetris.h"
+#include "Tetrominos.h"
 #include "GameMenus.h"
 #include "HelpDisplay.h"
 #include "HighScoreDisplay.h"
@@ -87,42 +87,42 @@ int main() {
     GameMenus menus;
     HighScoreDisplay highScores;
     HelpDisplay help;
-    Tetris tetris(menus.pauseMenu(), menus.gameOverMenu(), highScores);
-    menus.configure(tetris, highScores, help);
+    Tetrominos game(menus.pauseMenu(), menus.gameOverMenu(), highScores);
+    menus.configure(game, highScores, help);
 
     while (true) {
         menus.mainMenu().open();
-        if (tetris.doExit()) break;
-        tetris.start();
+        if (game.doExit()) break;
+        game.start();
 
         bool wasTooSmall = false;
-        while (!tetris.doExit() && !tetris.backToMenu()) {
+        while (!game.doExit() && !game.backToMenu()) {
             const auto frameStart = chrono::steady_clock::now();
 
             Input::pollKeys();
-            if (Platform::wasResized()) tetris.redraw();
+            if (Platform::wasResized()) game.redraw();
             if (Platform::isTerminalTooSmall()) {
                 if (!wasTooSmall) {
-                    tetris.pauseGameTimer();
+                    game.pauseGameTimer();
                     wasTooSmall = true;
                 }
                 this_thread::sleep_for(chrono::milliseconds(50));
                 continue;
             }
             if (wasTooSmall) {
-                tetris.resumeGameTimer();
+                game.resumeGameTimer();
                 wasTooSmall = false;
             }
 
-            tetris.step(pollInputSnapshot());
-            tetris.render();
+            game.step(pollInputSnapshot());
+            game.render();
 
             const auto elapsed = chrono::steady_clock::now() - frameStart;
             if (const auto sleepTime = chrono::milliseconds(16) - elapsed; sleepTime > chrono::milliseconds(0))
                 this_thread::sleep_for(sleepTime);
         }
-        if (tetris.doExit()) break;
-        tetris.clearBackToMenu();
+        if (game.doExit()) break;
+        game.clearBackToMenu();
         rlutil::cls();
         GameRenderer::renderTitle("A classic in console!");
     }

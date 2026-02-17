@@ -203,7 +203,7 @@ bool SoundEngine::init() {
     s_sounds["HARD_DROP"] = createEffectSound(&s_engine, "media/harddrop.wav");
     s_sounds["CLICK"] = createEffectSound(&s_engine, "media/click.wav");
     s_sounds["LINE_CLEAR"] = createEffectSound(&s_engine, "media/lineclear.wav");
-    s_sounds["TETRIS"] = createEffectSound(&s_engine, "media/tetris.wav");
+    s_sounds["QUAD"] = createEffectSound(&s_engine, "media/quad.wav");
 
     return true;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef TETRIS_DEBUG
+#ifdef GAME_DEBUG
 
 #include <optional>
 #include <string>

@@ -5,7 +5,7 @@
 
 #include "Menu.h"
 
-class Tetris;
+class Tetrominos;
 class HighScoreDisplay;
 class HelpDisplay;
 
@@ -14,7 +14,7 @@ public:
     GameMenus();
     ~GameMenus();
 
-    void configure(Tetris &tetris, HighScoreDisplay &highScores, HelpDisplay &help);
+    void configure(Tetrominos &game, HighScoreDisplay &highScores, HelpDisplay &help);
 
     Menu &mainMenu() { return _main; }
     Menu &pauseMenu() { return _pause; }
@@ -24,7 +24,7 @@ private:
     void syncSoundToMenu(Menu &menu);
     void applySoundFromMenu(Menu &menu);
 
-    Tetris *_tetris = nullptr;
+    Tetrominos *_game = nullptr;
 
     std::vector<std::string> _volumeValues;
 

@@ -117,7 +117,7 @@ bool Tetrimino::isMino(const int row, const int column) const {
 }
 
 int Tetrimino::getMino(const int row, const int column) const {
-    if (row >= 0 && row < TETRIS_HEIGHT && column >= 0 && column < TETRIS_WIDTH) return _matrix[row][column];
+    if (row >= 0 && row < BOARD_HEIGHT && column >= 0 && column < BOARD_WIDTH) return _matrix[row][column];
 
     return 1;
 }

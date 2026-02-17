@@ -17,7 +17,7 @@ struct HighScoreRecord {
     int lines{};
     int tpm{};
     int lpm{};
-    int tetris{};
+    int quad{};
     int combos{};
     int tSpins{};
     double gameElapsed{}; // seconds
@@ -48,7 +48,7 @@ struct Stats {
     int level{};
     int lines{};
     int goal{};
-    int tetris{};
+    int quad{};
     int combos{};
     int currentCombo{-1};
     int tSpins{};

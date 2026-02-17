@@ -60,8 +60,8 @@ void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
 
         const int startRow = state.pieces.current->getPosition().row;
         const int color = state.pieces.current->getColor();
-        bool columns[TETRIS_WIDTH]{};
-        for (int i = 0; i < TETRIS_WIDTH; i++)
+        bool columns[BOARD_WIDTH]{};
+        for (int i = 0; i < BOARD_WIDTH; i++)
             columns[i] = state.pieces.current->isMino(startRow, i)
                       || state.pieces.current->isMino(startRow + 1, i)
                       || state.pieces.current->isMino(startRow + 2, i)
@@ -79,7 +79,7 @@ void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
             trail.visibleStartRow = startRow;
             trail.color = color;
             trail.active = true;
-            for (int i = 0; i < TETRIS_WIDTH; i++)
+            for (int i = 0; i < BOARD_WIDTH; i++)
                 trail.columns[i] = columns[i];
             _timer.resetTimer(kHardDropTrail);
         }

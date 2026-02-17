@@ -53,7 +53,7 @@ void Platform::initConsole() {
     tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 
     rlutil::hidecursor();
-    rlutil::setConsoleTitle("Tetris Console");
+    rlutil::setConsoleTitle("Tetrominos");
     rlutil::cls();
     rlutil::setColor(rlutil::WHITE);
     rlutil::setBackgroundColor(rlutil::BLACK);
@@ -177,10 +177,10 @@ std::string Platform::getDataDir() {
     std::string dir;
     const char *xdg = std::getenv("XDG_DATA_HOME");
     if (xdg && xdg[0] != '\0')
-        dir = std::string(xdg) + "/TetrisConsole";
+        dir = std::string(xdg) + "/Tetrominos";
     else {
         const char *home = std::getenv("HOME");
-        dir = std::string(home ? home : "/tmp") + "/.local/share/TetrisConsole";
+        dir = std::string(home ? home : "/tmp") + "/.local/share/Tetrominos";
     }
     mkdir(dir.c_str(), 0755);
     return dir;

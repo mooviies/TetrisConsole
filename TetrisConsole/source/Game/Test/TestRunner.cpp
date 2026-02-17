@@ -1,4 +1,4 @@
-#ifdef TETRIS_DEBUG
+#ifdef GAME_DEBUG
 
 #include "TestRunner.h"
 
@@ -371,7 +371,7 @@ void TestRunner::writeReport() const {
 
     const auto now = chrono::system_clock::now();
     const auto time = chrono::system_clock::to_time_t(now);
-    out << "TetrisConsole Test Report — " << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << "\n";
+    out << "Tetrominos Test Report — " << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << "\n";
     out << "================================================\n\n";
 
     int passed = 0;
@@ -399,7 +399,7 @@ void TestRunner::writeReport() const {
 // Helper to build matrix cells from a row pattern string
 static vector<tuple<int, int, int>> rowCells(int row, const string &pattern) {
     vector<tuple<int, int, int>> cells;
-    for (int col = 0; col < TETRIS_WIDTH && col < static_cast<int>(pattern.size()); col++) {
+    for (int col = 0; col < BOARD_WIDTH && col < static_cast<int>(pattern.size()); col++) {
         const char ch = pattern[static_cast<size_t>(col)];
         if (ch == 'X') cells.emplace_back(row, col, Color::GREY);
     }
@@ -727,10 +727,10 @@ vector<TestScenario> TestRunner::buildScenarios() {
         scenarios.push_back(s);
     }
 
-    // Tetris: I EAST at (37,7) fills col 8. All 4 rows complete.
+    // Quad: I EAST at (37,7) fills col 8. All 4 rows complete.
     {
         TestScenario s;
-        s.name = "Tetris";
+        s.name = "Quad";
         s.description = "Clear 4 lines with I-piece";
         s.pieceType = PieceType::I;
         s.preRotations = 1; // EAST (vertical)
@@ -748,13 +748,13 @@ vector<TestScenario> TestRunner::buildScenarios() {
     // BACK-TO-BACK & COMBO SCENARIOS
     // ===================================================================
 
-    // Back-to-Back Tetris: Two consecutive Tetrises. Second gets 50% bonus.
+    // Back-to-Back Quad: Two consecutive Quads. Second gets 50% bonus.
     // 8 rows with gap at col 9. First I EAST fills rows 36-39 → 800.
     // Rows 32-35 shift down. Second I EAST fills again → 1200 (B2B).
     {
         TestScenario s;
-        s.name = "Back-to-Back Tetris";
-        s.description = "Two Tetrises in a row, second gets 50% B2B bonus";
+        s.name = "Back-to-Back Quad";
+        s.description = "Two Quads in a row, second gets 50% B2B bonus";
         s.pieceType = PieceType::I;
         s.preRotations = 1; // EAST (vertical)
         for (int row = 32; row <= 39; row++)

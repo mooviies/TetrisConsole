@@ -146,7 +146,7 @@ void GameRenderer::renderTitle(const std::string &subtitle) {
     const int oy = Platform::offsetY();
 
     Panel title(78);
-    title.addRow("Tetris Console", Align::Center);
+    title.addRow("Tetrominos", Align::Center);
     title.addSeparator();
     title.addRow(subtitle, Align::Center);
     title.setPosition(1 + ox, 1 + oy);

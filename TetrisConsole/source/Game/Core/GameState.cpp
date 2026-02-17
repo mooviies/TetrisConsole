@@ -36,7 +36,7 @@ GameState::GameState() {
         pieces.bag.push_back(std::make_unique<Tetrimino>(PieceType::Z, matrix));
     }
 
-    matrix.resize(TETRIS_HEIGHT);
+    matrix.resize(BOARD_HEIGHT);
 }
 
 GameState::~GameState() = default;
@@ -57,7 +57,7 @@ static HighScoreRecord readRecord(istream &in) {
     memcpy(&tmp, buf + 20, 4);
     rec.lpm = tmp;
     memcpy(&tmp, buf + 24, 4);
-    rec.tetris = tmp;
+    rec.quad = tmp;
     memcpy(&tmp, buf + 28, 4);
     rec.combos = tmp;
     memcpy(&tmp, buf + 32, 4);
@@ -160,7 +160,7 @@ static void writeRecord(ostream &out, const HighScoreRecord &rec) {
     memcpy(buf + 16, &tmp, 4);
     tmp = static_cast<int32_t>(rec.lpm);
     memcpy(buf + 20, &tmp, 4);
-    tmp = static_cast<int32_t>(rec.tetris);
+    tmp = static_cast<int32_t>(rec.quad);
     memcpy(buf + 24, &tmp, 4);
     tmp = static_cast<int32_t>(rec.combos);
     memcpy(buf + 28, &tmp, 4);
@@ -193,7 +193,7 @@ void GameState::saveHighscore() {
         rec.lines = stats.lines;
         rec.tpm = tpm();
         rec.lpm = lpm();
-        rec.tetris = stats.tetris;
+        rec.quad = stats.quad;
         rec.combos = stats.combos;
         rec.tSpins = stats.tSpins;
         rec.gameElapsed = gameElapsed();

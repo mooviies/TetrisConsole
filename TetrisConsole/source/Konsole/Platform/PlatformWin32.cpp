@@ -71,7 +71,7 @@ void Platform::initConsole() {
 
     HWND console = GetConsoleWindow();
     SetWindowLongPtr(console, GWL_STYLE, GetWindowLongPtr(console, GWL_STYLE) & ~(WS_MAXIMIZEBOX | WS_SIZEBOX));
-    SetConsoleTitle(TEXT("Tetris Console"));
+    SetConsoleTitle(TEXT("Tetrominos"));
 
     system("color 0F");
 
@@ -182,9 +182,9 @@ std::string Platform::getDataDir() {
     char path[MAX_PATH];
     std::string dir;
     if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, path)))
-        dir = std::string(path) + "\\TetrisConsole";
+        dir = std::string(path) + "\\Tetrominos";
     else
-        dir = ".\\TetrisConsole";
+        dir = ".\\Tetrominos";
     CreateDirectoryA(dir.c_str(), NULL);
     return dir;
 }

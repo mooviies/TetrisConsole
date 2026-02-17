@@ -35,7 +35,7 @@ private:
     size_t _tpmStatRow{};
     size_t _lpmStatRow{};
     size_t _linesStatRow{};
-    size_t _tetrisStatRow{};
+    size_t _quadStatRow{};
     size_t _combosStatRow{};
     size_t _tSpinsStatRow{};
     size_t _startRow{};

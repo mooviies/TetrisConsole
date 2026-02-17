@@ -25,15 +25,15 @@ void LineClear::stepPattern(GameState &state) const {
         state.lineClear.rows = std::move(rows);
         const int linesCleared = static_cast<int>(state.lineClear.rows.size());
         if (linesCleared == 4)
-            state.queueSound(GameSound::Tetris);
+            state.queueSound(GameSound::Quad);
         else
             state.queueSound(GameSound::LineClear);
 
         // Build notification text for impressive manoeuvres
         const bool isTSpin = state.flags.lastMoveIsTSpin;
         const bool isMiniTSpin = state.flags.lastMoveIsMiniTSpin;
-        const bool isTetris = (linesCleared == 4);
-        const bool isDifficult = isTetris || (isTSpin && linesCleared > 0) || (isMiniTSpin && linesCleared == 1);
+        const bool isQuad = (linesCleared == 4);
+        const bool isDifficult = isQuad || (isTSpin && linesCleared > 0) || (isMiniTSpin && linesCleared == 1);
         const bool isB2B = state.stats.backToBackBonus && isDifficult;
 
         string text;
@@ -45,8 +45,8 @@ void LineClear::stepPattern(GameState &state) const {
         } else if (isMiniTSpin) {
             text = "MINI T-SPIN";
             color = Color::MAGENTA;
-        } else if (isTetris) {
-            text = "TETRIS!";
+        } else if (isQuad) {
+            text = "QUAD!";
             color = Color::YELLOW;
         }
 
@@ -113,7 +113,7 @@ vector<int> LineClear::detectFullRows(const GameState &state) {
     vector<int> rows;
     for (int i = MATRIX_END; i >= MATRIX_START; i--) {
         bool full = true;
-        for (int j = 0; j < TETRIS_WIDTH; j++) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
             if (state.matrix[i][j] == 0) {
                 full = false;
                 break;
@@ -134,7 +134,7 @@ void LineClear::eliminateRows(GameState &state, const vector<int> &rows) {
 }
 
 void LineClear::awardScore(GameState &state, const int linesCleared) const {
-    if (linesCleared == 4) state.stats.tetris++;
+    if (linesCleared == 4) state.stats.quad++;
     if (state.flags.lastMoveIsTSpin || state.flags.lastMoveIsMiniTSpin) state.stats.tSpins++;
 
     auto [points, awardedLines, continuesBackToBack] =
