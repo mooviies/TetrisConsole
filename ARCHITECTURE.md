@@ -146,6 +146,7 @@ Tetris (facade) owns all three, dispatches StepResult
 - `FrameFlags flags` — step state, rotation/T-spin flags, game-over/started flags
 - `GameMatrix matrix` — the 40-row deque
 - `LineClearState lineClear` — cleared rows, flash state, notification/combo text
+- `HardDropTrail hardDropTrail` — trail animation state (columns, row range, fade progress)
 
 High scores are per-variant: `HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>`. Private members include the dirty flag, sound queue, game timer, and player name.
 
@@ -364,6 +365,8 @@ After lock, the game enters a multi-phase pipeline handled by `LineClear`:
 ### Hard Drop
 
 Moves the piece down until collision, scoring 2 points per cell dropped, then calls `lock()` immediately. Soft drop scores 1 point per cell.
+
+Before dropping, `PieceMovement::fall()` snapshots the piece's position, color, and occupied columns into `HardDropTrail`. After dropping, if the piece actually moved, the trail is activated and a `"harddroptrail"` timer starts. `GameController::step()` linearly advances `visibleStartRow` toward `endRow` over 150ms, creating a top-to-bottom fade. `PlayfieldDisplay` renders trail cells as `░░` in the piece's color (only in otherwise-empty cells — locked blocks, the active piece, and the ghost take priority).
 
 ### `awardScore()`
 
@@ -705,10 +708,12 @@ Composite display for the "Next" and "Hold" panels. Constructor takes a size (nu
 
 ### PlayfieldDisplay
 
-The 10x20 visible game field. Its `PlayfieldElement` (PanelElement subclass, height = 20) renders each row by checking:
-- Is there a current tetrimino mino here? Draw `██` in piece color
-- Is there a locked mino? Draw `░░` with the locked color as background
-- Otherwise: draw a checkerboard pattern in dark grey (`░░` / `▒▒` alternating)
+The 10x20 visible game field. Its `PlayfieldElement` (PanelElement subclass, height = 20) renders each row by checking, in priority order:
+1. Current tetrimino mino → `██` in piece color
+2. Locked mino → `░░` with locked color as background
+3. Ghost piece → `██` in dark grey
+4. Hard drop trail → `░░` in piece color (foreground only, fades top-to-bottom)
+5. Empty cell → checkerboard pattern (`░░` / `▒▒` alternating in dark grey)
 
 ### ScoreDisplay
 
@@ -820,6 +825,7 @@ The game uses named timers for:
 - `"fall"` — gravity tick interval
 - `"autorepeatleft"` / `"autorepeatright"` — DAS delay and repeat rate
 - `"lockdown"` — 0.5s lock-down timer
+- `"harddroptrail"` — 150ms hard drop trail animation
 
 Elapsed time is computed on-the-fly from `steady_clock::now() - start_time` — no cached values, no drift.
 

@@ -20,10 +20,10 @@ struct LineClearState {
 };
 
 struct HardDropTrail {
-    int startRow{};               // first row of the trail (piece top before drop)
-    int endRow{};                 // last row of the trail (piece top after drop)
-    int visibleStartRow{};        // current top of visible trail (advances downward)
-    int color{};                  // piece color
+    int startRow{};               // piece top-left row before drop (fixed)
+    int endRow{};                 // piece top-left row after drop (fixed)
+    int visibleStartRow{};        // shrinks toward endRow for top-to-bottom fade
+    int color{};
     bool active{};
-    bool columns[TETRIS_WIDTH]{}; // which columns the trail covers
+    bool columns[TETRIS_WIDTH]{};
 };

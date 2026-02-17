@@ -54,7 +54,6 @@ void PieceMovement::resetTimers() const {
 void PieceMovement::fall(GameState &state, const InputSnapshot &input) const {
     if (state.pieces.current == nullptr) return;
 
-    // Hard drop: instantly drop all the way and lock
     if (input.hardDrop && state.flags.stepState != GameStep::HardDrop) {
         state.queueSound(GameSound::HardDrop);
         state.flags.stepState = GameStep::HardDrop;
