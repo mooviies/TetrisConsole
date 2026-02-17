@@ -24,42 +24,78 @@ Cross-platform console Tetrominos game in C++17. Two layers: a platform abstract
 
 ## 1. Main Loop & Tetrominos Facade
 
-**Files:** `Game/Core/Tetrominos.h`, `Game/Core/Tetrominos.cpp`, `Game/Core/TetrominosConsole.cpp`
+**Files:** `Konsole/Core/GameEngine.h/.cpp`, `Game/Core/TetrominosGame.h/.cpp`, `Game/Core/TetrominosConsole.cpp`, `Game/Core/Tetrominos.h/.cpp`, `Game/Core/GameMenus.h/.cpp`
 
 ### Entry Point
 
-`main()` in `TetrominosConsole.cpp` bootstraps the application:
+`main()` in `TetrominosConsole.cpp` is a minimal wrapper — it creates a `TetrominosGame` and calls `run()`:
 
-1. `Platform::initConsole()` — terminal raw mode, alternate screen buffer, colors
-2. `Input::init(actionCount)` — initialize action-based input system with `Action::Count` (10) actions
-3. Bind default keys to actions (arrows, WASD, numpad, etc.) via `Input::bind(action, key)`
-4. `SoundEngine::init()` — miniaudio engine with embedded VFS
-5. Wait for terminal to reach minimum size (80x29)
-6. Build the menu tree (main, newGame, options, pause, restartConfirm, backToMenuConfirm, quit, gameOver) with option hints
-7. Create `HighScoreDisplay`, `HelpDisplay`, and the `Tetrominos` facade; wire menu callbacks via lambdas
-8. `main.open()` — blocking main menu (includes New Game, Options, High Scores, Help, Exit; plus Test in debug builds)
-9. `game.start()` — initialize game state, configure renderer, begin music
-10. Enter the main loop
-
-### Main Loop
-
-```
-while (!game.doExit() && !game.backToMenu()) {
-    frameStart = now()
-    Input::pollKeys()                    // 1. gather input
-    Platform::wasResized()?              // 2. handle terminal resize
-    Platform::isTerminalTooSmall()?      // 3. pause if terminal too small
-    snapshot = InputSnapshot from        // 4. capture action states
-               Input::action() queries
-    game.step(snapshot)                  // 5. game logic + sound dispatch
-    game.render()                        // 6. draw (dirty → full render, else timer-only)
-    sleep(16ms - elapsed)                // 7. ~60 FPS frame cap
+```cpp
+int main() {
+    TetrominosGame game;
+    return game.run();
 }
 ```
 
+### GameEngine (Base Class)
+
+`GameEngine` (`Konsole/Core/`) provides a generic game loop with virtual callbacks:
+
+```cpp
+class GameEngine {
+    virtual void onInit() = 0;
+    virtual void onFrame(double dt) = 0;
+    virtual void onCleanup() {}
+    virtual void onResize() {}
+    virtual void onTerminalTooSmall() {}
+    virtual void onTerminalRestored() {}
+    void setTargetFps(int fps);   // default 60
+    void requestExit(int exitCode = 0);
+};
+```
+
+`run()` handles the lifecycle: `Platform::initConsole()`, wait for minimum terminal size (80x29), call `onInit()`, then enter the frame loop. After the loop exits, it calls `onCleanup()` then `Platform::cleanupConsole()`.
+
+### TetrominosGame (Game Driver)
+
+`TetrominosGame` inherits from `GameEngine` and owns all top-level components:
+
+- `std::unique_ptr<GameMenus> _menus` — menu tree and callbacks
+- `std::unique_ptr<HighScoreDisplay> _highScores` — high score viewer
+- `std::unique_ptr<HelpDisplay> _help` — key bindings viewer
+- `std::unique_ptr<Tetrominos> _game` — game facade
+- `Screen _screen` — state machine (`MainMenu` or `Playing`)
+
+**`onInit()`** bootstraps the application:
+
+1. `Input::init(actionCount)` — initialize action-based input system with `Action::Count` (9) actions
+2. Bind default keys to actions (arrows, WASD, numpad, etc.) via `Input::bind(action, key)`
+3. `SoundEngine::init()` — miniaudio engine with embedded VFS
+4. Render title banner via `GameRenderer::renderTitle()`
+5. Create `GameMenus`, `HighScoreDisplay`, `HelpDisplay`, and `Tetrominos` facade
+6. `GameMenus::configure()` — wire all menu callbacks
+
+**`onFrame()`** implements a screen state machine:
+
+- **MainMenu**: opens the blocking main menu. On return, calls `game.start()` and transitions to Playing.
+- **Playing**: polls input, calls `game.step(snapshot)` and `game.render()`. If `backToMenu()`, transitions back to MainMenu.
+
+**`onResize()`** calls `game.redraw()`. **`onTerminalTooSmall()`** pauses the game timer. **`onTerminalRestored()`** resumes it.
+
+### GameMenus
+
+`GameMenus` (`Game/Core/`) owns and configures the entire menu tree:
+
+- `_main`, `_newGame`, `_options` — main menu hierarchy
+- `_pause`, `_pauseSound` — pause menu with sound submenu
+- `_restartConfirm`, `_backToMenuConfirm`, `_quit` — confirmation dialogs
+- `_gameOver` — game over menu
+
+`configure(game, highScores, help)` wires all menu callbacks using lambdas that capture the `Tetrominos` reference. Sound settings (Music volume, Effects volume, Soundtrack mode) are managed via `syncSoundToMenu()` / `applySoundFromMenu()` helper methods that translate between `SoundEngine` state and menu option values.
+
 ### Tetrominos Facade
 
-The `Tetrominos` class owns all core components and wires them together:
+The `Tetrominos` class owns the MVC components and wires them together:
 
 - `GameState _state` — model
 - `GameRenderer _renderer` — view
@@ -77,8 +113,7 @@ The `Tetrominos` class owns all core components and wires them together:
 
 After dispatching, `step()` also:
 - Plays pending sounds queued by the controller (`GameSound` enum: Click, Lock, HardDrop, LineClear, Quad)
-- Handles mute toggle requests
-- Cycles music tracks (A -> B -> C -> A) when a track ends
+- Advances music tracks when the current track ends, respecting the active `SoundtrackMode` (Cycle: A→B→C→A, Random: random different track, TrackA/B/C: loop the chosen track)
 
 **`render()`** checks `_state.isDirty()` before calling `_renderer.render()`, then clears the dirty flag. When not dirty, it calls `_renderer.renderTimer()` to update only the time, TPM, and LPM displays (smooth per-frame updates without full redraws).
 
@@ -87,12 +122,12 @@ After dispatching, `step()` also:
 ### Pause Flow
 
 When `StepResult::PauseRequested` is returned:
-1. Pause game timer and music
+1. Pause game timer and music (`SoundEngine::pauseMusic()`)
 2. Render playfield hidden (replaced with blank)
-3. Open pause menu (Resume / Restart / Main Menu / Exit Game)
-4. On Resume: invalidate renderer, restore music, resume timer
+3. Open pause menu (Resume / Restart / Options / Main Menu / Exit Game)
+4. On Resume: invalidate renderer, unpause music (or switch track if soundtrack mode changed during pause), resume timer
 5. On Restart: stop music, reset controller/state, reconfigure renderer, restart music
-6. On Main Menu: save highscore, set `_backToMenu` flag
+6. On Main Menu: stop music, set `_backToMenu` flag
 
 ### Game Over Flow
 
@@ -106,7 +141,7 @@ When `StepResult::GameOver` is returned:
 
 ### Exit Flow
 
-The quit menu callback calls `game.exit()`, which sets `_state.setShouldExit(true)`. The main loop checks `game.doExit()` and exits cleanly, running `SoundEngine::cleanup()`, `Input::cleanup()`, and `Platform::cleanupConsole()`.
+The quit menu callback calls `game.exit()`, which sets `_state.setShouldExit(true)`. `TetrominosGame::onFrame()` checks `game.doExit()` and calls `requestExit()`, which causes `GameEngine::run()` to exit the frame loop. Cleanup runs in order: `onCleanup()` (destroys components, `SoundEngine::cleanup()`, `Input::cleanup()`), then `Platform::cleanupConsole()`.
 
 ---
 
@@ -150,7 +185,7 @@ Tetrominos (facade) owns all three, dispatches StepResult
 
 High scores are per-variant: `HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>`. Private members include the dirty flag, sound queue, game timer, and player name.
 
-**GameRenderer** owns the display components (`ScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`, `Icon` for mute). It calls `update()` on each display with data from `GameState`, then `render()` to draw. Has `configure(previewCount, holdEnabled, showGoal)` to adjust the UI based on game options (showGoal controls whether the goal/lines-remaining display appears in `ScoreDisplay`), and `renderTimer()` to update only the time/TPM/LPM without full redraws.
+**GameRenderer** owns the display components (`ScoreDisplay`, `PieceDisplay` for next and hold, `PlayfieldDisplay`). It calls `update()` on each display with data from `GameState`, then `render()` to draw. Has `configure(previewCount, holdEnabled, showGoal)` to adjust the UI based on game options (showGoal controls whether the goal/lines-remaining display appears in `ScoreDisplay`), `renderTimer()` to update only the time/TPM/LPM without full redraws, and a static `renderTitle(subtitle)` method that draws a centered title banner. `render()` takes an optional `playfieldVisible` parameter (default `true`) — set to `false` during pause to hide the playfield. At levels above 10, `render()` also draws a side notification overlay showing line-clear and combo text over the bottom of the next-piece queue panel.
 
 ### Dirty Flag
 
@@ -497,10 +532,10 @@ Identifies all supported keys:
 Defines the game's logical actions:
 
 ```
-Left, Right, SoftDrop, HardDrop, RotateCW, RotateCCW, Hold, Pause, Mute, Select, Count
+Left, Right, SoftDrop, HardDrop, RotateCW, RotateCCW, Hold, Pause, Select, Count
 ```
 
-`InputSnapshot` is a plain struct with a `bool` field for each action (except Select, which is menu-only). It is populated each frame from `Input::action()` queries and passed to `Tetrominos::step()`.
+`InputSnapshot` is a plain struct with a `bool` field for each action (except Select, which is menu-only). It is populated each frame by `TetrominosGame::pollInputSnapshot()` from `Input::action()` queries and passed to `Tetrominos::step()`.
 
 ### Public Interface
 
@@ -519,7 +554,7 @@ The game loop calls `pollKeys()` once per frame, then queries `action()` for eac
 
 ### Default Key Bindings
 
-Set up in `TetrominosConsole.cpp` after `Input::init()`:
+Set up in `TetrominosGame::bindDefaultKeys()` after `Input::init()`:
 
 | Action | Keys |
 |--------|------|
@@ -531,7 +566,6 @@ Set up in `TetrominosConsole.cpp` after `Input::init()`:
 | RotateCCW | Z, Numpad3, Numpad7 |
 | Hold | C, Numpad0 |
 | Pause | Escape, F1 |
-| Mute | M |
 | Select | Enter |
 
 ### Linux Implementation (`InputLinux.cpp`)
@@ -729,7 +763,7 @@ Standalone two-panel viewer (not a game HUD element). Has two entry points:
 - `open(allHighscores, initialVariant)` — browse mode, opened from the main menu
 - `openForNewEntry(allHighscores, newRecord, variant)` — new high score mode, returns the player name. Shows confetti animation.
 
-Takes `const HighScoreTable&` (per-variant scores) and a `VARIANT`. Blocks until the user presses ENTER or ESC.
+Takes `const HighScoreTable&` (per-variant scores) and a `GameVariant`. Blocks until the user presses ENTER or ESC.
 
 **Left panel** (interior width 28): title "HIGH SCORES", separator, 10 ranked entries. Each entry shows cursor indicator, rank, name (10 chars), and score (10 digits). UP/DOWN arrows move the selection cursor.
 
@@ -749,7 +783,7 @@ Particle animation system for celebrating new high scores. `start(screenW, scree
 
 ### Icon
 
-Standalone single-character display (not a PanelElement). Used for the mute indicator (`♪`). Changes color based on mute state: white (unmuted), yellow (music muted), red (all muted).
+Standalone single-character display (not a PanelElement). Available as a general-purpose UI indicator in the Konsole layer.
 
 ---
 
@@ -783,19 +817,25 @@ All sounds are stored in a `map<string, MaSoundPtr>`. `MaSoundPtr` is a `unique_
 
 5 music tracks: `A.mp3`, `B.mp3`, `C.mp3` (game music), `title.mp3`, `score.mp3` (menu music, looping).
 
-`playMusic(name)` stops the current track, seeks to frame 0, sets volume, and starts. The `Tetrominos` facade checks `musicEnded()` each frame and cycles game music: A -> B -> C -> A.
+`playMusic(name)` stops the current track, seeks to frame 0, sets volume, and starts. `pauseMusic()` / `unpauseMusic()` pause and resume the current track (used during the pause menu). The `Tetrominos` facade checks `musicEnded()` each frame and advances to the next track based on the active `SoundtrackMode`.
 
-### Mute State Machine
+### Volume Control
 
-Three states, cycled by pressing M:
+Music and effect volumes are independently adjustable via `setMusicVolume(float)` / `getMusicVolume()` and `setEffectVolume(float)` / `getEffectVolume()`. Volume values range from 0.0 (silent) to 1.0 (full). These are exposed in the Options and Pause Sound menus as 11-step visual sliders (0–10 hash marks).
 
-```
-UNMUTED --> MUSIC_MUTED --> ALL_MUTED --> UNMUTED
-              (save music vol,   (save effect vol,  (restore both)
-               set to 0)          set to 0)
-```
+### Soundtrack Mode
 
-Saved volumes are restored when cycling back to UNMUTED.
+`SoundtrackMode` controls how game music tracks advance when a track ends:
+
+| Mode | Behavior |
+|------|----------|
+| `Cycle` | Play A → B → C → A (default) |
+| `Random` | Play a random different track |
+| `TrackA` | Always play track A |
+| `TrackB` | Always play track B |
+| `TrackC` | Always play track C |
+
+Set via `setSoundtrackMode()` / `getSoundtrackMode()`. Exposed in the Options and Pause Sound menus. When the soundtrack mode is changed during a pause, the `Tetrominos` facade detects the mismatch on resume and switches to the correct track.
 
 ---
 
@@ -893,12 +933,13 @@ Two static function pointers allow external control:
 - `Menu::shouldExitGame` — checked each loop iteration to break out when the game exits
 - `Menu::onResize` — called on terminal resize to redraw surrounding UI (also used by `HighScoreDisplay`)
 
-Menu callbacks use lambdas that capture the `Tetrominos` reference. The menu tree:
+Menu callbacks are wired by `GameMenus::configure()` using lambdas that capture the `Tetrominos` reference. The menu tree:
 
 ```
 Main Menu
 ├── New Game → Level (1-15), Variant (Marathon/Sprint/Ultra) + Start
-├── Options → Lock Down, Ghost Piece, Hold Piece, Preview (0-6), Reset Defaults, Back
+├── Options → Lock Down, Ghost Piece, Hold Piece, Preview (0-6),
+│             Music, Effects, Soundtrack, Reset Defaults, Back
 ├── High Scores → HighScoreDisplay (per-variant two-panel viewer)
 ├── Help → HelpDisplay (two-panel key bindings reference)
 ├── Test → TestRunner (debug builds only, GAME_DEBUG)
@@ -906,6 +947,7 @@ Main Menu
 Pause Menu
 ├── Resume
 ├── Restart → Confirmation
+├── Options → Sound submenu (Music, Effects, Soundtrack, Back)
 ├── Main Menu → Confirmation
 └── Exit Game → Quit confirmation
 Game Over Menu
