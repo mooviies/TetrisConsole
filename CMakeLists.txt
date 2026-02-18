@@ -12,49 +12,17 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion)
 endif()
 
-# --- Konsole static library ---
-file(GLOB_RECURSE KONSOLE_SRCS Tetrominos/source/Konsole/*.cpp)
-
-if(WIN32)
-    list(FILTER KONSOLE_SRCS EXCLUDE REGEX "Linux\\.cpp$")
-else()
-    list(FILTER KONSOLE_SRCS EXCLUDE REGEX "Win32\\.cpp$")
-endif()
-
-add_library(konsole STATIC ${KONSOLE_SRCS})
-
-target_include_directories(konsole PUBLIC
-    Tetrominos/source/Konsole/Core
-    Tetrominos/source/Konsole/Platform
-    Tetrominos/source/Konsole/UI
-    Tetrominos/source/Konsole/Util
-)
-target_include_directories(konsole SYSTEM PUBLIC
-    Tetrominos/include
-    ${CMAKE_BINARY_DIR}
-)
-
-if(WIN32)
-    target_link_libraries(konsole PUBLIC winmm ole32)
-elseif(APPLE)
-    find_library(COREAUDIO_LIB CoreAudio REQUIRED)
-    find_library(AUDIOTOOLBOX_LIB AudioToolbox REQUIRED)
-    find_library(COREFOUNDATION_LIB CoreFoundation REQUIRED)
-    target_link_libraries(konsole PUBLIC
-        pthread dl m
-        ${COREAUDIO_LIB} ${AUDIOTOOLBOX_LIB} ${COREFOUNDATION_LIB}
-    )
-else()
-    target_link_libraries(konsole PUBLIC pthread dl m)
-endif()
+# --- Konsole library (submodule) ---
+add_subdirectory(Konsole)
 
 # --- Media embedding ---
 file(GLOB MEDIA_FILES Tetrominos/media/*)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/media_data.h ${CMAKE_BINARY_DIR}/media_data.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
-    COMMAND python ${CMAKE_SOURCE_DIR}/scripts/embed_media.py ${CMAKE_BINARY_DIR}
-    DEPENDS ${MEDIA_FILES} ${CMAKE_SOURCE_DIR}/scripts/embed_media.py
+    COMMAND python ${CMAKE_SOURCE_DIR}/Konsole/scripts/embed_media.py
+            ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/Tetrominos/media
+    DEPENDS ${MEDIA_FILES} ${CMAKE_SOURCE_DIR}/Konsole/scripts/embed_media.py
     COMMENT "Embedding media files"
 )
 add_custom_target(media_embed DEPENDS ${CMAKE_BINARY_DIR}/media_data.h)

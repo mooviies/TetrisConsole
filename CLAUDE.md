@@ -37,23 +37,31 @@ The project is a cross-platform console Tetrominos game built in C++17, split in
 
 ### Build Targets
 
-Konsole is built as a **static library** (`libkonsole.a` / `konsole.lib`) that the game executable links against. This enforces a clean dependency direction: Game depends on Konsole, never the reverse. The final output is still a single executable.
+Konsole is a **git submodule** (`Konsole/`, from `mooviies/KonsoleGE`) built as a **static library** (`libkonsole.a` / `konsole.lib`) that the game executable links against. This enforces a clean dependency direction: Game depends on Konsole, never the reverse. The final output is still a single executable.
+
+After cloning, initialize the submodule:
+```
+git submodule update --init
+```
 
 ### Source Layout
 
 ```
+Konsole/                      # Git submodule (mooviies/KonsoleGE)
+  source/
+    Core/                     # GameEngine base class (generic game loop)
+    Platform/                 # OS abstraction (console, keyboard)
+    UI/                       # Panel, Menu, Icon, Color, RowDrawContext
+    Util/                     # Timer, Random, SoundEngine, Utility, Vector2i
+  include/                    # Vendored headers (miniaudio.h, rlutil.h)
+  scripts/                    # embed_media.py
 Tetrominos/source/
-  Konsole/                  # Static library — platform abstraction & UI primitives
-    Core/                   # GameEngine base class (generic game loop)
-    Platform/               # OS abstraction (console, keyboard)
-    UI/                     # Panel, Menu, Icon, Color, RowDrawContext
-    Util/                   # Timer, Random, SoundEngine, Utility, Vector2i
-  Game/                     # Executable — game logic
-    Core/                   # MVC triad, facade, game driver, menus, entry point, shared types
-    Piece/                  # Tetrimino, PieceData, Facing (geometry & SRS)
-    Rules/                  # Pluggable policies (ScoringRule, GravityPolicy, LockDownPolicy, GoalPolicy, VariantRule)
-    Display/                # Panel-based display components (HUD, modals, Confetti, HelpDisplay)
-    Test/                   # Debug-only test runner (GAME_DEBUG)
+  Game/                       # Executable — game logic
+    Core/                     # MVC triad, facade, game driver, menus, entry point, shared types
+    Piece/                    # Tetrimino, PieceData, Facing (geometry & SRS)
+    Rules/                    # Pluggable policies (ScoringRule, GravityPolicy, LockDownPolicy, GoalPolicy, VariantRule)
+    Display/                  # Panel-based display components (HUD, modals, Confetti, HelpDisplay)
+    Test/                     # Debug-only test runner (GAME_DEBUG)
 ```
 
 ### MVC Pattern
@@ -85,7 +93,7 @@ Tetrominos (facade) owns all three, dispatches StepResult
 
 Dirty flag (`markDirty`/`isDirty`/`clearDirty`) on `GameState` controls when rendering happens.
 
-### Konsole Layer (`source/Konsole/`)
+### Konsole Layer (`Konsole/source/`)
 
 OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FILTER ... EXCLUDE)` to exclude the wrong platform's files at configure time — no `#ifdef` in game logic.
 
@@ -102,7 +110,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 - **Display/** — `ScoreDisplay`, `PlayfieldDisplay`, `PieceDisplay`, `PiecePreview`, `HighScoreDisplay` (per-variant tabs, confetti), `HelpDisplay` (two-panel key bindings), `Confetti` (particle animation).
 - **Test/** — `TestRunner` (debug-only scenario-based regression tests, guarded by `GAME_DEBUG`).
 
-### Dependencies (header-only, vendored in `include/`)
+### Dependencies (header-only, vendored in `Konsole/include/`)
 
 - **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp. Vendored headers use `-isystem` to suppress warnings.
 - **rlutil.h** — Console colors, cursor positioning, `getkey()`. Cross-platform via `#ifdef _WIN32` with a `RLUTIL_USE_ANSI` flag (enabled) that forces ANSI escape sequences on Windows instead of Win32 API calls — required for output batching on Windows Terminal (see `BatchingStreambuf` in `PlatformWin32.cpp`). Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
@@ -110,7 +118,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 ### Key Quirks
 
 - `_shouldExit` is set via `Tetrominos::exit()` → `GameState::setShouldExit(true)`; `TetrominosGame::onFrame()` detects this and calls `requestExit()` on the `GameEngine` base class to exit the main loop.
-- Media files are embedded at build time via `scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
+- Media files are embedded at build time via `Konsole/scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
 - High scores are per-variant: `HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>` (3 variants × top 10 each). Stored in `score.bin` in `$XDG_DATA_HOME/Tetrominos/` (Linux) or `%APPDATA%\Tetrominos\` (Windows).
 - Game options persist separately in `options.bin` in the same data directory.
 - `GAME_DEBUG` compile definition is set for Debug builds (`$<$<CONFIG:Debug>:GAME_DEBUG>`), enabling the test runner menu item.

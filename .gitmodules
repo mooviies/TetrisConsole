@@ -1,0 +1,3 @@
+[submodule "Konsole"]
+	path = Konsole
+	url = git@github.com:mooviies/KonsoleGE.git
