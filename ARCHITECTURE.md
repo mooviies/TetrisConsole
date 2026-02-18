@@ -1,6 +1,6 @@
 # Architecture
 
-Cross-platform console Tetrominos game in C++17. Two layers: a platform abstraction library (KonsoleGE, a git submodule from `mooviies/KonsoleGE`, built as a static library) and game logic (`source/Game/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`) in `KonsoleGE/include/`.
+Cross-platform console Tetrominos game in C++17. Two layers: a platform abstraction library (KonsoleGE, a git submodule from `mooviies/KonsoleGE`, built as a static library) and game logic (`Tetrominos/source/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`) in `KonsoleGE/include/`.
 
 ---
 
@@ -24,7 +24,7 @@ Cross-platform console Tetrominos game in C++17. Two layers: a platform abstract
 
 ## 1. Main Loop & Tetrominos Facade
 
-**Files:** `KonsoleGE/source/Core/GameEngine.h/.cpp`, `Game/Core/TetrominosGame.h/.cpp`, `Game/Core/TetrominosConsole.cpp`, `Game/Core/Tetrominos.h/.cpp`, `Game/Core/GameMenus.h/.cpp`
+**Files:** `KonsoleGE/source/Core/GameEngine.h/.cpp`, `source/Core/TetrominosGame.h/.cpp`, `source/Core/TetrominosConsole.cpp`, `source/Core/Tetrominos.h/.cpp`, `source/Core/GameMenus.h/.cpp`
 
 ### Entry Point
 
@@ -84,7 +84,7 @@ class GameEngine {
 
 ### GameMenus
 
-`GameMenus` (`Game/Core/`) owns and configures the entire menu tree:
+`GameMenus` (`source/Core/`) owns and configures the entire menu tree:
 
 - `_main`, `_newGame`, `_options` — main menu hierarchy
 - `_pause`, `_pauseSound` — pause menu with sound submenu
@@ -147,7 +147,7 @@ The quit menu callback calls `game.exit()`, which sets `_state.setShouldExit(tru
 
 ## 2. MVC: GameController, GameState, GameRenderer
 
-**Files:** `Game/Core/GameController.h/.cpp`, `Game/Core/PieceMovement.h/.cpp`, `Game/Core/LineClear.h/.cpp`, `Game/Core/GameState.h/.cpp`, `Game/Core/GameRenderer.h/.cpp`
+**Files:** `source/Core/GameController.h/.cpp`, `source/Core/PieceMovement.h/.cpp`, `source/Core/LineClear.h/.cpp`, `source/Core/GameState.h/.cpp`, `source/Core/GameRenderer.h/.cpp`
 
 ### Separation of Concerns
 
@@ -220,7 +220,7 @@ Within the Falling phase, `PieceMovement` uses a `GameStep` enum:
 
 ## 3. Piece Generation (Double-Bag Randomizer)
 
-**Files:** `Game/Core/GameState.h/.cpp`, `Game/Core/GameController.cpp`
+**Files:** `source/Core/GameState.h/.cpp`, `source/Core/GameController.cpp`
 
 ### The Double-Bag (14 Objects)
 
@@ -267,7 +267,7 @@ This guarantees the Guideline's **7-bag randomizer**: every piece type appears e
 
 ## 4. Tetrimino, Facing & SRS Rotation
 
-**Files:** `Game/Piece/Tetrimino.h/.cpp`, `Game/Piece/Facing.h/.cpp`, `Game/Piece/PieceData.h/.cpp`, `KonsoleGE/source/Util/Vector2i.h`
+**Files:** `source/Piece/Tetrimino.h/.cpp`, `source/Piece/Facing.h/.cpp`, `source/Piece/PieceData.h/.cpp`, `KonsoleGE/source/Util/Vector2i.h`
 
 ### Piece Data (Static Table)
 
@@ -344,7 +344,7 @@ Only applies to the T-piece. Each facing defines 4 corner positions (A, B, C, D)
 
 ## 5. Scoring, Leveling & Lock-Down
 
-**Files:** `Game/Core/PieceMovement.cpp` (`fall()`, `lock()`), `Game/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `Game/Rules/ScoringRule.h/.cpp`, `Game/Rules/LockDownPolicy.h/.cpp`, `Game/Rules/GravityPolicy.h/.cpp`, `Game/Rules/GoalPolicy.h/.cpp`, `Game/Rules/VariantRule.h/.cpp`
+**Files:** `source/Core/PieceMovement.cpp` (`fall()`, `lock()`), `source/Core/LineClear.cpp` (`awardScore()`, `detectFullRows()`, `eliminateRows()`), `source/Rules/ScoringRule.h/.cpp`, `source/Rules/LockDownPolicy.h/.cpp`, `source/Rules/GravityPolicy.h/.cpp`, `source/Rules/GoalPolicy.h/.cpp`, `source/Rules/VariantRule.h/.cpp`
 
 ### Lock-Down Mechanics
 
@@ -474,7 +474,7 @@ Left/right movement uses Delayed Auto Shift:
 
 ### High Score Persistence
 
-**File:** `Game/Core/GameState.cpp` (persistence) + `Game/Core/GameState.h` (`HighScoreRecord` struct)
+**File:** `source/Core/GameState.cpp` (persistence) + `source/Core/GameState.h` (`HighScoreRecord` struct)
 
 Per-variant top-10 leaderboards stored as a binary file (`score.bin`). `HighScoreTable` is `std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>` — one sorted vector per variant (Marathon, Sprint, Ultra). Each record stores both game stats and the options used during that game:
 
@@ -514,7 +514,7 @@ Magic: `0x53484354` ("TCHS" little-endian), version 3.
 
 ## 6. Input System
 
-**Files:** `KonsoleGE/source/Platform/Input.h`, `KonsoleGE/source/Platform/Input.cpp`, `KonsoleGE/source/Platform/InputLinux.cpp`, `KonsoleGE/source/Platform/InputWin32.cpp`, `Game/Core/InputSnapshot.h`
+**Files:** `KonsoleGE/source/Platform/Input.h`, `KonsoleGE/source/Platform/Input.cpp`, `KonsoleGE/source/Platform/InputLinux.cpp`, `KonsoleGE/source/Platform/InputWin32.cpp`, `source/Core/InputSnapshot.h`
 
 ### Architecture
 
@@ -686,7 +686,7 @@ static std::string getDataDir();   // persistent data directory
 
 ## 8. Panel Rendering System
 
-**Files:** `KonsoleGE/source/UI/Panel.h/.cpp`, `KonsoleGE/source/UI/RowDrawContext.h/.cpp`, `KonsoleGE/source/UI/Icon.h/.cpp`, `KonsoleGE/source/UI/Color.h`, `Game/Display/PiecePreview.h/.cpp`, `Game/Display/PieceDisplay.h/.cpp`, `Game/Display/PlayfieldDisplay.h/.cpp`, `Game/Display/ScoreDisplay.h/.cpp`, `Game/Display/HighScoreDisplay.h/.cpp`, `Game/Display/HelpDisplay.h/.cpp`, `Game/Display/Confetti.h/.cpp`
+**Files:** `KonsoleGE/source/UI/Panel.h/.cpp`, `KonsoleGE/source/UI/RowDrawContext.h/.cpp`, `KonsoleGE/source/UI/Icon.h/.cpp`, `KonsoleGE/source/UI/Color.h`, `source/Display/PiecePreview.h/.cpp`, `source/Display/PieceDisplay.h/.cpp`, `source/Display/PlayfieldDisplay.h/.cpp`, `source/Display/ScoreDisplay.h/.cpp`, `source/Display/HighScoreDisplay.h/.cpp`, `source/Display/HelpDisplay.h/.cpp`, `source/Display/Confetti.h/.cpp`
 
 ### Color
 
@@ -974,7 +974,7 @@ Game Over Menu
 
 **`konsolege`** — static library from `KonsoleGE/source/**/*.cpp` (git submodule). Included via `add_subdirectory(KonsoleGE)`. Its include directories and link dependencies are `PUBLIC`, so they propagate automatically to the executable via `target_link_libraries`.
 
-**`tetrominos`** — executable from `Game/**/*.cpp` + `media_data.cpp`. Links against `konsole` with `PRIVATE` visibility.
+**`tetrominos`** — executable from `Tetrominos/source/**/*.cpp` + `media_data.cpp`. Links against `konsolege` with `PRIVATE` visibility.
 
 A `media_embed` custom target ensures `media_data.h` is generated before `konsole` compiles (SoundEngine needs it).
 

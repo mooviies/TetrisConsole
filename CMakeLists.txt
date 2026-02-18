@@ -29,7 +29,7 @@ add_custom_target(media_embed DEPENDS ${CMAKE_BINARY_DIR}/media_data.h)
 add_dependencies(konsolege media_embed)
 
 # --- Game executable ---
-file(GLOB_RECURSE GAME_SRCS Tetrominos/source/Game/*.cpp)
+file(GLOB_RECURSE GAME_SRCS Tetrominos/source/*.cpp)
 
 if(WIN32)
     set(TARGET_NAME Tetrominos)
@@ -40,18 +40,18 @@ endif()
 add_executable(${TARGET_NAME}
     ${GAME_SRCS}
     ${CMAKE_BINARY_DIR}/media_data.cpp
-        Tetrominos/source/Game/Rules/GoalPolicy.cpp
-        Tetrominos/source/Game/Rules/GoalPolicy.h
-        Tetrominos/source/Game/Rules/VariantRule.cpp
-        Tetrominos/source/Game/Rules/VariantRule.h
+        Tetrominos/source/Rules/GoalPolicy.cpp
+        Tetrominos/source/Rules/GoalPolicy.h
+        Tetrominos/source/Rules/VariantRule.cpp
+        Tetrominos/source/Rules/VariantRule.h
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE
-    Tetrominos/source/Game/Core
-    Tetrominos/source/Game/Piece
-    Tetrominos/source/Game/Rules
-    Tetrominos/source/Game/Display
-    Tetrominos/source/Game/Test
+    Tetrominos/source/Core
+    Tetrominos/source/Piece
+    Tetrominos/source/Rules
+    Tetrominos/source/Display
+    Tetrominos/source/Test
 )
 
 target_compile_definitions(${TARGET_NAME} PRIVATE

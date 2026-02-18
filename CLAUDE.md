@@ -55,13 +55,12 @@ KonsoleGE/                    # Git submodule (mooviies/KonsoleGE)
     Util/                     # Timer, Random, SoundEngine, Utility, Vector2i
   include/                    # Vendored headers (miniaudio.h, rlutil.h)
   scripts/                    # embed_media.py
-Tetrominos/source/
-  Game/                       # Executable — game logic
-    Core/                     # MVC triad, facade, game driver, menus, entry point, shared types
-    Piece/                    # Tetrimino, PieceData, Facing (geometry & SRS)
-    Rules/                    # Pluggable policies (ScoringRule, GravityPolicy, LockDownPolicy, GoalPolicy, VariantRule)
-    Display/                  # Panel-based display components (HUD, modals, Confetti, HelpDisplay)
-    Test/                     # Debug-only test runner (GAME_DEBUG)
+Tetrominos/source/              # Executable — game logic
+  Core/                         # MVC triad, facade, game driver, menus, entry point, shared types
+  Piece/                        # Tetrimino, PieceData, Facing (geometry & SRS)
+  Rules/                        # Pluggable policies (ScoringRule, GravityPolicy, LockDownPolicy, GoalPolicy, VariantRule)
+  Display/                      # Panel-based display components (HUD, modals, Confetti, HelpDisplay)
+  Test/                         # Debug-only test runner (GAME_DEBUG)
 ```
 
 ### MVC Pattern
@@ -102,7 +101,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 - **UI/** — `Panel` (box-drawn frame rendering primitive with row-level dirty tracking), `Menu` (hierarchical menu system), `Icon` (standalone indicator), `Color.h` (16 ANSI constants), `RowDrawContext` (element rendering helper).
 - **Util/** — `Timer` (Meyers singleton named-timer), `Random` (mt19937 utility), `SoundEngine` (miniaudio wrapper with embedded VFS, volume control, `SoundtrackMode`), `Utility`, `Vector2i`.
 
-### Game Layer (`source/Game/`)
+### Game Layer (`Tetrominos/source/`)
 
 - **Core/** — `TetrominosConsole.cpp` (minimal entry point), `TetrominosGame` (game driver, inherits `GameEngine`), `GameMenus` (menu tree owner), `Tetrominos` (facade), `GameController` (phase orchestrator), `PieceMovement` (falling-phase logic), `LineClear` (line-clear pipeline), `GameState` (model), `GameRenderer` (view), `GameTypes.h` (`LineClearState`, `HardDropTrail`), `Constants.h` (includes `GameVariant` enum, `VARIANT_COUNT`), `InputSnapshot.h` (defines `Action` enum and `InputSnapshot` struct).
 - **Piece/** — `Tetrimino` (live game piece), `PieceData` (static per-type data), `Facing` (rotation states + SRS wall kick data).
