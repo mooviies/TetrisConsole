@@ -976,15 +976,15 @@ Game Over Menu
 
 **`tetrominos`** — executable from `Tetrominos/source/**/*.cpp` + `media_data.cpp`. Links against `konsolege` with `PRIVATE` visibility.
 
-A `media_embed` custom target ensures `media_data.h` is generated before `konsole` compiles (SoundEngine needs it).
+A `media_embed` custom target ensures `media_data.h` is generated before `konsolege` compiles (SoundEngine needs it).
 
 ### Platform Source Exclusion
 
 ```cmake
 if(WIN32)
-    list(FILTER KONSOLE_SRCS EXCLUDE REGEX "Linux\\.cpp$")
+    list(FILTER KONSOLEGE_SRCS EXCLUDE REGEX "Linux\\.cpp$")
 else()
-    list(FILTER KONSOLE_SRCS EXCLUDE REGEX "Win32\\.cpp$")
+    list(FILTER KONSOLEGE_SRCS EXCLUDE REGEX "Win32\\.cpp$")
 endif()
 ```
 
@@ -997,11 +997,11 @@ Shared via `add_compile_options()` (applies to both targets):
 - **GCC/Clang**: `-Wall -Wextra -Wpedantic -Wshadow -Wconversion`
 - **MSVC**: `/W3 /sdl`
 
-Vendored headers in `Tetrominos/include/` use `-isystem` to suppress their warnings.
+Vendored headers in `KonsoleGE/include/` use `-isystem` to suppress their warnings.
 
 ### Platform Linking
 
-Attached to `konsole` with `PUBLIC` visibility (propagates to the executable):
+Attached to `konsolege` with `PUBLIC` visibility (propagates to the executable):
 
 | Platform | Libraries |
 |----------|-----------|
