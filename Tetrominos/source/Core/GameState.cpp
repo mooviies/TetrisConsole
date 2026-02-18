@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 #include <cstring>
 
@@ -14,9 +15,23 @@
 using namespace std;
 
 static constexpr uint32_t kMagic = 0x53484354; // "TCHS" little-endian
-static constexpr uint32_t kVersion = 4;
+static constexpr uint32_t kVersion = 5;
 static constexpr size_t kRecordSize = 80;
 static constexpr size_t kMaxHighscores = 10;
+
+static constexpr uint64_t kFnvOffset = 0xcbf29ce484222325ULL;
+static constexpr uint64_t kFnvPrime  = 0x100000001b3ULL;
+static constexpr uint8_t  kHashKey[] = {
+    0x4A, 0xF7, 0x2B, 0x83, 0xD1, 0x6E, 0x09, 0xC5,
+    0x38, 0xB4, 0xE2, 0x7D, 0x5F, 0x91, 0xA6, 0x0C
+};
+
+static uint64_t computeHash(const char* data, size_t len) {
+    uint64_t h = kFnvOffset;
+    for (auto b : kHashKey) { h ^= b; h *= kFnvPrime; }
+    for (size_t i = 0; i < len; i++) { h ^= static_cast<uint8_t>(data[i]); h *= kFnvPrime; }
+    return h;
+}
 
 #define SCORE_FILE (Platform::getDataDir() + "/score.bin")
 
@@ -91,28 +106,54 @@ void GameState::loadHighscore() {
     for (auto &bucket : _highscores)
         bucket.clear();
 
-    ifstream in(SCORE_FILE, ios::binary);
-    if (!in.is_open()) {
+    ifstream file(SCORE_FILE, ios::binary);
+    if (!file.is_open()) {
+        activateHighscore();
+        return;
+    }
+
+    const string fileData((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    file.close();
+
+    if (fileData.size() < 8) {
         activateHighscore();
         return;
     }
 
     uint32_t magic = 0, version = 0;
-    in.read(reinterpret_cast<char *>(&magic), 4);
-    in.read(reinterpret_cast<char *>(&version), 4);
+    memcpy(&magic, fileData.data(), 4);
+    memcpy(&version, fileData.data() + 4, 4);
 
-    if (!in || magic != kMagic || (version != 3 && version != kVersion)) {
-        in.close();
+    if (magic != kMagic || (version != 3 && version != 4 && version != kVersion)) {
         activateHighscore();
         return;
     }
+
+    string parseData = fileData;
+
+    if (version == kVersion) {
+        if (parseData.size() < 16) {
+            activateHighscore();
+            return;
+        }
+        uint64_t storedHash = 0;
+        memcpy(&storedHash, parseData.data() + parseData.size() - 8, 8);
+        const uint64_t expectedHash = computeHash(parseData.data(), parseData.size() - 8);
+        if (storedHash != expectedHash) {
+            activateHighscore();
+            return;
+        }
+        parseData.resize(parseData.size() - 8);
+    }
+
+    istringstream in(parseData);
+    in.seekg(8); // skip magic + version (already validated)
 
     if (version == 3) {
         // v3 migration: flat record list → Marathon bucket
         uint32_t count = 0;
         in.read(reinterpret_cast<char *>(&count), 4);
         if (!in) {
-            in.close();
             activateHighscore();
             return;
         }
@@ -124,7 +165,7 @@ void GameState::loadHighscore() {
         }
         sortAndCap(marathon);
     } else {
-        // v4: skip 4-byte reserved field, then per-variant sections
+        // v4/v5: skip 4-byte reserved field, then per-variant sections
         uint32_t reserved = 0;
         in.read(reinterpret_cast<char *>(&reserved), 4);
 
@@ -134,16 +175,15 @@ void GameState::loadHighscore() {
             in.read(reinterpret_cast<char *>(&count), 4);
             if (!in) break;
 
-            const size_t bucket = clamp(static_cast<size_t>(variantId), static_cast<size_t>(0), VARIANT_COUNT - 1);
+            const size_t idx = clamp(static_cast<size_t>(variantId), static_cast<size_t>(0), VARIANT_COUNT - 1);
             for (uint32_t i = 0; i < count; i++) {
                 if (!in) break;
-                _highscores[bucket].push_back(readRecord(in));
+                _highscores[idx].push_back(readRecord(in));
             }
-            sortAndCap(_highscores[bucket]);
+            sortAndCap(_highscores[idx]);
         }
     }
 
-    in.close();
     activateHighscore();
 }
 
@@ -211,27 +251,33 @@ void GameState::saveHighscore() {
         if (bucket.size() > kMaxHighscores) bucket.resize(kMaxHighscores);
     }
 
-    ofstream out(SCORE_FILE, ios::binary);
-    if (!out.is_open()) return;
+    ostringstream buf;
 
     uint32_t magic = kMagic;
     uint32_t version = kVersion;
     uint32_t reserved = 0;
 
-    out.write(reinterpret_cast<const char *>(&magic), 4);
-    out.write(reinterpret_cast<const char *>(&version), 4);
-    out.write(reinterpret_cast<const char *>(&reserved), 4);
+    buf.write(reinterpret_cast<const char *>(&magic), 4);
+    buf.write(reinterpret_cast<const char *>(&version), 4);
+    buf.write(reinterpret_cast<const char *>(&reserved), 4);
 
     for (size_t v = 0; v < VARIANT_COUNT; v++) {
         auto variantId = static_cast<uint32_t>(v);
         auto count = static_cast<uint32_t>(_highscores[v].size());
-        out.write(reinterpret_cast<const char *>(&variantId), 4);
-        out.write(reinterpret_cast<const char *>(&count), 4);
+        buf.write(reinterpret_cast<const char *>(&variantId), 4);
+        buf.write(reinterpret_cast<const char *>(&count), 4);
 
         for (const auto &rec : _highscores[v])
-            writeRecord(out, rec);
+            writeRecord(buf, rec);
     }
 
+    const string data = buf.str();
+    const uint64_t hash = computeHash(data.data(), data.size());
+
+    ofstream out(SCORE_FILE, ios::binary);
+    if (!out.is_open()) return;
+    out.write(data.data(), static_cast<streamsize>(data.size()));
+    out.write(reinterpret_cast<const char *>(&hash), 8);
     out.close();
 }
 

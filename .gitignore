@@ -31,3 +31,10 @@ score.bin
 
 # Local notes
 /notes/
+
+# makepkg artifacts
+.SRCINFO
+pkg/
+src/
+*.pkg.tar.zst
+tetrominos-git/

@@ -9,6 +9,7 @@
 
 #include "Constants.h"
 #include "GameTypes.h"
+#include "SecureValue.h"
 #include "Tetrimino.h"
 
 struct HighScoreRecord {
@@ -44,17 +45,17 @@ struct GameConfig {
 using HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>;
 
 struct Stats {
-    int64_t score{};
-    int level{};
-    int lines{};
-    int goal{};
-    int quad{};
-    int combos{};
-    int currentCombo{-1};
-    int tSpins{};
-    int nbMinos{};
+    SecureValue<int64_t> score{};
+    SecureValue<int> level{};
+    SecureValue<int> lines{};
+    SecureValue<int> goal{};
+    SecureValue<int> quad{};
+    SecureValue<int> combos{};
+    SecureValue<int> currentCombo{-1};
+    SecureValue<int> tSpins{};
+    SecureValue<int> nbMinos{};
     bool backToBackBonus{};
-    int64_t highscore{};
+    SecureValue<int64_t> highscore{};
     bool hasBetterHighscore{};
 };
 
