@@ -12,21 +12,21 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion)
 endif()
 
-# --- Konsole library (submodule) ---
-add_subdirectory(Konsole)
+# --- KonsoleGE library (submodule) ---
+add_subdirectory(KonsoleGE)
 
 # --- Media embedding ---
 file(GLOB MEDIA_FILES Tetrominos/media/*)
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/media_data.h ${CMAKE_BINARY_DIR}/media_data.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}
-    COMMAND python ${CMAKE_SOURCE_DIR}/Konsole/scripts/embed_media.py
+    COMMAND python ${CMAKE_SOURCE_DIR}/KonsoleGE/scripts/embed_media.py
             ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/Tetrominos/media
-    DEPENDS ${MEDIA_FILES} ${CMAKE_SOURCE_DIR}/Konsole/scripts/embed_media.py
+    DEPENDS ${MEDIA_FILES} ${CMAKE_SOURCE_DIR}/KonsoleGE/scripts/embed_media.py
     COMMENT "Embedding media files"
 )
 add_custom_target(media_embed DEPENDS ${CMAKE_BINARY_DIR}/media_data.h)
-add_dependencies(konsole media_embed)
+add_dependencies(konsolege media_embed)
 
 # --- Game executable ---
 file(GLOB_RECURSE GAME_SRCS Tetrominos/source/Game/*.cpp)
@@ -58,7 +58,7 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
     $<$<CONFIG:Debug>:GAME_DEBUG>
 )
 
-target_link_libraries(${TARGET_NAME} PRIVATE konsole)
+target_link_libraries(${TARGET_NAME} PRIVATE konsolege)
 
 if(MINGW)
     target_link_options(${TARGET_NAME} PRIVATE -static-libgcc -static-libstdc++ -static -lpthread)

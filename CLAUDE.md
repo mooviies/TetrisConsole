@@ -37,7 +37,7 @@ The project is a cross-platform console Tetrominos game built in C++17, split in
 
 ### Build Targets
 
-Konsole is a **git submodule** (`Konsole/`, from `mooviies/KonsoleGE`) built as a **static library** (`libkonsole.a` / `konsole.lib`) that the game executable links against. This enforces a clean dependency direction: Game depends on Konsole, never the reverse. The final output is still a single executable.
+KonsoleGE is a **git submodule** (`KonsoleGE/`, from `mooviies/KonsoleGE`) built as a **static library** (`libkonsolege.a` / `konsolege.lib`) that the game executable links against. This enforces a clean dependency direction: Game depends on KonsoleGE, never the reverse. The final output is still a single executable.
 
 After cloning, initialize the submodule:
 ```
@@ -47,7 +47,7 @@ git submodule update --init
 ### Source Layout
 
 ```
-Konsole/                      # Git submodule (mooviies/KonsoleGE)
+KonsoleGE/                    # Git submodule (mooviies/KonsoleGE)
   source/
     Core/                     # GameEngine base class (generic game loop)
     Platform/                 # OS abstraction (console, keyboard)
@@ -89,11 +89,11 @@ Tetrominos (facade) owns all three, dispatches StepResult
 - **Tetrominos** — Facade that owns the above three plus `Menu&` references and `HighScoreDisplay&`. Dispatches `StepResult`, handles pause/game-over flow, manages music with `SoundtrackMode`. `step()` takes an `InputSnapshot` parameter.
 - **TetrominosGame** — Game driver that inherits from `GameEngine`. Owns `GameMenus`, `HighScoreDisplay`, `HelpDisplay`, and `Tetrominos`. Manages the screen state machine (MainMenu/Playing) and input polling.
 - **GameMenus** — Owns and configures the entire menu tree. Manages sound settings (volume, soundtrack mode) via `syncSoundToMenu()` / `applySoundFromMenu()`.
-- **GameEngine** — Base class in Konsole layer providing a generic game loop with virtual callbacks (`onInit`, `onFrame`, `onCleanup`, `onResize`, `onTerminalTooSmall`, `onTerminalRestored`). Handles FPS capping, terminal resize detection, and cleanup.
+- **GameEngine** — Base class in KonsoleGE layer providing a generic game loop with virtual callbacks (`onInit`, `onFrame`, `onCleanup`, `onResize`, `onTerminalTooSmall`, `onTerminalRestored`). Handles FPS capping, terminal resize detection, and cleanup.
 
 Dirty flag (`markDirty`/`isDirty`/`clearDirty`) on `GameState` controls when rendering happens.
 
-### Konsole Layer (`Konsole/source/`)
+### KonsoleGE Layer (`KonsoleGE/source/`)
 
 OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FILTER ... EXCLUDE)` to exclude the wrong platform's files at configure time — no `#ifdef` in game logic.
 
@@ -110,7 +110,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 - **Display/** — `ScoreDisplay`, `PlayfieldDisplay`, `PieceDisplay`, `PiecePreview`, `HighScoreDisplay` (per-variant tabs, confetti), `HelpDisplay` (two-panel key bindings), `Confetti` (particle animation).
 - **Test/** — `TestRunner` (debug-only scenario-based regression tests, guarded by `GAME_DEBUG`).
 
-### Dependencies (header-only, vendored in `Konsole/include/`)
+### Dependencies (header-only, vendored in `KonsoleGE/include/`)
 
 - **miniaudio.h** — Cross-platform audio (replaced FMOD). `#define MINIAUDIO_IMPLEMENTATION` is in SoundEngine.cpp. Vendored headers use `-isystem` to suppress warnings.
 - **rlutil.h** — Console colors, cursor positioning, `getkey()`. Cross-platform via `#ifdef _WIN32` with a `RLUTIL_USE_ANSI` flag (enabled) that forces ANSI escape sequences on Windows instead of Win32 API calls — required for output batching on Windows Terminal (see `BatchingStreambuf` in `PlatformWin32.cpp`). Extended with bright background ANSI codes (`\033[100m`–`\033[107m`) for colors 8-15 (DARKGREY through WHITE) in `getANSIBackgroundColor()`.
@@ -118,7 +118,7 @@ OS-specific code lives in `*Win32.cpp` / `*Linux.cpp` files. CMake uses `list(FI
 ### Key Quirks
 
 - `_shouldExit` is set via `Tetrominos::exit()` → `GameState::setShouldExit(true)`; `TetrominosGame::onFrame()` detects this and calls `requestExit()` on the `GameEngine` base class to exit the main loop.
-- Media files are embedded at build time via `Konsole/scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
+- Media files are embedded at build time via `KonsoleGE/scripts/embed_media.py` into `${CMAKE_BINARY_DIR}/media_data.{h,cpp}`. CMake runs this automatically when media files change.
 - High scores are per-variant: `HighScoreTable = std::array<std::vector<HighScoreRecord>, VARIANT_COUNT>` (3 variants × top 10 each). Stored in `score.bin` in `$XDG_DATA_HOME/Tetrominos/` (Linux) or `%APPDATA%\Tetrominos\` (Windows).
 - Game options persist separately in `options.bin` in the same data directory.
 - `GAME_DEBUG` compile definition is set for Debug builds (`$<$<CONFIG:Debug>:GAME_DEBUG>`), enabling the test runner menu item.

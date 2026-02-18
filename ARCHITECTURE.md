@@ -1,6 +1,6 @@
 # Architecture
 
-Cross-platform console Tetrominos game in C++17. Two layers: a platform abstraction library (Konsole, a git submodule from `mooviies/KonsoleGE`, built as a static library) and game logic (`source/Game/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`) in `Konsole/include/`.
+Cross-platform console Tetrominos game in C++17. Two layers: a platform abstraction library (KonsoleGE, a git submodule from `mooviies/KonsoleGE`, built as a static library) and game logic (`source/Game/`, the executable that links against it). No third-party game frameworks — only vendored header-only libraries (`miniaudio.h`, `rlutil.h`) in `KonsoleGE/include/`.
 
 ---
 
@@ -24,7 +24,7 @@ Cross-platform console Tetrominos game in C++17. Two layers: a platform abstract
 
 ## 1. Main Loop & Tetrominos Facade
 
-**Files:** `Konsole/source/Core/GameEngine.h/.cpp`, `Game/Core/TetrominosGame.h/.cpp`, `Game/Core/TetrominosConsole.cpp`, `Game/Core/Tetrominos.h/.cpp`, `Game/Core/GameMenus.h/.cpp`
+**Files:** `KonsoleGE/source/Core/GameEngine.h/.cpp`, `Game/Core/TetrominosGame.h/.cpp`, `Game/Core/TetrominosConsole.cpp`, `Game/Core/Tetrominos.h/.cpp`, `Game/Core/GameMenus.h/.cpp`
 
 ### Entry Point
 
@@ -39,7 +39,7 @@ int main() {
 
 ### GameEngine (Base Class)
 
-`GameEngine` (`Konsole/source/Core/`) provides a generic game loop with virtual callbacks:
+`GameEngine` (`KonsoleGE/source/Core/`) provides a generic game loop with virtual callbacks:
 
 ```cpp
 class GameEngine {
@@ -267,7 +267,7 @@ This guarantees the Guideline's **7-bag randomizer**: every piece type appears e
 
 ## 4. Tetrimino, Facing & SRS Rotation
 
-**Files:** `Game/Piece/Tetrimino.h/.cpp`, `Game/Piece/Facing.h/.cpp`, `Game/Piece/PieceData.h/.cpp`, `Konsole/source/Util/Vector2i.h`
+**Files:** `Game/Piece/Tetrimino.h/.cpp`, `Game/Piece/Facing.h/.cpp`, `Game/Piece/PieceData.h/.cpp`, `KonsoleGE/source/Util/Vector2i.h`
 
 ### Piece Data (Static Table)
 
@@ -514,7 +514,7 @@ Magic: `0x53484354` ("TCHS" little-endian), version 3.
 
 ## 6. Input System
 
-**Files:** `Konsole/source/Platform/Input.h`, `Konsole/source/Platform/Input.cpp`, `Konsole/source/Platform/InputLinux.cpp`, `Konsole/source/Platform/InputWin32.cpp`, `Game/Core/InputSnapshot.h`
+**Files:** `KonsoleGE/source/Platform/Input.h`, `KonsoleGE/source/Platform/Input.cpp`, `KonsoleGE/source/Platform/InputLinux.cpp`, `KonsoleGE/source/Platform/InputWin32.cpp`, `Game/Core/InputSnapshot.h`
 
 ### Architecture
 
@@ -604,7 +604,7 @@ After collecting all pressed `KeyCode`s, it iterates over all actions and sets `
 
 ## 7. Platform Abstraction
 
-**Files:** `Konsole/source/Platform/Platform.h`, `Konsole/source/Platform/PlatformLinux.cpp`, `Konsole/source/Platform/PlatformWin32.cpp`
+**Files:** `KonsoleGE/source/Platform/Platform.h`, `KonsoleGE/source/Platform/PlatformLinux.cpp`, `KonsoleGE/source/Platform/PlatformWin32.cpp`
 
 ### Interface
 
@@ -686,7 +686,7 @@ static std::string getDataDir();   // persistent data directory
 
 ## 8. Panel Rendering System
 
-**Files:** `Konsole/source/UI/Panel.h/.cpp`, `Konsole/source/UI/RowDrawContext.h/.cpp`, `Konsole/source/UI/Icon.h/.cpp`, `Konsole/source/UI/Color.h`, `Game/Display/PiecePreview.h/.cpp`, `Game/Display/PieceDisplay.h/.cpp`, `Game/Display/PlayfieldDisplay.h/.cpp`, `Game/Display/ScoreDisplay.h/.cpp`, `Game/Display/HighScoreDisplay.h/.cpp`, `Game/Display/HelpDisplay.h/.cpp`, `Game/Display/Confetti.h/.cpp`
+**Files:** `KonsoleGE/source/UI/Panel.h/.cpp`, `KonsoleGE/source/UI/RowDrawContext.h/.cpp`, `KonsoleGE/source/UI/Icon.h/.cpp`, `KonsoleGE/source/UI/Color.h`, `Game/Display/PiecePreview.h/.cpp`, `Game/Display/PieceDisplay.h/.cpp`, `Game/Display/PlayfieldDisplay.h/.cpp`, `Game/Display/ScoreDisplay.h/.cpp`, `Game/Display/HighScoreDisplay.h/.cpp`, `Game/Display/HelpDisplay.h/.cpp`, `Game/Display/Confetti.h/.cpp`
 
 ### Color
 
@@ -783,13 +783,13 @@ Particle animation system for celebrating new high scores. `start(screenW, scree
 
 ### Icon
 
-Standalone single-character display (not a PanelElement). Available as a general-purpose UI indicator in the Konsole layer.
+Standalone single-character display (not a PanelElement). Available as a general-purpose UI indicator in the KonsoleGE layer.
 
 ---
 
 ## 9. Sound Engine
 
-**Files:** `Konsole/source/Util/SoundEngine.h/.cpp`
+**Files:** `KonsoleGE/source/Util/SoundEngine.h/.cpp`
 
 ### Overview
 
@@ -841,7 +841,7 @@ Set via `setSoundtrackMode()` / `getSoundtrackMode()`. Exposed in the Options an
 
 ## 10. Timer
 
-**Files:** `Konsole/source/Util/Timer.h/.cpp`
+**Files:** `KonsoleGE/source/Util/Timer.h/.cpp`
 
 ### Design
 
@@ -873,7 +873,7 @@ Elapsed time is computed on-the-fly from `steady_clock::now() - start_time` — 
 
 ## 11. Random
 
-**Files:** `Konsole/source/Util/Random.h/.cpp`
+**Files:** `KonsoleGE/source/Util/Random.h/.cpp`
 
 ### Design
 
@@ -891,7 +891,7 @@ Creates a fresh `uniform_int_distribution` for each call. Used by the bag shuffl
 
 ## 12. Menu System
 
-**Files:** `Konsole/source/UI/Menu.h/.cpp`
+**Files:** `KonsoleGE/source/UI/Menu.h/.cpp`
 
 ### Structure
 
@@ -960,19 +960,19 @@ Game Over Menu
 
 ## 13. Build System & Media Embedding
 
-**Files:** `CMakeLists.txt`, `Konsole/scripts/embed_media.py`
+**Files:** `CMakeLists.txt`, `KonsoleGE/scripts/embed_media.py`
 
 ### CMake Configuration
 
 - C++17 standard, required
 - `CMAKE_EXPORT_COMPILE_COMMANDS ON` for clangd
-- Two build targets: `konsole` (static library) and `tetrominos`/`Tetrominos` (executable)
+- Two build targets: `konsolege` (static library) and `tetrominos`/`Tetrominos` (executable)
 - Binary name: `tetrominos` (Linux/macOS), `Tetrominos.exe` (Windows)
 - Sources gathered with `file(GLOB_RECURSE ...)` to pick up files in subfolders automatically
 
 ### Build Targets
 
-**`konsole`** — static library from `Konsole/source/**/*.cpp` (git submodule). Included via `add_subdirectory(Konsole)`. Its include directories and link dependencies are `PUBLIC`, so they propagate automatically to the executable via `target_link_libraries`.
+**`konsolege`** — static library from `KonsoleGE/source/**/*.cpp` (git submodule). Included via `add_subdirectory(KonsoleGE)`. Its include directories and link dependencies are `PUBLIC`, so they propagate automatically to the executable via `target_link_libraries`.
 
 **`tetrominos`** — executable from `Game/**/*.cpp` + `media_data.cpp`. Links against `konsole` with `PRIVATE` visibility.
 
@@ -1011,7 +1011,7 @@ Attached to `konsole` with `PUBLIC` visibility (propagates to the executable):
 
 ### Media Embedding Pipeline
 
-`Konsole/scripts/embed_media.py` runs at build time via `add_custom_command`, triggered when any file in `Tetrominos/media/` changes:
+`KonsoleGE/scripts/embed_media.py` runs at build time via `add_custom_command`, triggered when any file in `Tetrominos/media/` changes:
 
 1. Scans `Tetrominos/media/` for all files
 2. Generates `${CMAKE_BINARY_DIR}/media_data.h` — declares `findEmbeddedMedia()`
