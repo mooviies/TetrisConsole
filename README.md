@@ -4,6 +4,20 @@ A cross-platform Tetrominos game that runs in the terminal, written in C++17. Fe
 
 All media (music and sound effects) are embedded into the binary at compile time — no external files needed to play.
 
+## Getting Started
+
+This project uses a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for the KonsoleGE library. Clone with `--recursive` to fetch everything in one step:
+
+```
+git clone --recursive git@github.com:mooviies/Tetrominos.git
+```
+
+If you already cloned without `--recursive`, initialize the submodule manually:
+
+```
+git submodule update --init
+```
+
 ## Building
 
 Requires CMake 3.16+ and a C++17 compiler. Python 3 is needed for media embedding.
@@ -36,7 +50,6 @@ The terminal should be at least 80 columns wide and 29 rows tall.
 | Rotate CCW |             | Z       | 3, 7        |
 | Hold piece |             | C       | 0           |
 | Pause      | Escape, F1  |         |             |
-| Cycle mute |             | M       |             |
 | Select     | Enter       |         |             |
 
 ## Options
@@ -83,9 +96,8 @@ All options are persisted across sessions.
 - Per-variant high score leaderboards (top 10 each) with detailed stats and game options per entry
 - Confetti animation on new high scores
 - Help screen showing all key bindings (accessible from the main menu)
-- Options menu: lock-down mode, ghost piece, hold piece, preview count — persisted across sessions
-- Mute toggle (M key): cycles unmuted (white ♪) → music muted (yellow ♪) → all muted (red ♪)
-- Streamed music (three tracks that cycle A/B/C) and sound effects via miniaudio
+- Options menu: lock-down mode, ghost piece, hold piece, preview count, music/effects volume, soundtrack mode — persisted across sessions
+- Streamed music (three tracks with configurable soundtrack mode) and sound effects via miniaudio, with independent volume controls
 - UTF-8 box-drawing and block characters for the UI
 - Persistent data in `$XDG_DATA_HOME/Tetrominos/` (Linux) or `%APPDATA%\Tetrominos\` (Windows)
 
@@ -109,20 +121,22 @@ All base points are multiplied by the current level. Consecutive Quads or T-spin
 ## Project Structure
 
 ```
-Tetrominos/source/
-  Konsole/                  # Static library — platform abstraction & UI primitives
-    Platform/               # OS abstraction (console init, keyboard input)
-    UI/                     # Panel rendering, menus, colors
-    Util/                   # Timer, RNG, audio engine, helpers
-  Game/                     # Executable — game logic (links against Konsole)
-    Core/                   # MVC triad, facade, entry point
-    Piece/                  # Tetrimino geometry, SRS rotation data
-    Rules/                  # Pluggable gameplay policies (scoring, gravity, lock-down, goals, variants)
-    Display/                # HUD and modal display components
-    Test/                   # Debug-only test runner
+KonsoleGE/                    # Git submodule (mooviies/KonsoleGE) — static library
+  source/
+    Core/                     # GameEngine base class (generic game loop)
+    Platform/                 # OS abstraction (console init, keyboard input)
+    UI/                       # Panel rendering, menus, colors
+    Util/                     # Timer, RNG, audio engine, helpers
+  include/                    # Vendored headers (miniaudio.h, rlutil.h)
+Tetrominos/source/            # Executable — game logic (links against KonsoleGE)
+  Core/                       # MVC triad, facade, entry point
+  Piece/                      # Tetrimino geometry, SRS rotation data
+  Rules/                      # Pluggable gameplay policies (scoring, gravity, lock-down, goals, variants)
+  Display/                    # HUD and modal display components
+  Test/                       # Debug-only test runner
 ```
 
-Konsole is built as a static library that the game executable links against, enforcing a clean dependency boundary.
+KonsoleGE is built as a static library that the game executable links against, enforcing a clean dependency boundary.
 
 ## Platform Support
 
@@ -132,7 +146,7 @@ Konsole is built as a static library that the game executable links against, enf
 
 ## Dependencies
 
-All dependencies are vendored as header-only libraries in `include/`:
+All dependencies are vendored as header-only libraries in `KonsoleGE/include/`:
 
 - [miniaudio](https://miniaud.io/) — cross-platform audio
 - [rlutil](https://github.com/tapio/rlutil) — console colors and cursor positioning
